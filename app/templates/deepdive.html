@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LUMA — 책 이해 딥다이브</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07130f; --bg2:#0b1d16; --bg3:#10271e;
+  --green-deep:#123524; --green-soft:#2f5d46;
+  --gold:#f5c86b; --gold-dim:rgba(245,200,107,.12); --gold-border:rgba(245,200,107,.28);
+  --text:#f3f7f0; --sub:#9aa89d;
+  --panel:rgba(255,255,255,.055); --border:rgba(255,255,255,.09);
+  --green-dim:rgba(80,180,120,.1); --green-border:rgba(80,180,120,.25); --mint:#7de8a8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%,rgba(18,53,36,.55) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 30% at 85% 90%,rgba(245,200,107,.03) 0%,transparent 60%);
+  color:var(--text);font-family:'Pretendard',sans-serif;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:rgba(80,180,120,.2);border-radius:2px;}
+a{text-decoration:none;color:inherit;}
+
+/* NAV */
+.nav{
+  position:relative;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:52px;background:rgba(7,19,15,.94);
+  border-bottom:1px solid var(--border);flex-shrink:0;backdrop-filter:blur(14px);
+}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2.4s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,200,107,.4)}50%{box-shadow:0 0 0 7px transparent}}
+.nav-links{display:flex;gap:2px;}
+.npill{padding:5px 12px;border-radius:14px;font-size:.72rem;color:var(--sub);transition:.2s;}
+.npill:hover{background:rgba(80,180,120,.1);color:var(--mint);}
+.npill.active{background:rgba(80,180,120,.15);color:var(--mint);}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--sub);}
+.nav-login-btn{background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);padding:5px 13px;border-radius:14px;font-size:.72rem;transition:.2s;}
+.nav-login-btn:hover{background:rgba(245,200,107,.2);}
+.nav-logout{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);color:#f87171;padding:4px 10px;border-radius:7px;font-size:.7rem;cursor:pointer;font-family:'Pretendard',sans-serif;}
+
+/* MAIN WRAP */
+.dive-wrap{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+
+/* HERO */
+.dive-hero{
+  display:flex;flex-direction:column;align-items:center;
+  padding:52px 20px 40px;text-align:center;flex-shrink:0;
+  transition:padding .4s ease;
+}
+.dive-hero.compact{padding:28px 20px 24px;}
+.hero-emblem{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(80,180,120,.2),rgba(245,200,107,.12));
+  border:1px solid rgba(80,180,120,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;margin-bottom:16px;
+  box-shadow:0 0 40px rgba(80,180,120,.07);
+  transition:all .4s ease;
+}
+.dive-hero.compact .hero-emblem{width:42px;height:42px;font-size:1rem;margin-bottom:10px;}
+.hero-label-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;width:100%;max-width:560px;}
+.hero-label-line{flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(80,180,120,.2),transparent);}
+.hero-label-text{font-size:.61rem;color:var(--sub);letter-spacing:.22em;text-transform:uppercase;white-space:nowrap;}
+.dive-hero.compact .hero-label-row{display:none;}
+.hero-title{font-family:'DM Serif Display',serif;font-size:1.75rem;color:var(--text);line-height:1.25;margin-bottom:10px;transition:font-size .4s;}
+.dive-hero.compact .hero-title{font-size:1.15rem;margin-bottom:6px;}
+.hero-sub{font-size:.83rem;color:var(--sub);line-height:1.8;margin-bottom:28px;max-width:500px;transition:all .4s;}
+.dive-hero.compact .hero-sub{display:none;}
+
+/* SEARCH PANEL */
+.search-panel{
+  width:100%;max-width:580px;
+  background:rgba(80,180,120,.05);
+  border:1px solid rgba(80,180,120,.22);
+  border-radius:16px;padding:6px 6px 6px 18px;
+  display:flex;align-items:center;gap:8px;
+  transition:.2s;
+}
+.search-panel:focus-within{border-color:rgba(80,180,120,.45);box-shadow:0 0 0 3px rgba(80,180,120,.06);}
+.search-icon{font-size:1rem;flex-shrink:0;color:var(--sub);}
+.search-input{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--text);font-family:'Pretendard',sans-serif;
+  font-size:.9rem;padding:6px 0;
+}
+.search-input::placeholder{color:var(--sub);}
+.search-btn{
+  padding:9px 20px;border-radius:11px;
+  background:linear-gradient(135deg,rgba(245,200,107,.85),rgba(245,200,107,.6));
+  border:none;color:#1a1200;font-family:'Pretendard',sans-serif;
+  font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s;
+  white-space:nowrap;flex-shrink:0;
+}
+.search-btn:hover{box-shadow:0 4px 16px rgba(245,200,107,.2);transform:translateY(-1px);}
+.search-btn:active{transform:translateY(0);}
+.search-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* RECENT CHIPS */
+.recent-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px;max-width:560px;}
+.r-chip{padding:5px 11px;border-radius:15px;border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--sub);font-size:.69rem;cursor:pointer;transition:.2s;font-family:'Pretendard',sans-serif;}
+.r-chip:hover{border-color:var(--green-border);color:var(--mint);background:var(--green-dim);}
+
+/* RESULTS SECTION */
+.dive-results{display:none;padding:0 20px 40px;flex-direction:column;gap:28px;}
+.dive-results.show{display:flex;}
+.results-inner{width:100%;max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:28px;}
+
+/* Section headers */
+.dive-section{}
+.dive-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.dive-section-title{font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:8px;}
+.section-badge{font-size:.58rem;padding:2px 8px;border-radius:5px;background:var(--green-dim);border:1px solid var(--green-border);color:var(--mint);}
+.source-badge{font-size:.59rem;color:var(--sub);letter-spacing:.06em;}
+
+/* BOOK GRID */
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.book-card{
+  background:rgba(80,180,120,.04);border:1px solid var(--border);
+  border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;
+  transition:.2s;cursor:default;
+}
+.book-card:hover{border-color:var(--green-border);background:rgba(80,180,120,.07);}
+.book-cover{
+  width:100%;aspect-ratio:2/3;border-radius:9px;
+  background:linear-gradient(135deg,var(--green-deep),rgba(47,93,70,.6));
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;flex-shrink:0;
+}
+.book-cover img{width:100%;height:100%;object-fit:cover;}
+.book-cover-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:12px;text-align:center;
+}
+.bcp-icon{font-size:1.8rem;opacity:.7;}
+.bcp-abbr{font-family:'DM Serif Display',serif;font-size:.75rem;color:rgba(243,247,240,.5);line-height:1.4;}
+.book-title{font-family:'DM Serif Display',serif;font-size:.88rem;color:var(--text);line-height:1.4;}
+.book-author{font-size:.68rem;color:var(--sub);}
+.book-desc{font-size:.72rem;color:var(--sub);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.book-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;}
+.btn-xs{padding:5px 10px;border-radius:7px;font-size:.66rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;border:1px solid;white-space:nowrap;}
+.btn-xs-gold{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold);}
+.btn-xs-gold:hover{background:rgba(245,200,107,.2);}
+.btn-xs-green{background:var(--green-dim);border-color:var(--green-border);color:var(--mint);}
+.btn-xs-green:hover{background:rgba(80,180,120,.2);}
+.btn-xs-muted{background:none;border-color:var(--border);color:var(--sub);}
+.btn-xs-muted:hover{border-color:rgba(255,255,255,.18);color:var(--text);}
+
+/* VIDEO CATEGORY TABS */
+.video-cat-tabs{
+  display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;
+  padding-bottom:2px;margin-bottom:14px;
+}
+.video-cat-tabs::-webkit-scrollbar{display:none;}
+.vcat-tab{
+  flex-shrink:0;padding:5px 12px;border-radius:15px;
+  font-size:.69rem;color:var(--sub);
+  background:none;border:1px solid var(--border);
+  cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;
+}
+.vcat-tab:hover{border-color:var(--green-border);color:var(--mint);background:var(--green-dim);}
+.vcat-tab.active{background:var(--green-dim);border-color:var(--green-border);color:var(--mint);}
+
+/* VIDEO GRID */
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.video-card{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:13px;overflow:hidden;transition:.2s;display:flex;flex-direction:column;
+}
+.video-card:hover{border-color:var(--green-border);background:rgba(80,180,120,.04);}
+.video-thumb{
+  width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;
+  background:rgba(18,53,36,.6);flex-shrink:0;
+}
+.video-thumb img{width:100%;height:100%;object-fit:cover;transition:.25s;}
+.video-card:hover .video-thumb img{transform:scale(1.03);}
+.thumb-placeholder{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--green-deep),rgba(47,93,70,.5));
+  font-size:2rem;opacity:.5;
+}
+.video-play-overlay{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(7,19,15,.3);opacity:0;transition:.2s;
+}
+.video-card:hover .video-play-overlay{opacity:1;}
+.play-circle{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(245,200,107,.85);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;color:#1a1200;
+}
+.video-cat-tag{
+  position:absolute;top:7px;left:7px;
+  font-size:.57rem;padding:2px 7px;border-radius:5px;
+  background:rgba(7,19,15,.8);backdrop-filter:blur(4px);
+  border:1px solid rgba(80,180,120,.3);color:var(--mint);
+}
+.video-info{padding:11px 12px;display:flex;flex-direction:column;gap:5px;flex:1;}
+.video-title{font-size:.79rem;color:var(--text);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.video-channel{font-size:.65rem;color:var(--sub);}
+.video-actions{display:flex;gap:5px;margin-top:auto;padding-top:8px;}
+.btn-watch{
+  flex:1;padding:6px 8px;border-radius:8px;
+  background:linear-gradient(135deg,rgba(245,200,107,.8),rgba(245,200,107,.55));
+  border:none;color:#1a1200;font-size:.69rem;font-weight:600;
+  cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;
+}
+.btn-watch:hover{box-shadow:0 3px 12px rgba(245,200,107,.2);}
+.btn-discuss{
+  padding:6px 8px;border-radius:8px;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  color:var(--mint);font-size:.65rem;
+  cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;
+  white-space:nowrap;
+}
+.btn-discuss:hover{background:rgba(80,180,120,.2);}
+.btn-later{
+  padding:6px 8px;border-radius:8px;
+  background:none;border:1px solid var(--border);
+  color:var(--sub);font-size:.65rem;
+  cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;
+}
+.btn-later:hover{border-color:rgba(255,255,255,.18);color:var(--text);}
+.btn-later.saved{border-color:rgba(80,180,120,.3);color:var(--mint);}
+
+/* THOUGHT QUESTIONS */
+.thought-card{
+  background:linear-gradient(135deg,rgba(18,53,36,.5),rgba(245,200,107,.03));
+  border:1px solid rgba(245,200,107,.2);border-radius:14px;padding:18px;
+}
+.thought-label{font-size:.59rem;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;display:block;}
+.thought-qs{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.thought-q-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 14px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:10px;transition:.2s;
+}
+.thought-q-item:hover{border-color:rgba(245,200,107,.2);background:rgba(245,200,107,.03);}
+.q-num{
+  width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  background:rgba(245,200,107,.15);border:1px solid rgba(245,200,107,.3);
+  font-size:.62rem;color:var(--gold);display:flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+.thought-q-text{font-family:'Noto Serif KR',serif;font-size:.82rem;color:var(--text);line-height:1.7;flex:1;}
+.q-copy-btn{flex-shrink:0;background:none;border:none;color:var(--sub);font-size:.65rem;cursor:pointer;font-family:'Pretendard',sans-serif;padding:2px 5px;border-radius:4px;transition:.2s;margin-top:2px;}
+.q-copy-btn:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.thought-cta{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-primary{
+  padding:9px 18px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(80,180,120,.7),rgba(47,93,70,.9));
+  border:none;color:var(--text);font-family:'Pretendard',sans-serif;
+  font-size:.78rem;font-weight:500;cursor:pointer;transition:.2s;
+}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(80,180,120,.18);}
+.btn-secondary{
+  padding:9px 18px;border-radius:10px;
+  background:var(--gold-dim);border:1px solid var(--gold-border);
+  color:var(--gold);font-family:'Pretendard',sans-serif;
+  font-size:.78rem;cursor:pointer;transition:.2s;
+}
+.btn-secondary:hover{background:rgba(245,200,107,.2);}
+
+/* LOADING STATE */
+.loading-state{
+  display:none;align-items:center;justify-content:center;
+  gap:10px;padding:28px 0;
+}
+.loading-state.show{display:flex;}
+.l-dots{display:flex;gap:5px;}
+.ldot{width:7px;height:7px;border-radius:50%;background:rgba(80,180,120,.7);animation:ldot .9s ease-in-out infinite;}
+.ldot:nth-child(2){animation-delay:.15s;}
+.ldot:nth-child(3){animation-delay:.3s;}
+@keyframes ldot{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+.loading-text{font-size:.78rem;color:var(--sub);}
+
+/* EMPTY / ERROR STATE */
+.state-panel{
+  text-align:center;padding:36px 20px;
+  border:1px solid var(--border);border-radius:14px;
+  background:rgba(255,255,255,.02);
+}
+.state-icon{font-size:2rem;margin-bottom:10px;opacity:.5;}
+.state-title{font-size:.88rem;color:var(--text);margin-bottom:6px;}
+.state-sub{font-size:.76rem;color:var(--sub);line-height:1.7;margin-bottom:14px;}
+.btn-retry{
+  padding:8px 18px;border-radius:9px;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  color:var(--mint);font-size:.76rem;cursor:pointer;
+  font-family:'Pretendard',sans-serif;transition:.2s;
+}
+.btn-retry:hover{background:rgba(80,180,120,.2);}
+
+/* MINI SPINNER */
+.mini-spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(245,200,107,.2);border-top-color:rgba(245,200,107,.8);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:rgba(11,29,22,.96);border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:10px 16px;font-size:.77rem;color:#4ade80;z-index:999;transform:translateY(70px);opacity:0;transition:.35s cubic-bezier(.34,1.56,.64,1);max-width:260px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.warn{border-color:rgba(248,113,113,.3);color:#f87171;}
+.toast.gold{border-color:rgba(245,200,107,.3);color:var(--gold);}
+
+/* MOBILE */
+@media(max-width:640px){
+  .nav{padding:0 14px;}
+  .nav-links{display:none;}
+  .dive-hero{padding:32px 14px 24px;}
+  .book-grid{grid-template-columns:1fr 1fr;}
+  .video-grid{grid-template-columns:1fr;}
+  .thought-cta{flex-direction:column;}
+  .dive-results{padding:0 14px 32px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:28px;object-fit:contain" onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--gold);line-height:1">LUMA</span>
+      <span id="luma-tagline" style="font-size:.56rem;color:var(--sub);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="npill">별자리 지도</a>
+    <a href="/heart" class="npill">마음 행성계</a>
+    <a href="/lounge" class="npill">탐사 성운</a>
+    <a href="/social" class="npill">독자 광장</a>
+    <a href="/live" class="npill">라이브</a>
+    <a href="/socrates" class="npill">소크라테스</a>
+    <a href="/profile" class="npill">프로필</a>
+    <a href="/deepdive" class="npill active">딥다이브</a>
+  </div>
+  <div class="nav-user" id="nav-user">
+    <a href="/auth/login" class="nav-login-btn">로그인</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="dive-wrap">
+
+  <!-- HERO -->
+  <div class="dive-hero" id="dive-hero">
+    <div class="hero-emblem">🔭</div>
+
+    <div class="hero-label-row">
+      <div class="hero-label-line"></div>
+      <span class="hero-label-text">책 이해 딥다이브</span>
+      <div class="hero-label-line"></div>
+    </div>
+
+    <h1 class="hero-title">궁금한 책이나 주제를 탐사하세요</h1>
+    <p class="hero-sub">책 제목이나 주제를 입력하면, 관련 YouTube 영상과 생각 확장 질문을 함께 보여줍니다<br>단순 검색이 아닌, 책을 이해하기 위한 큐레이션입니다</p>
+
+    <div class="search-panel" id="search-panel">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-input" type="text"
+        placeholder="코스모스, 사피엔스, 자유론... 책 제목이나 주제를 입력하세요"
+        onkeydown="if(event.key==='Enter') searchDeepDive()">
+      <button class="search-btn" id="search-btn" onclick="searchDeepDive()">탐사 시작</button>
+    </div>
+
+    <div class="recent-chips" id="recent-chips">
+      <button class="r-chip" onclick="quickSearch('코스모스')">코스모스</button>
+      <button class="r-chip" onclick="quickSearch('사피엔스')">사피엔스</button>
+      <button class="r-chip" onclick="quickSearch('자유론')">자유론</button>
+      <button class="r-chip" onclick="quickSearch('데미안')">데미안</button>
+      <button class="r-chip" onclick="quickSearch('철학입문')">철학입문</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-state" id="loading-state">
+    <div class="l-dots">
+      <div class="ldot"></div><div class="ldot"></div><div class="ldot"></div>
+    </div>
+    <span class="loading-text" id="loading-text">탐사 중...</span>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="dive-results" id="dive-results">
+    <div class="results-inner">
+
+      <!-- BOOK SECTION -->
+      <div class="dive-section" id="books-section" style="display:none">
+        <div class="dive-section-header">
+          <div class="dive-section-title">
+            📚 관련 책
+            <span class="section-badge" id="book-count-badge">0권</span>
+          </div>
+        </div>
+        <div class="book-grid" id="book-grid"></div>
+      </div>
+
+      <!-- VIDEO SECTION -->
+      <div class="dive-section" id="videos-section">
+        <div class="dive-section-header">
+          <div class="dive-section-title">
+            🎬 이해를 돕는 YouTube 영상
+            <span class="section-badge" id="video-count-badge">0개</span>
+          </div>
+          <span class="source-badge" id="source-badge"></span>
+        </div>
+        <div class="video-cat-tabs" id="video-cat-tabs"></div>
+        <div id="video-grid-wrap">
+          <div class="video-grid" id="video-grid"></div>
+          <div class="state-panel" id="video-empty" style="display:none">
+            <div class="state-icon">🎬</div>
+            <div class="state-title">이 주제의 영상을 찾지 못했습니다</div>
+            <div class="state-sub">다른 검색어로 시도해보세요</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THOUGHT QUESTIONS -->
+      <div class="dive-section" id="questions-section" style="display:none">
+        <div class="thought-card">
+          <span class="thought-label">✦ 이 주제로 생각해볼 질문</span>
+          <div class="thought-qs" id="thought-qs"></div>
+          <div class="thought-cta">
+            <button class="btn-primary" id="btn-socrates-dive" onclick="startSocratesFromDeepDive()">
+              ⊙ AI 소크라테스와 대화하기
+            </button>
+            <button class="btn-secondary" onclick="copyAllQuestions()">
+              질문 모두 복사
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div class="state-panel" id="error-state" style="display:none">
+        <div class="state-icon">⚠️</div>
+        <div class="state-title">탐사에 실패했습니다</div>
+        <div class="state-sub" id="error-msg">서버 연결을 확인하고 다시 시도해주세요</div>
+        <button class="btn-retry" onclick="retrySearch()">다시 시도</button>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- .dive-wrap -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────
+const UID = JSON.parse(localStorage.getItem('luma_user') || '{}').user_id || 'user_demo';
+let currentQuery    = '';
+let allVideos       = [];
+let activeCategory  = 'all';
+let currentQuestions = [];
+let savedVideos     = new Set(JSON.parse(localStorage.getItem('dd_saved_videos') || '[]'));
+
+const CAT_LABELS = {
+  all:'전체', summary:'요약', review:'리뷰',
+  explanation:'해설', lecture:'강연', reading:'낭독', discussion:'토론'
+};
+
+// ── AUTH ─────────────────────────────────────────────────
+function authHeaders(){
+  const t = localStorage.getItem('luma_token');
+  return t ? {'Content-Type':'application/json','Authorization':'Bearer '+t}
+           : {'Content-Type':'application/json'};
+}
+
+// ── NAV ──────────────────────────────────────────────────
+function initNav(){
+  const el = document.getElementById('nav-user');
+  if(!el) return;
+  const u = JSON.parse(localStorage.getItem('luma_user') || '{}');
+  if(u.display_name || u.email){
+    el.innerHTML = `<span style="font-size:.72rem;color:var(--sub)">${u.display_name||u.email}</span><button class="nav-logout" onclick="logout()">로그아웃</button>`;
+  }
+}
+function logout(){
+  localStorage.removeItem('luma_token');
+  localStorage.removeItem('luma_user');
+  window.location.href = '/landing';
+}
+
+// ── QUICK SEARCH ─────────────────────────────────────────
+function quickSearch(query){
+  document.getElementById('search-input').value = query;
+  searchDeepDive();
+}
+
+// ── MAIN SEARCH ───────────────────────────────────────────
+async function searchDeepDive(){
+  const query = document.getElementById('search-input').value.trim();
+  if(!query){ showToast('검색어를 입력해주세요','warn'); return; }
+
+  currentQuery = query;
+  setSearchLoading(true);
+  hideResults();
+  hideError();
+
+  try{
+    const r = await fetch(`/api/v2/deepdive/search?q=${encodeURIComponent(query)}&limit=12`,{
+      headers: authHeaders()
+    });
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error || '검색 실패');
+
+    const {books=[], videos=[], questions=[]} = d.data || {};
+    allVideos = videos;
+    currentQuestions = questions;
+    activeCategory = 'all';
+
+    // compact hero
+    document.getElementById('dive-hero').classList.add('compact');
+    document.getElementById('recent-chips').style.display = 'none';
+
+    renderBookResults(books);
+    renderVideoResults(videos);
+    renderThoughtQuestions(questions);
+    showResults();
+  }catch(e){
+    showError(e.message || '탐사 중 오류가 발생했습니다');
+  }
+
+  setSearchLoading(false);
+}
+
+// ── RETRY ────────────────────────────────────────────────
+function retrySearch(){
+  if(currentQuery) searchDeepDive();
+}
+
+// ── RENDER BOOKS ─────────────────────────────────────────
+function renderBookResults(books){
+  const section = document.getElementById('books-section');
+  const grid    = document.getElementById('book-grid');
+  if(!books || !books.length){ section.style.display='none'; return; }
+
+  document.getElementById('book-count-badge').textContent = books.length+'권';
+  grid.innerHTML = books.map(b => bookCardHTML(b)).join('');
+  section.style.display = '';
+}
+
+function bookCardHTML(b){
+  const title  = escHtml(b.title || b.book_title || '제목 없음');
+  const author = escHtml(b.author || '');
+  const desc   = escHtml(b.description || b.summary || '');
+  const bookId = escHtml(b.book_id || b.id || title);
+  const abbr   = title.slice(0,8);
+
+  const cover = b.cover_url
+    ? `<img src="${escHtml(b.cover_url)}" alt="${title}" onerror="this.parentElement.innerHTML='<div class=\\'book-cover-placeholder\\'><div class=\\'bcp-icon\\'>📖</div><div class=\\'bcp-abbr\\'>${abbr}</div></div>'">`
+    : `<div class="book-cover-placeholder"><div class="bcp-icon">📖</div><div class="bcp-abbr">${abbr}</div></div>`;
+
+  return `
+  <div class="book-card">
+    <div class="book-cover">${cover}</div>
+    <div class="book-title">${title}</div>
+    ${author ? `<div class="book-author">${author}</div>` : ''}
+    ${desc ? `<div class="book-desc">${desc}</div>` : ''}
+    <div class="book-actions">
+      <button class="btn-xs btn-xs-gold" onclick="saveBook(${JSON.stringify(bookId).replace(/"/g,'&quot;')},${JSON.stringify(title).replace(/"/g,'&quot;')})">내 서재 담기</button>
+      <button class="btn-xs btn-xs-green" onclick="startSocratesFromDeepDive(${JSON.stringify(title).replace(/"/g,'&quot;')})">소크라테스와 질문</button>
+    </div>
+  </div>`;
+}
+
+// ── RENDER VIDEOS ─────────────────────────────────────────
+function renderVideoResults(videos){
+  const countBadge = document.getElementById('video-count-badge');
+  countBadge.textContent = videos.length + '개';
+
+  buildCategoryTabs(videos);
+  filterVideosByCategory('all');
+}
+
+function buildCategoryTabs(videos){
+  const tabsEl = document.getElementById('video-cat-tabs');
+  const presentCats = new Set(videos.map(v=>v.category).filter(Boolean));
+  const cats = ['all', ...Object.keys(CAT_LABELS).filter(c=>c!=='all'&&presentCats.has(c))];
+
+  tabsEl.innerHTML = cats.map(c=>`
+    <button class="vcat-tab ${c==='all'?'active':''}" data-cat="${c}"
+      onclick="filterVideosByCategory('${c}')">
+      ${CAT_LABELS[c]||c}
+    </button>`).join('');
+}
+
+function filterVideosByCategory(category){
+  activeCategory = category;
+
+  // update tab active state
+  document.querySelectorAll('.vcat-tab').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.cat === category);
+  });
+
+  const filtered = category === 'all'
+    ? allVideos
+    : allVideos.filter(v => v.category === category);
+
+  const grid  = document.getElementById('video-grid');
+  const empty = document.getElementById('video-empty');
+
+  if(!filtered.length){
+    grid.style.display = 'none';
+    empty.style.display = '';
+    return;
+  }
+  grid.style.display = '';
+  empty.style.display = 'none';
+  grid.innerHTML = filtered.map(v => videoCardHTML(v)).join('');
+
+  // update source badge
+  const srcEl = document.getElementById('source-badge');
+  if(allVideos[0]?.source_query){
+    srcEl.textContent = `"${escHtml(allVideos[0].source_query)}" 기반 큐레이션`;
+  }
+}
+
+function videoCardHTML(v){
+  const videoId = escHtml(v.video_id || '');
+  const title   = escHtml(v.title || '제목 없음');
+  const channel = escHtml(v.channel || '');
+  const thumb   = escHtml(v.thumbnail || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`);
+  const url     = escHtml(v.url || `https://www.youtube.com/watch?v=${videoId}`);
+  const cat     = v.category || 'video';
+  const catLabel = escHtml(CAT_LABELS[cat] || cat);
+  const isSaved = savedVideos.has(videoId);
+
+  return `
+  <div class="video-card">
+    <div class="video-thumb">
+      <img src="${thumb}" alt="${title}"
+        onerror="this.parentElement.innerHTML='<div class=\\'thumb-placeholder\\'>🎬</div>'">
+      <div class="video-cat-tag">${catLabel}</div>
+      <div class="video-play-overlay">
+        <div class="play-circle">▶</div>
+      </div>
+    </div>
+    <div class="video-info">
+      <div class="video-title">${title}</div>
+      ${channel ? `<div class="video-channel">${channel}</div>` : ''}
+      <div class="video-actions">
+        <a href="${url}" target="_blank" rel="noopener noreferrer" class="btn-watch">영상 보기</a>
+        <button class="btn-discuss" onclick="discussFromVideo(${JSON.stringify(title).replace(/"/g,'&quot;')})">토론 질문</button>
+        <button class="btn-later ${isSaved?'saved':''}" id="later-${videoId}"
+          onclick="saveVideo(${JSON.stringify(videoId).replace(/"/g,'&quot;')},${JSON.stringify(title).replace(/"/g,'&quot;')})">
+          ${isSaved?'✓':'나중에'}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── RENDER QUESTIONS ──────────────────────────────────────
+function renderThoughtQuestions(questions){
+  const section = document.getElementById('questions-section');
+  const qs      = document.getElementById('thought-qs');
+
+  if(!questions || !questions.length){ section.style.display='none'; return; }
+
+  qs.innerHTML = questions.slice(0,3).map((q,i) => `
+    <div class="thought-q-item">
+      <div class="q-num">${i+1}</div>
+      <div class="thought-q-text">${escHtml(q)}</div>
+      <button class="q-copy-btn" onclick="copyText(${JSON.stringify(escHtml(q)).replace(/"/g,'&quot;')})">복사</button>
+    </div>`).join('');
+  section.style.display = '';
+}
+
+// ── SAVE BOOK ─────────────────────────────────────────────
+async function saveBook(bookId, title){
+  try{
+    const r = await fetch('/api/v2/deepdive/save',{
+      method:'POST', headers:authHeaders(),
+      body: JSON.stringify({type:'book', item:{book_id:bookId, title}, user_id:UID})
+    });
+    const d = await r.json();
+    if(d.ok) showToast(`"${unescHtml(title)}" 서재에 담았습니다 ✦`,'gold');
+  }catch(e){ showToast('저장 오류','warn'); }
+}
+
+// ── SAVE VIDEO ────────────────────────────────────────────
+async function saveVideo(videoId, title){
+  const btn = document.getElementById('later-'+videoId);
+  if(savedVideos.has(videoId)){
+    showToast('이미 저장된 영상입니다','warn'); return;
+  }
+  savedVideos.add(videoId);
+  localStorage.setItem('dd_saved_videos', JSON.stringify([...savedVideos]));
+  if(btn){ btn.textContent='✓'; btn.classList.add('saved'); }
+  try{
+    await fetch('/api/v2/deepdive/save',{
+      method:'POST', headers:authHeaders(),
+      body: JSON.stringify({type:'video', item:{video_id:videoId, title}, user_id:UID})
+    });
+    showToast('나중에 볼 영상으로 저장됐습니다 ✦','gold');
+  }catch(e){ showToast('나중에 볼 목록에 저장됐습니다 ✦','gold'); }
+}
+
+// ── SOCRATES INTEGRATION ──────────────────────────────────
+function startSocratesFromDeepDive(bookTitle){
+  const title = bookTitle || currentQuery;
+  sessionStorage.setItem('socrates_from_deepdive', JSON.stringify({
+    book_title: title,
+    passage: currentQuestions[0] || ''
+  }));
+  window.location.href = '/socrates';
+}
+
+function discussFromVideo(videoTitle){
+  sessionStorage.setItem('socrates_from_deepdive', JSON.stringify({
+    book_title: currentQuery,
+    passage: unescHtml(videoTitle)
+  }));
+  showToast('소크라테스 페이지로 이동합니다','gold');
+  setTimeout(() => window.location.href = '/socrates', 900);
+}
+
+// ── COPY HELPERS ──────────────────────────────────────────
+function copyText(text){
+  const clean = unescHtml(text);
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(clean).then(() => showToast('복사됐습니다 ✦','gold'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value=clean; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('복사됐습니다 ✦','gold');
+  }
+}
+function copyAllQuestions(){
+  if(!currentQuestions.length){ showToast('질문이 없습니다','warn'); return; }
+  copyText(currentQuestions.slice(0,3).map((q,i)=>`${i+1}. ${q}`).join('\n'));
+}
+
+// ── UI HELPERS ────────────────────────────────────────────
+function setSearchLoading(show){
+  const btn = document.getElementById('search-btn');
+  const loadEl = document.getElementById('loading-state');
+  if(show){
+    btn.disabled=true;
+    btn.innerHTML='<span class="mini-spinner"></span>탐사 중...';
+    loadEl.classList.add('show');
+    document.getElementById('loading-text').textContent = `"${currentQuery}" 탐사 중...`;
+  } else {
+    btn.disabled=false;
+    btn.textContent='탐사 시작';
+    loadEl.classList.remove('show');
+  }
+}
+function showResults(){
+  document.getElementById('dive-results').classList.add('show');
+  document.getElementById('error-state').style.display = 'none';
+}
+function hideResults(){
+  document.getElementById('dive-results').classList.remove('show');
+}
+function showError(msg){
+  hideResults();
+  document.getElementById('error-msg').textContent = msg;
+  document.getElementById('error-state').style.display = '';
+  document.getElementById('dive-results').classList.add('show');
+}
+function hideError(){
+  document.getElementById('error-state').style.display = 'none';
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function escHtml(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function unescHtml(s){ return String(s??'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"'); }
+
+// ── TOAST ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type=''){
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.className=`toast show${type?' '+type:''}`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+function initDeepDivePage(){
+  initNav();
+
+  // Rotating tagline
+  const phrases=[
+    {t:'생각은 빛이 된다',ko:true},
+    {t:'읽기 전에, 먼저 이해하기',ko:true},
+    {t:'영상으로 책을 탐사하다',ko:true},
+    {t:'Deep Dive Into Books',ko:false},
+    {t:'Read. Watch. Expand.',ko:false},
+  ];
+  const el=document.getElementById('luma-tagline');
+  if(el){
+    let i=0;
+    function show(idx){
+      const p=phrases[idx];
+      el.style.opacity='0'; el.style.transform='translateY(-5px)';
+      setTimeout(()=>{
+        el.textContent=p.t;
+        el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"'DM Serif Display',serif";
+        el.style.letterSpacing=p.ko?'.05em':'.12em';
+        el.style.opacity='1'; el.style.transform='translateY(0)';
+      },500);
+    }
+    show(0);
+    setInterval(()=>{ i=(i+1)%phrases.length; show(i); },10000);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initDeepDivePage);
+</script>
+</body>
+</html>

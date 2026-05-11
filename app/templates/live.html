@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMA — 라이브 독서실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DESIGN TOKENS — Dark Space Theme
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+:root{
+  --space:#050815;
+  --space2:#080d20;
+  --space3:#0d1530;
+  --cyan:#8fdcff;
+  --cyan-dim:rgba(143,220,255,.18);
+  --cyan-glow:rgba(143,220,255,.32);
+  --gold:#f5c86b;
+  --gold-dim:rgba(245,200,107,.15);
+  --gold-glow:rgba(245,200,107,.28);
+  --text:#eef3ff;
+  --muted:#9da9c7;
+  --border:rgba(143,220,255,.1);
+  --card:rgba(255,255,255,.04);
+  --red:#f87171;
+  --green:#4ade80;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  background:var(--space);
+  color:var(--text);
+  font-family:'Pretendard',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+a{text-decoration:none;color:inherit;}
+button,input,select,textarea{font-family:inherit;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(143,220,255,.15);border-radius:2px;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STARFIELD CANVAS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#starfield{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   NAV
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.luma-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:60px;
+  background:rgba(5,8,21,.96);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(14px);
+}
+.logo{
+  display:flex;align-items:center;gap:9px;
+  text-decoration:none;
+}
+.logo-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--gold);
+  animation:logoPulse 2s infinite;
+}
+@keyframes logoPulse{
+  0%,100%{box-shadow:0 0 0 0 var(--gold-glow)}
+  50%{box-shadow:0 0 0 8px transparent}
+}
+.nav-links{display:flex;gap:3px;}
+.nav-link{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px;border-radius:18px;
+  font-size:.76rem;color:var(--muted);
+  transition:.2s;cursor:pointer;
+}
+.nav-link:hover{background:var(--card);color:var(--text);}
+.nav-link.active{
+  background:rgba(143,220,255,.12);
+  color:var(--cyan);
+  border:1px solid rgba(143,220,255,.22);
+}
+.nav-right{display:flex;align-items:center;gap:10px;}
+#nav-user-area .nav-user-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:5px 12px 5px 8px;border-radius:20px;
+  background:var(--card);border:1px solid var(--border);
+  cursor:pointer;transition:.2s;
+}
+#nav-user-area .nav-user-pill:hover{border-color:rgba(143,220,255,.3);}
+.nav-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#1a2e6b,#4a7ba8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:600;
+}
+.nav-username{font-size:.75rem;color:var(--text);max-width:80px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.nav-login-btn{
+  padding:7px 16px;border-radius:18px;
+  background:rgba(143,220,255,.1);
+  border:1px solid rgba(143,220,255,.25);
+  color:var(--cyan);font-size:.76rem;cursor:pointer;transition:.2s;
+}
+.nav-login-btn:hover{background:rgba(143,220,255,.2);}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE WRAPPER
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.page-wrap{position:relative;z-index:1;min-height:calc(100vh - 60px);}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LOBBY HERO
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.lobby-hero{
+  position:relative;overflow:hidden;
+  padding:56px 0 48px;
+  background:linear-gradient(160deg,rgba(15,25,65,.9) 0%,rgba(5,8,21,.7) 60%,rgba(20,8,40,.8) 100%);
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.lobby-hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 30% 50%,rgba(143,220,255,.07),transparent),
+    radial-gradient(ellipse 50% 70% at 75% 40%,rgba(245,200,107,.06),transparent);
+  pointer-events:none;
+}
+.hero-stars{
+  position:absolute;top:0;left:0;right:0;height:100%;
+  pointer-events:none;overflow:hidden;
+}
+.hero-star{
+  position:absolute;border-radius:50%;
+  background:#fff;
+  animation:twinkle var(--dur,3s) ease-in-out infinite;
+  opacity:0;
+}
+@keyframes twinkle{
+  0%,100%{opacity:0;transform:scale(1);}
+  50%{opacity:var(--op,.7);transform:scale(1.3);}
+}
+.live-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(143,220,255,.1);
+  border:1px solid rgba(143,220,255,.3);
+  border-radius:20px;padding:5px 14px;
+  font-size:.72rem;color:var(--cyan);
+  letter-spacing:.08em;margin-bottom:18px;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#f87171;
+  animation:liveBlink 1.2s infinite;
+}
+@keyframes liveBlink{
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(248,113,113,.6);}
+  50%{opacity:.5;box-shadow:0 0 0 5px transparent;}
+}
+.hero-title{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(2rem,5vw,3.2rem);
+  background:linear-gradient(135deg,var(--text) 30%,var(--cyan) 80%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  line-height:1.15;margin-bottom:10px;
+}
+.hero-sub{
+  font-size:.92rem;color:var(--muted);
+  font-family:'Noto Serif KR',serif;
+  letter-spacing:.04em;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LOBBY CONTENT
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.lobby-content{
+  max-width:1100px;margin:0 auto;
+  padding:36px 28px 72px;
+}
+.lobby-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:12px;
+}
+.lobby-toolbar-left h2{
+  font-family:'DM Serif Display',serif;
+  font-size:1.2rem;color:var(--text);margin-bottom:3px;
+}
+.lobby-toolbar-left p{font-size:.78rem;color:var(--muted);}
+.create-room-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 22px;border-radius:22px;
+  background:linear-gradient(135deg,var(--gold) 0%,#d4a44f 100%);
+  color:#1a1200;font-size:.82rem;font-weight:700;
+  border:none;cursor:pointer;
+  box-shadow:0 4px 20px var(--gold-glow);
+  transition:.2s;
+}
+.create-room-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(245,200,107,.4);
+}
+.create-room-btn::before{content:'✦';}
+
+/* ROOMS GRID */
+.rooms-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:18px;
+}
+.room-card{
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px 22px;
+  cursor:pointer;
+  transition:.25s;
+  position:relative;overflow:hidden;
+}
+.room-card::before{
+  content:'';position:absolute;inset:0;border-radius:18px;
+  background:radial-gradient(circle at 80% 20%,rgba(143,220,255,.04),transparent 60%);
+  pointer-events:none;
+}
+.room-card:hover{
+  border-color:rgba(143,220,255,.3);
+  background:rgba(143,220,255,.04);
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
+}
+.rc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.rc-badge-live{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.62rem;padding:3px 9px;border-radius:8px;
+  background:rgba(248,113,113,.12);color:var(--red);
+  font-weight:600;letter-spacing:.05em;
+  animation:badgePulse 1.5s infinite;
+}
+.rc-badge-live::before{
+  content:'';display:block;
+  width:5px;height:5px;border-radius:50%;
+  background:var(--red);
+  animation:liveBlink 1.2s infinite;
+}
+.rc-badge-ended{
+  font-size:.62rem;padding:3px 9px;border-radius:8px;
+  background:rgba(157,169,199,.1);color:var(--muted);
+}
+@keyframes badgePulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+.rc-title{
+  font-size:.95rem;font-weight:600;color:var(--text);
+  margin-bottom:5px;line-height:1.3;
+}
+.rc-book{
+  font-size:.76rem;color:var(--cyan);
+  display:flex;align-items:center;gap:5px;
+  margin-bottom:14px;
+}
+.rc-book::before{content:'📖';font-size:.7rem;}
+.rc-footer{display:flex;align-items:center;justify-content:space-between;}
+.rc-avatars{display:flex;align-items:center;}
+.rc-avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,#1a2e6b,#4a7ba8);
+  border:2px solid var(--space2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;margin-left:-8px;
+}
+.rc-avatar:first-child{margin-left:0;}
+.rc-avatar-more{
+  background:rgba(143,220,255,.12);
+  color:var(--cyan);font-size:.58rem;font-weight:700;
+}
+.rc-meta{font-size:.68rem;color:var(--muted);display:flex;gap:10px;align-items:center;}
+.rc-meta span{display:flex;align-items:center;gap:3px;}
+.enter-btn{
+  padding:7px 16px;border-radius:14px;
+  background:rgba(143,220,255,.1);
+  border:1px solid rgba(143,220,255,.25);
+  color:var(--cyan);font-size:.74rem;
+  cursor:pointer;transition:.2s;
+}
+.enter-btn:hover{background:rgba(143,220,255,.22);box-shadow:0 0 12px var(--cyan-glow);}
+
+/* EMPTY STATE */
+.empty-state{
+  grid-column:1/-1;
+  text-align:center;padding:64px 20px;
+}
+.empty-icon{font-size:3.5rem;opacity:.2;margin-bottom:16px;}
+.empty-text{font-size:.9rem;color:var(--muted);line-height:1.8;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ROOM VIEW (inside a room)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.room-view-wrap{
+  display:flex;flex-direction:column;height:calc(100vh - 60px);
+  position:relative;z-index:1;
+}
+
+/* ROOM HEADER */
+.room-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 24px;flex-shrink:0;
+  background:rgba(5,8,21,.95);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(10px);
+}
+.rh-info{flex:1;min-width:0;}
+.rh-title{
+  font-family:'DM Serif Display',serif;
+  font-size:1.05rem;color:var(--text);margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rh-book{font-size:.72rem;color:var(--cyan);margin-bottom:5px;}
+.rh-meta{display:flex;align-items:center;gap:14px;font-size:.66rem;color:var(--muted);}
+.rh-timer{color:var(--cyan);font-variant-numeric:tabular-nums;}
+.rh-live-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(248,113,113,.12);color:var(--red);
+  padding:2px 8px;border-radius:6px;font-size:.62rem;font-weight:600;
+  animation:badgePulse 1.5s infinite;
+}
+.leave-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:12px;
+  background:rgba(248,113,113,.08);
+  border:1px solid rgba(248,113,113,.22);
+  color:var(--red);font-size:.76rem;cursor:pointer;
+  transition:.2s;flex-shrink:0;
+}
+.leave-btn:hover{background:rgba(248,113,113,.18);}
+
+/* ROOM BODY SPLIT */
+.room-body{flex:1;display:flex;overflow:hidden;}
+
+/* LEFT AREA */
+.room-left{
+  flex:0 0 70%;display:flex;flex-direction:column;
+  border-right:1px solid var(--border);overflow:hidden;
+}
+
+/* WEBCAM TILES */
+.webcam-section{
+  flex-shrink:0;padding:14px;
+  background:rgba(0,0,0,.35);
+  border-bottom:1px solid var(--border);
+}
+.webcam-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:8px;
+}
+.cam-tile{
+  background:#060c18;
+  border:1px solid rgba(143,220,255,.1);
+  border-radius:12px;aspect-ratio:4/3;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.cam-tile.local-tile{border-color:rgba(74,222,128,.25);}
+.cam-tile.speaking{border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan-glow);}
+.cam-tile video{width:100%;height:100%;object-fit:cover;}
+.cam-avatar-ph{font-size:2.2rem;opacity:.35;}
+.cam-name-tag{
+  position:absolute;bottom:6px;left:8px;
+  font-size:.6rem;
+  background:rgba(0,0,0,.7);color:#fff;
+  padding:2px 7px;border-radius:5px;
+  backdrop-filter:blur(4px);
+}
+.cam-you-tag{
+  position:absolute;top:6px;right:6px;
+  font-size:.55rem;
+  background:rgba(74,222,128,.2);color:var(--green);
+  padding:2px 6px;border-radius:4px;
+}
+.cam-mic-icon{
+  position:absolute;bottom:6px;right:7px;
+  font-size:.75rem;opacity:.8;
+}
+
+/* TRANSCRIPT AREA */
+.transcript-section{
+  flex:1;overflow-y:auto;
+  padding:16px 20px;
+}
+.transcript-hdr{
+  font-size:.68rem;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.transcript-hdr::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,var(--border),transparent);
+}
+.transcript-line{
+  font-family:'Noto Serif KR',serif;
+  font-size:.85rem;color:var(--text);
+  line-height:1.9;margin-bottom:4px;
+  padding:6px 10px;border-radius:8px;
+  border-left:2px solid transparent;
+  transition:.2s;
+}
+.transcript-line:hover{
+  background:rgba(143,220,255,.04);
+  border-left-color:var(--cyan);
+}
+.transcript-line .tl-who{
+  font-size:.62rem;color:var(--cyan);
+  margin-right:6px;font-family:'Pretendard',sans-serif;
+}
+.transcript-empty{
+  font-size:.82rem;color:var(--muted);opacity:.6;
+  text-align:center;padding:40px 0;
+  font-family:'Noto Serif KR',serif;
+}
+#speech-interim{
+  font-size:.78rem;color:var(--muted);
+  font-style:italic;padding:6px 10px;
+  border-left:2px dashed var(--border);
+  margin-bottom:4px;display:none;
+}
+
+/* RIGHT AREA */
+.room-right{
+  flex:0 0 30%;display:flex;flex-direction:column;
+  background:rgba(8,13,32,.6);overflow:hidden;
+}
+
+/* PARTICIPANTS */
+.participants-section{
+  flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  padding:14px 16px;
+}
+.section-label{
+  font-size:.65rem;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:10px;
+}
+.participant-list{display:flex;flex-direction:column;gap:6px;max-height:140px;overflow-y:auto;}
+.participant-item{
+  display:flex;align-items:center;gap:9px;
+  padding:6px 8px;border-radius:9px;
+  background:rgba(255,255,255,.03);
+}
+.p-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#1a2e6b,#4a7ba8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;flex-shrink:0;
+}
+.p-name{font-size:.76rem;color:var(--text);flex:1;}
+.p-status{font-size:.7rem;color:var(--muted);}
+.p-status.speaking{color:var(--cyan);}
+
+/* CHAT */
+.chat-section{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.chat-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.chat-msg{display:flex;gap:7px;align-items:flex-start;}
+.chat-msg.me{flex-direction:row-reverse;}
+.chat-av{
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(143,220,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;flex-shrink:0;
+}
+.bubble{
+  background:rgba(255,255,255,.05);
+  border-radius:0 10px 10px 10px;
+  padding:7px 11px;max-width:78%;
+}
+.chat-msg.me .bubble{
+  background:rgba(143,220,255,.08);
+  border-radius:10px 0 10px 10px;
+}
+.b-author{font-size:.6rem;color:var(--cyan);margin-bottom:2px;}
+.b-text{font-size:.78rem;color:var(--text);line-height:1.55;}
+.b-time{font-size:.58rem;color:var(--muted);margin-top:2px;}
+.sys-msg{text-align:center;font-size:.64rem;color:var(--muted);padding:3px;opacity:.7;}
+
+.chat-input-area{
+  display:flex;gap:6px;align-items:center;
+  padding:10px 12px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.chat-in{
+  flex:1;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:10px;
+  padding:8px 12px;color:var(--text);
+  font-size:.78rem;outline:none;transition:.2s;
+}
+.chat-in:focus{border-color:rgba(143,220,255,.35);}
+.chat-in::placeholder{color:var(--muted);}
+.chat-send-btn{
+  padding:8px 14px;border-radius:10px;
+  background:rgba(143,220,255,.1);
+  border:1px solid rgba(143,220,255,.25);
+  color:var(--cyan);font-size:.74rem;cursor:pointer;transition:.2s;
+}
+.chat-send-btn:hover{background:rgba(143,220,255,.2);}
+
+/* BOTTOM CONTROLS */
+.room-controls{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:12px 20px;
+  background:rgba(5,8,21,.97);
+  border-top:1px solid var(--border);
+  flex-shrink:0;flex-wrap:wrap;
+}
+.ctrl-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 16px;border-radius:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  color:var(--muted);font-size:.62rem;cursor:pointer;
+  transition:.2s;min-width:60px;
+}
+.ctrl-btn span.ctrl-icon{font-size:1.1rem;line-height:1;}
+.ctrl-btn:hover{background:rgba(255,255,255,.08);color:var(--text);}
+.ctrl-btn.active{
+  background:rgba(143,220,255,.1);
+  border-color:rgba(143,220,255,.3);
+  color:var(--cyan);
+}
+.ctrl-btn.danger{
+  background:rgba(248,113,113,.07);
+  border-color:rgba(248,113,113,.2);
+  color:var(--red);
+}
+.ctrl-btn.danger:hover{background:rgba(248,113,113,.15);}
+.ctrl-btn.gold-btn{
+  background:rgba(245,200,107,.1);
+  border-color:rgba(245,200,107,.3);
+  color:var(--gold);
+}
+.ctrl-btn.gold-btn:hover{background:rgba(245,200,107,.18);}
+.ctrl-divider{width:1px;height:36px;background:var(--border);}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MODALS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:linear-gradient(160deg,var(--space3) 0%,var(--space2) 100%);
+  border:1px solid rgba(143,220,255,.2);
+  border-radius:20px;padding:26px;
+  width:min(460px,100%);
+  max-height:90vh;overflow-y:auto;
+}
+.modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.modal-title{
+  font-family:'Noto Serif KR',serif;
+  font-size:.95rem;color:var(--cyan);font-weight:600;
+}
+.modal-close{
+  background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:1rem;transition:.2s;
+  padding:4px 8px;border-radius:6px;
+}
+.modal-close:hover{background:rgba(255,255,255,.08);color:var(--text);}
+.f-label{font-size:.68rem;color:var(--muted);margin-bottom:5px;display:block;letter-spacing:.04em;}
+.f-input{
+  width:100%;background:rgba(255,255,255,.04);
+  border:1px solid rgba(143,220,255,.15);border-radius:10px;
+  padding:10px 14px;color:var(--text);
+  font-size:.82rem;outline:none;margin-bottom:14px;transition:.2s;
+}
+.f-input:focus{border-color:rgba(143,220,255,.4);background:rgba(143,220,255,.04);}
+.f-input::placeholder{color:var(--muted);}
+.f-textarea{
+  width:100%;min-height:180px;resize:vertical;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(143,220,255,.15);border-radius:10px;
+  padding:11px 12px;color:var(--text);font-size:.82rem;
+  outline:none;margin-bottom:14px;line-height:1.7;
+}
+.f-textarea:focus{border-color:rgba(143,220,255,.4);background:rgba(143,220,255,.04);}
+.f-help{font-size:.68rem;color:var(--muted);line-height:1.6;margin:-6px 0 12px;}
+.f-select{
+  width:100%;background:rgba(255,255,255,.04);
+  border:1px solid rgba(143,220,255,.15);border-radius:10px;
+  padding:10px 14px;color:var(--text);
+  font-size:.82rem;outline:none;margin-bottom:14px;
+  cursor:pointer;
+}
+.f-select option{background:var(--space3);color:var(--text);}
+.modal-confirm-btn{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,var(--gold) 0%,#d4a44f 100%);
+  color:#1a1200;font-size:.86rem;font-weight:700;
+  border:none;border-radius:12px;cursor:pointer;
+  transition:.2s;margin-top:4px;
+}
+.modal-confirm-btn:hover{
+  box-shadow:0 6px 24px var(--gold-glow);
+  transform:translateY(-1px);
+}
+/* REPORT MODAL — bigger */
+#report-modal .modal-box{width:min(620px,100%);}
+.report-content{display:flex;flex-direction:column;gap:14px;}
+.report-section{margin-bottom:6px;}
+.report-label{
+  font-size:.62rem;color:var(--muted);letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:8px;
+  padding-bottom:5px;border-bottom:1px solid var(--border);
+}
+.report-oneliner{
+  font-family:'Noto Serif KR',serif;font-size:.9rem;
+  color:var(--text);line-height:1.8;
+  padding:12px;border-radius:10px;
+  border-left:2px solid var(--cyan);
+  background:rgba(143,220,255,.04);
+}
+.report-item{
+  font-size:.8rem;color:var(--text);line-height:1.7;
+  padding:7px 10px;border-radius:8px;
+  background:rgba(255,255,255,.03);
+  margin-bottom:5px;display:flex;gap:7px;
+}
+.report-item::before{content:'✦';color:var(--gold);flex-shrink:0;font-size:.7rem;}
+.report-quote{
+  font-style:italic;font-size:.78rem;color:var(--muted);
+  border-left:2px solid var(--border);padding-left:10px;
+  line-height:1.75;font-family:'Noto Serif KR',serif;
+  margin-bottom:5px;
+}
+.report-kw-row{display:flex;flex-wrap:wrap;gap:6px;}
+.report-kw{
+  font-size:.72rem;padding:4px 11px;border-radius:11px;
+  background:rgba(143,220,255,.08);
+  border:1px solid rgba(143,220,255,.2);color:var(--cyan);
+}
+.report-loading{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--space3);
+  border:1px solid rgba(74,222,128,.3);
+  border-radius:12px;padding:11px 20px;
+  font-size:.78rem;color:var(--green);
+  z-index:999;opacity:0;transition:.35s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;
+}
+.toast.err{border-color:rgba(248,113,113,.3);color:var(--red);}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .room-body{flex-direction:column;}
+  .room-left{flex:0 0 55%;}
+  .room-right{flex:0 0 45%;}
+}
+@media(max-width:640px){
+  .nav-links{display:none;}
+  .lobby-content{padding:20px 16px 48px;}
+  .webcam-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- STARFIELD -->
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav class="luma-nav">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA"
+         style="height:32px;object-fit:contain"
+         onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--gold);line-height:1">LUMA</span>
+      <span id="luma-tagline"
+            style="font-size:.58rem;color:var(--muted);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">
+        생각은 빛이 된다
+      </span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/"         class="nav-link">별자리 지도</a>
+    <a href="/heart"    class="nav-link">마음 행성계</a>
+    <a href="/lounge"   class="nav-link">탐사 성운</a>
+    <a href="/social"   class="nav-link">독자 광장</a>
+    <a href="/live"     class="nav-link active">라이브</a>
+    <a href="/socrates" class="nav-link">소크라테스</a>
+    <a href="/profile"  class="nav-link">프로필</a>
+  </div>
+  <div class="nav-right">
+    <div id="nav-user-area">
+      <a href="/auth" class="nav-login-btn">로그인</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================================
+     JINJA2 MODE SWITCH
+     ================================================================ -->
+
+{% if mode == 'room' %}
+
+<!-- ═══════════════════════════════════════
+     ROOM VIEW (server-rendered room data)
+     ═══════════════════════════════════════ -->
+<div class="page-wrap">
+<div class="room-view-wrap" id="room-view-wrap">
+
+  <!-- ROOM HEADER -->
+  <div class="room-hdr">
+    <div class="rh-info">
+      <div class="rh-title" id="rv-title">{{ room.title if room else '독서실' }}</div>
+      <div class="rh-book" id="rv-book">{{ room.book_title if room else '' }}</div>
+      <div class="rh-meta">
+        <span class="rh-live-badge">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--red);display:inline-block;animation:liveBlink 1.2s infinite"></span>
+          LIVE
+        </span>
+        <span id="rv-timer" class="rh-timer">00:00</span>
+        <span id="rv-members">참여자 —</span>
+      </div>
+    </div>
+    <button class="leave-btn" onclick="leaveRoom()">🚪 방 나가기</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="room-body">
+
+    <!-- LEFT: webcam + transcript -->
+    <div class="room-left">
+      <div class="webcam-section">
+        <div class="webcam-grid" id="webcam-grid">
+          <!-- Local tile -->
+          <div class="cam-tile local-tile" id="local-tile">
+            <video id="local-video" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;"></video>
+            <div class="cam-avatar-ph" id="local-emoji">🌙</div>
+            <div class="cam-name-tag" id="local-name-tag">나</div>
+            <div class="cam-you-tag">나</div>
+            <div class="cam-mic-icon" id="local-mic">🎤</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="transcript-section" id="transcript-section">
+        <div class="transcript-hdr">음성 전사 &nbsp;·&nbsp; 자동 기록</div>
+        <div id="speech-interim"></div>
+        <div id="transcript-lines">
+          <div class="transcript-empty">🎤 마이크를 켜면 읽는 내용이 여기에 실시간으로 기록됩니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: participants + chat -->
+    <div class="room-right">
+
+      <!-- Participants -->
+      <div class="participants-section">
+        <div class="section-label">참여자</div>
+        <div class="participant-list" id="participant-list">
+          <div class="participant-item">
+            <div class="p-avatar">🌙</div>
+            <span class="p-name" id="my-participant-name">나</span>
+            <span class="p-status" id="my-status">📖 읽는 중</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="chat-section">
+        <div class="section-label" style="padding:12px 14px 0">채팅</div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div style="padding:6px 14px;font-size:.66rem;color:var(--muted);min-height:20px;" id="speech-indicator"></div>
+        <div class="chat-input-area">
+          <input class="chat-in" id="chat-in"
+                 placeholder="메시지 입력 (Enter)"
+                 onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="chat-send-btn" onclick="sendChat()">전송</button>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- .room-body -->
+
+  <!-- BOTTOM CONTROLS -->
+  <div class="room-controls">
+    <button class="ctrl-btn" id="mic-ctrl" onclick="toggleMic()">
+      <span class="ctrl-icon">🎤</span>마이크
+    </button>
+    <button class="ctrl-btn" id="cam-ctrl" onclick="toggleCamera()">
+      <span class="ctrl-icon">📷</span>카메라
+    </button>
+    <div class="ctrl-divider"></div>
+    <button class="ctrl-btn" id="chat-ctrl" onclick="focusChat()">
+      <span class="ctrl-icon">💬</span>채팅
+    </button>
+    <button class="ctrl-btn gold-btn" onclick="openReportModal()">
+      <span class="ctrl-icon">📋</span>리포트 보기
+    </button>
+    <button class="ctrl-btn" onclick="openMemoModal()">
+      <span class="ctrl-icon">🗒️</span>메모 저장
+    </button>
+    <div class="ctrl-divider"></div>
+    <button class="ctrl-btn danger" onclick="leaveRoom()">
+      <span class="ctrl-icon">🚪</span>나가기
+    </button>
+  </div>
+
+</div><!-- .room-view-wrap -->
+</div><!-- .page-wrap -->
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">📋 독서실 리포트</div>
+      <button class="modal-close" onclick="closeModal('report-modal')">✕</button>
+    </div>
+    <div id="report-content-area">
+      <div class="report-loading">리포트를 불러오는 중…</div>
+    </div>
+  </div>
+</div>
+
+<!-- MEMO MODAL -->
+<div class="modal-overlay" id="memo-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">🗒️ 독서모임 메모</div>
+      <button class="modal-close" onclick="closeModal('memo-modal')">✕</button>
+    </div>
+    <label class="f-label">메모 내용</label>
+    <textarea class="f-textarea" id="live-memo-text" placeholder="방금 떠오른 생각, 인상 깊은 발언, 다음 모임 질문을 적어두세요."></textarea>
+    <div class="f-help" id="memo-context-help">현재 방과 책 정보가 함께 저장됩니다.</div>
+    <button class="modal-confirm-btn" onclick="saveMemo()">메모 저장</button>
+  </div>
+</div>
+
+{% else %}
+
+<!-- ═══════════════════════════════════════
+     LOBBY VIEW (default)
+     ═══════════════════════════════════════ -->
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <div class="lobby-hero" id="lobby-hero">
+    <div class="hero-stars" id="hero-stars"></div>
+    <div style="position:relative;z-index:1">
+      <div class="live-pill">
+        <span class="live-dot"></span>
+        지금 열린 독서실
+      </div>
+      <h1 class="hero-title">라이브 독서실</h1>
+      <p class="hero-sub">지금 이 순간, 함께 읽는 우주</p>
+    </div>
+  </div>
+
+  <!-- LOBBY CONTENT -->
+  <div class="lobby-content">
+    <div class="lobby-toolbar">
+      <div class="lobby-toolbar-left">
+        <h2>열린 독서실</h2>
+        <p>실시간으로 함께 읽고 이야기 나눠요</p>
+      </div>
+      <button class="create-room-btn" onclick="openModal('create-modal')">
+        방 만들기
+      </button>
+    </div>
+
+    <div class="rooms-grid" id="rooms-grid">
+
+      {% if rooms %}
+        {% for room in rooms %}
+        <div class="room-card" onclick="openJoinModal('{{ room.room_id }}','{{ room.title|e }}','{{ room.book_title|e }}',{{ room.member_count|default(0) }})">
+          <div class="rc-header">
+            <div style="flex:1;min-width:0">
+              <div class="rc-title">{{ room.title }}</div>
+              <div class="rc-book">{{ room.book_title or '책 미정' }}</div>
+            </div>
+            {% if room.status == 'live' %}
+            <span class="rc-badge-live">LIVE</span>
+            {% else %}
+            <span class="rc-badge-ended">종료</span>
+            {% endif %}
+          </div>
+          <div class="rc-footer">
+            <div>
+              <div class="rc-avatars">
+                {% for i in range([room.member_count|default(0), 4]|min) %}
+                <div class="rc-avatar">{{ ['🌙','⭐','🪐','✨'][i] }}</div>
+                {% endfor %}
+                {% if room.member_count|default(0) > 4 %}
+                <div class="rc-avatar rc-avatar-more">+{{ room.member_count - 4 }}</div>
+                {% endif %}
+              </div>
+              <div class="rc-meta" style="margin-top:6px">
+                <span>👥 {{ room.member_count|default(0) }}명</span>
+                {% if room.duration_min %}
+                <span>⏱ {{ room.duration_min }}분</span>
+                {% endif %}
+              </div>
+            </div>
+            <button class="enter-btn">입장하기</button>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">🌌</div>
+          <div class="empty-text">
+            아직 열린 방이 없습니다.<br>
+            첫 번째 독서실을 만들어보세요.
+          </div>
+        </div>
+      {% endif %}
+
+    </div><!-- .rooms-grid -->
+  </div><!-- .lobby-content -->
+
+</div><!-- .page-wrap -->
+
+{% endif %}
+<!-- ================================================================
+     END JINJA2 MODE SWITCH
+     ================================================================ -->
+
+<!-- CREATE ROOM MODAL -->
+<div class="modal-overlay" id="create-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">✦ 새 독서실 만들기</div>
+      <button class="modal-close" onclick="closeModal('create-modal')">✕</button>
+    </div>
+    <label class="f-label">방 이름 *</label>
+    <input  class="f-input" id="room-title-in" placeholder="예: 오늘의 소설 독서 모임">
+    <label class="f-label">읽는 책</label>
+    <input  class="f-input" id="room-book-in"  placeholder="책 제목">
+    <label class="f-label">최대 참여 인원</label>
+    <select class="f-select" id="room-max-in">
+      <option value="2">2명</option>
+      <option value="4">4명</option>
+      <option value="6">6명</option>
+      <option value="8" selected>8명</option>
+      <option value="10">10명</option>
+      <option value="16">16명</option>
+      <option value="20">20명</option>
+    </select>
+    <button class="modal-confirm-btn" onclick="createRoom()">방 열기</button>
+  </div>
+</div>
+
+<!-- JOIN MODAL -->
+<div class="modal-overlay" id="join-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">🚀 독서실 입장</div>
+      <button class="modal-close" onclick="closeModal('join-modal')">✕</button>
+    </div>
+    <div id="join-info-box"
+         style="background:rgba(143,220,255,.06);border:1px solid rgba(143,220,255,.18);
+                border-radius:12px;padding:14px;margin-bottom:16px;font-size:.82rem;">
+    </div>
+    <button class="modal-confirm-btn" onclick="confirmJoin()">입장하기</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ================================================================
+     SCRIPTS
+     ================================================================ -->
+<script>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STARFIELD
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+(function(){
+  const canvas = document.getElementById('starfield');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [];
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  function makeStars(n) {
+    stars = [];
+    for (let i = 0; i < n; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.2,
+        o: Math.random() * 0.7 + 0.1,
+        s: Math.random() * 0.008 + 0.002,
+        t: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.t += s.s;
+      const a = s.o * (0.5 + 0.5 * Math.sin(s.t));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,220,255,${a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize();
+  makeStars(200);
+  draw();
+  window.addEventListener('resize', () => { resize(); makeStars(200); });
+})();
+
+/* Hero micro-stars */
+(function(){
+  const wrap = document.getElementById('hero-stars');
+  if (!wrap) return;
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('div');
+    s.className = 'hero-star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      width:${size}px;height:${size}px;
+      --dur:${2 + Math.random()*3}s;
+      --op:${0.4 + Math.random()*0.5};
+      animation-delay:${Math.random()*4}s;
+    `;
+    wrap.appendChild(s);
+  }
+})();
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STATE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const MODE     = '{{ mode }}';
+const ROOM_ID  = '{{ room.room_id if room else "" }}';
+const EMOJIS   = ['🌙','⭐','🪐','✨','🌟','💫','🌠','🔭'];
+let curRoomId  = ROOM_ID || null;
+let myPeerId   = null;
+let myName     = '';
+let myEmoji    = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+let localStream= null;
+let recognition= null;
+let micOn      = false;
+let camOn      = false;
+let roomSec    = 0;
+let roomTimer  = null;
+let pollInt    = null;
+let lastMsgId  = 0;
+let joinTarget = null;
+let transcriptLines = [];
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   AUTH HELPERS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function authHeaders() {
+  const token = localStorage.getItem('luma_token');
+  return token
+    ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+    : { 'Content-Type': 'application/json' };
+}
+function getStoredUser() {
+  try { return JSON.parse(localStorage.getItem('luma_user') || '{}'); } catch(e) { return {}; }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LOBBY — LOAD ROOMS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function loadRooms() {
+  try {
+    const r = await fetch('/api/live/rooms?status=live', { headers: authHeaders() });
+    const d = await r.json();
+    renderRoomGrid(d.rooms || []);
+  } catch(e) {}
+}
+
+function renderRoomGrid(rooms) {
+  const grid = document.getElementById('rooms-grid');
+  if (!grid) return;
+  if (!rooms.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🌌</div>
+        <div class="empty-text">아직 열린 방이 없습니다.<br>첫 번째 독서실을 만들어보세요.</div>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = rooms.map(r => {
+    const safeTitle = (r.title||'').replace(/'/g,"\\'");
+    const safeBook  = (r.book_title||'').replace(/'/g,"\\'");
+    const cnt = r.member_count || 0;
+    const avatarArr = EMOJIS.slice(0, Math.min(cnt, 4));
+    const avatarHtml = avatarArr.map(e => `<div class="rc-avatar">${e}</div>`).join('') +
+      (cnt > 4 ? `<div class="rc-avatar rc-avatar-more">+${cnt-4}</div>` : '');
+    const badge = r.status === 'live'
+      ? `<span class="rc-badge-live">LIVE</span>`
+      : `<span class="rc-badge-ended">종료</span>`;
+    return `
+      <div class="room-card" onclick="openJoinModal('${r.room_id}','${safeTitle}','${safeBook}',${cnt})">
+        <div class="rc-header">
+          <div style="flex:1;min-width:0">
+            <div class="rc-title">${r.title||'무제 독서실'}</div>
+            <div class="rc-book">${r.book_title||'책 미정'}</div>
+          </div>
+          ${badge}
+        </div>
+        <div class="rc-footer">
+          <div>
+            <div class="rc-avatars">${avatarHtml}</div>
+            <div class="rc-meta" style="margin-top:6px">
+              <span>👥 ${cnt}명</span>
+              ${r.duration_min ? `<span>⏱ ${r.duration_min}분</span>` : ''}
+            </div>
+          </div>
+          <button class="enter-btn">입장하기</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CREATE ROOM
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function createRoom() {
+  const title  = (document.getElementById('room-title-in')?.value || '').trim();
+  const book   = (document.getElementById('room-book-in')?.value  || '').trim();
+  const maxP   = parseInt(document.getElementById('room-max-in')?.value || '8');
+  if (!title) { showToast('방 이름을 입력해주세요.', true); return; }
+  try {
+    const r = await fetch('/api/live/rooms', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ title, book_title: book, max_participants: maxP, password: prompt('방 비밀번호를 입력하세요. 공개방이면 비워두세요.') || '' })
+    });
+    const d = await r.json();
+    if (!d.ok) { showToast('방 생성에 실패했습니다.', true); return; }
+    closeModal('create-modal');
+    await enterRoom(d.room.room_id, d.room);
+  } catch(e) { showToast('서버 오류가 발생했습니다.', true); }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   JOIN ROOM
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function openJoinModal(id, title, book, cnt) {
+  joinTarget = id;
+  const box = document.getElementById('join-info-box');
+  if (box) {
+    box.innerHTML = `
+      <div style="font-weight:600;color:var(--text);margin-bottom:5px;font-size:.9rem">${title}</div>
+      <div style="color:var(--cyan);font-size:.75rem;margin-bottom:4px">📖 ${book||'책 미정'}</div>
+      <div style="color:var(--muted);font-size:.7rem">현재 ${cnt}명 참여 중</div>`;
+  }
+  openModal('join-modal');
+}
+
+async function confirmJoin() {
+  if (!joinTarget) return;
+  closeModal('join-modal');
+  try {
+    const r = await fetch(`/api/live/${joinTarget}/join`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ password: prompt('방 비밀번호를 입력하세요.') || '' })
+    });
+    const d = await r.json();
+    if (!d.ok) { showToast('입장에 실패했습니다.', true); return; }
+    await enterRoom(joinTarget, d.room || { room_id: joinTarget, title: '독서실', book_title: '' });
+  } catch(e) { showToast('입장 오류', true); }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ENTER ROOM (switch view)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function enterRoom(roomId, roomData) {
+  curRoomId = roomId;
+  /* If we're in lobby mode, redirect to room URL */
+  if (MODE !== 'room') {
+    window.location.href = `/live/${roomId}`;
+    return;
+  }
+  /* Already in room view — update UI */
+  const u = getStoredUser();
+  myName  = u.display_name || u.email || '독서인';
+  myEmoji = u.emoji || myEmoji;
+  document.getElementById('rv-title').textContent  = roomData.title || '독서실';
+  document.getElementById('rv-book').textContent   = roomData.book_title || '';
+  document.getElementById('local-name-tag').textContent = myName;
+  document.getElementById('local-emoji').textContent    = myEmoji;
+  document.getElementById('my-participant-name').textContent = myName;
+
+  try {
+    const r = await fetch(`/api/live/${roomId}/join`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ display_name: myName, password: sessionStorage.getItem('luma_live_password_' + roomId) || prompt('방 비밀번호를 입력하세요.') || '' })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      myPeerId = d.peer_id || ('peer_' + Date.now());
+      updateMemberCount(d.room?.member_count || 1);
+      addSysMsg(`${myName}님이 입장했습니다.`);
+    }
+  } catch(e) {}
+
+  await startMedia();
+  startRoomTimer();
+  startPolling();
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MEDIA (camera + mic)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function startMedia() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const vid   = document.getElementById('local-video');
+    if (vid) {
+      vid.srcObject = localStream;
+      vid.style.display = 'block';
+      document.getElementById('local-emoji').style.display = 'none';
+    }
+    micOn = true; camOn = true;
+    updateMicCtrl();
+    updateCamCtrl();
+    startSpeechRecognition();
+    showToast('카메라와 마이크가 연결됐습니다.');
+  } catch(e) {
+    addSysMsg('카메라/마이크 접근 거부 — 텍스트로만 참여합니다.');
+  }
+}
+
+function toggleMic() {
+  if (!localStream) return;
+  micOn = !micOn;
+  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  updateMicCtrl();
+  if (micOn) startSpeechRecognition();
+  else stopSpeechRecognition();
+}
+
+function toggleCamera() {
+  if (!localStream) return;
+  camOn = !camOn;
+  localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+  updateCamCtrl();
+  const vid = document.getElementById('local-video');
+  const ph  = document.getElementById('local-emoji');
+  if (vid) vid.style.display   = camOn ? 'block' : 'none';
+  if (ph)  ph.style.display    = camOn ? 'none'  : 'block';
+}
+
+function updateMicCtrl() {
+  const btn = document.getElementById('mic-ctrl');
+  if (!btn) return;
+  btn.innerHTML = `<span class="ctrl-icon">${micOn ? '🎤' : '🔇'}</span>마이크`;
+  btn.classList.toggle('active', micOn);
+}
+function updateCamCtrl() {
+  const btn = document.getElementById('cam-ctrl');
+  if (!btn) return;
+  btn.innerHTML = `<span class="ctrl-icon">${camOn ? '📷' : '📵'}</span>카메라`;
+  btn.classList.toggle('active', camOn);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SPEECH RECOGNITION
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function startSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  if (recognition) { try { recognition.stop(); } catch(e) {} }
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'ko-KR';
+
+  const interim = document.getElementById('speech-interim');
+  const indicator = document.getElementById('speech-indicator');
+
+  recognition.onresult = e => {
+    let interimText = '', finalText = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+      else interimText += e.results[i][0].transcript;
+    }
+    if (interim) {
+      interim.style.display = interimText ? 'block' : 'none';
+      interim.textContent = interimText ? `🎤 ${interimText}` : '';
+    }
+    if (indicator) indicator.textContent = interimText ? `🎤 ${myName} 말하는 중…` : '';
+    document.getElementById('my-status').textContent = interimText ? '🎤 말 중' : '📖 읽는 중';
+    document.getElementById('my-status').className = 'p-status' + (interimText ? ' speaking' : '');
+
+    if (finalText.trim() && curRoomId) {
+      addTranscriptLine(myName, finalText.trim());
+      if (interim) { interim.style.display = 'none'; interim.textContent = ''; }
+      if (indicator) indicator.textContent = '';
+      fetch(`/api/live/${curRoomId}/transcript`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ display_name: myName, text: finalText.trim(), is_final: true })
+      }).catch(() => {});
+    }
+  };
+  recognition.onerror = () => {};
+  recognition.onend   = () => { if (micOn) { try { recognition.start(); } catch(e) {} } };
+  try { recognition.start(); } catch(e) {}
+}
+
+function stopSpeechRecognition() {
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  const interim = document.getElementById('speech-interim');
+  if (interim) { interim.style.display = 'none'; interim.textContent = ''; }
+}
+
+function addTranscriptLine(who, text) {
+  const container = document.getElementById('transcript-lines');
+  if (!container) return;
+  const empty = container.querySelector('.transcript-empty');
+  if (empty) container.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'transcript-line';
+  div.innerHTML = `<span class="tl-who">${who}</span>${text}`;
+  container.appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  transcriptLines.push({ who, text, ts: new Date().toISOString() });
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CHAT
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function sendChat() {
+  const el   = document.getElementById('chat-in');
+  const text = (el?.value || '').trim();
+  if (!text || !curRoomId) return;
+  el.value = '';
+  try {
+    const r = await fetch(`/api/live/${curRoomId}/chat`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ display_name: myName, emoji: myEmoji, text })
+    });
+    const d = await r.json();
+    if (d.ok) addChatMsg({ ...d.message, is_me: true });
+  } catch(e) {
+    /* Optimistic UI */
+    addChatMsg({ display_name: myName, emoji: myEmoji, text, ts: new Date().toISOString(), is_me: true });
+  }
+}
+
+function addChatMsg(msg) {
+  const area = document.getElementById('chat-messages');
+  if (!area) return;
+  const isMe = msg.is_me || msg.peer_id === myPeerId;
+  const el   = document.createElement('div');
+  el.className = `chat-msg${isMe ? ' me' : ''}`;
+  el.innerHTML = `
+    <div class="chat-av">${msg.emoji || '🌙'}</div>
+    <div class="bubble">
+      ${!isMe ? `<div class="b-author">${msg.display_name || '독서인'}</div>` : ''}
+      <div class="b-text">${escHtml(msg.text || '')}</div>
+      <div class="b-time">${(msg.ts || '').slice(11,16)}</div>
+    </div>`;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addSysMsg(text) {
+  const area = document.getElementById('chat-messages');
+  if (!area) return;
+  const el = document.createElement('div');
+  el.className = 'sys-msg';
+  el.textContent = text;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+
+function focusChat() {
+  document.getElementById('chat-in')?.focus();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   POLLING
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function startPolling() {
+  stopPolling();
+  lastMsgId = 0;
+  pollInt = setInterval(async () => {
+    if (!curRoomId) return;
+    try {
+      const r = await fetch(`/api/live/${curRoomId}/poll?since=${lastMsgId}`, { headers: authHeaders() });
+      const d = await r.json();
+      if (d.ok) {
+        (d.messages || []).forEach(m => {
+          if (m.peer_id !== myPeerId) addChatMsg(m);
+        });
+        if (d.messages?.length) {
+          lastMsgId = d.messages[d.messages.length-1].id ||
+                      d.messages[d.messages.length-1].msg_id || lastMsgId;
+        }
+        if (d.member_count != null) updateMemberCount(d.member_count);
+        if (d.participants?.length) updateParticipantList(d.participants);
+      }
+    } catch(e) {}
+  }, 3000);
+}
+
+function stopPolling() {
+  if (pollInt) { clearInterval(pollInt); pollInt = null; }
+}
+
+function updateMemberCount(n) {
+  const el = document.getElementById('rv-members');
+  if (el) el.textContent = `참여자 ${n}명`;
+}
+
+function updateParticipantList(list) {
+  const el = document.getElementById('participant-list');
+  if (!el) return;
+  const others = list.filter(p => p.peer_id !== myPeerId);
+  const mine = el.querySelector(`[data-peer="me"]`);
+  /* Keep my own item, rebuild others */
+  el.querySelectorAll('[data-peer]:not([data-peer="me"])').forEach(n => n.remove());
+  others.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'participant-item';
+    div.dataset.peer = p.peer_id;
+    div.innerHTML = `
+      <div class="p-avatar">${p.emoji || '🌙'}</div>
+      <span class="p-name">${escHtml(p.display_name || '독서인')}</span>
+      <span class="p-status">${p.speaking ? '🎤 말 중' : '📖 읽는 중'}</span>`;
+    el.appendChild(div);
+  });
+  if (mine) mine.dataset.peer = 'me';
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TIMER
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function startRoomTimer() {
+  roomSec = 0;
+  roomTimer = setInterval(() => {
+    roomSec++;
+    const m = String(Math.floor(roomSec / 60)).padStart(2,'0');
+    const s = String(roomSec % 60).padStart(2,'0');
+    const el = document.getElementById('rv-timer');
+    if (el) el.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LEAVE ROOM
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function leaveRoom() {
+  if (!confirm('방에서 나가시겠습니까?')) return;
+  stopPolling();
+  stopSpeechRecognition();
+  if (localStream) localStream.getTracks().forEach(t => t.stop());
+  clearInterval(roomTimer);
+  try {
+    await fetch(`/api/live/${curRoomId}/leave`, { method: 'POST', headers: authHeaders() });
+  } catch(e) {}
+  window.location.href = '/live';
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   REPORT MODAL
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function openReportModal() {
+  openModal('report-modal');
+  const area = document.getElementById('report-content-area');
+  area.innerHTML = '<div class="report-loading">AI가 리포트를 생성하는 중… ✨</div>';
+  try {
+    const r = await fetch(`/api/live/${curRoomId}/report`, { headers: authHeaders() });
+    const d = await r.json();
+    if (d.ok && d.report) renderReport(d.report);
+    else area.innerHTML = '<div class="report-loading">아직 리포트가 없습니다. 독서가 끝난 뒤 다시 시도해보세요.</div>';
+  } catch(e) {
+    area.innerHTML = '<div class="report-loading">리포트를 불러올 수 없습니다.</div>';
+  }
+}
+
+function renderReport(r) {
+  const area = document.getElementById('report-content-area');
+  const insHtml = (r.key_insights || []).map(i => `<div class="report-item">${escHtml(i)}</div>`).join('');
+  const qtHtml  = (r.highlight_quotes || []).map(q => `<div class="report-quote">"${escHtml(q)}"</div>`).join('');
+  const nqHtml  = (r.next_questions || []).map(q => `<div class="report-item">${escHtml(q)}</div>`).join('');
+  const kwHtml  = (r.main_keywords || []).map(k => `<span class="report-kw">${escHtml(k)}</span>`).join('');
+  area.innerHTML = `
+    <div class="report-content">
+      ${r.mood ? `<div style="margin-bottom:12px"><span style="font-size:.8rem;color:var(--gold)">${r.mood_emoji||'📖'} ${r.mood}</span></div>` : ''}
+      ${r.one_line ? `<div class="report-section"><div class="report-label">한 줄 요약</div><div class="report-oneliner">${escHtml(r.one_line)}</div></div>` : ''}
+      ${insHtml ? `<div class="report-section"><div class="report-label">핵심 인사이트</div>${insHtml}</div>` : ''}
+      ${qtHtml  ? `<div class="report-section"><div class="report-label">인상적인 구절</div>${qtHtml}</div>`  : ''}
+      ${kwHtml  ? `<div class="report-section"><div class="report-label">키워드</div><div class="report-kw-row">${kwHtml}</div></div>` : ''}
+      ${nqHtml  ? `<div class="report-section"><div class="report-label">다음 모임 질문</div>${nqHtml}</div>` : ''}
+      <div style="font-size:.62rem;color:var(--muted);text-align:center;margin-top:10px">
+        ✦ AI 자동 생성 · ${(r.created_at||'').slice(0,10)}
+      </div>
+    </div>`;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SAVE MEMO
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function openMemoModal() {
+  const textEl = document.getElementById('live-memo-text');
+  const help = document.getElementById('memo-context-help');
+  const book = (document.getElementById('rv-book')?.textContent || '').trim();
+  const title = (document.getElementById('rv-title')?.textContent || '').trim();
+  if (help) help.textContent = `${book || '책 미정'} · ${title || '라이브 독서모임'}에 연결해 저장합니다.`;
+  if (textEl && !textEl.value && transcriptLines.length) {
+    textEl.value = transcriptLines.slice(-3).map(l => `[${l.who}] ${l.text}`).join('\n');
+  }
+  openModal('memo-modal');
+  setTimeout(() => textEl?.focus(), 50);
+}
+
+async function saveMemo() {
+  const textEl = document.getElementById('live-memo-text');
+  const content = (textEl?.value || '').trim();
+  if (!content) { showToast('저장할 메모 내용을 입력해주세요.', true); return; }
+
+  const bookTitle = (document.getElementById('rv-book')?.textContent || '').trim();
+  const roomTitle = (document.getElementById('rv-title')?.textContent || '').trim();
+  const payload = {
+    book_title: bookTitle,
+    content: `[${roomTitle || '라이브 독서모임'}]\n${content}`,
+    tags: ['라이브독서모임', '독서모임메모'],
+    source: 'manual'
+  };
+
+  try {
+    const r = await fetch('/api/v2/memos', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || 'memo-save-failed');
+
+    fetch(`/api/live/${curRoomId}/transcript`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ display_name: myName, text: content, is_final: true, memo: true })
+    }).catch(() => {});
+
+    textEl.value = '';
+    closeModal('memo-modal');
+    showToast('메모가 저장됐습니다! 📝');
+  } catch(e) {
+    showToast('메모 저장에 실패했습니다. 로그인 상태를 확인해주세요.', true);
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MODALS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function openModal(id)  { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TOAST
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+let toastTimer;
+function showToast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   INIT NAV USER
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function initNav() {
+  const area = document.getElementById('nav-user-area');
+  if (!area) return;
+  const u = getStoredUser();
+  if (u.display_name || u.email) {
+    area.innerHTML = `
+      <div class="nav-user-pill" onclick="window.location='/auth/profile'">
+        <div class="nav-avatar">${u.emoji || u.display_name?.[0] || '✨'}</div>
+        <span class="nav-username">${u.display_name || u.email}</span>
+      </div>`;
+  } else {
+    /* Try server session check */
+    fetch('/auth/api/me').then(r => r.json()).then(d => {
+      if (d.ok && d.user) {
+        const u2 = d.user;
+        area.innerHTML = `
+          <div class="nav-user-pill" onclick="window.location='/auth/profile'">
+            <div class="nav-avatar">${u2.display_name?.[0] || '✨'}</div>
+            <span class="nav-username">${u2.display_name || u2.email}</span>
+          </div>`;
+      }
+    }).catch(() => {});
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ROTATING TAGLINE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+(function(){
+  const phrases = [
+    { t:'생각은 빛이 된다', ko:true },
+    { t:'읽을수록 더 깊은 우주로', ko:true },
+    { t:'당신의 생각은 하나의 우주가 됩니다', ko:true },
+    { t:'한 문장이 하나의 별이 되듯', ko:true },
+    { t:'함께 읽는 우주, 라이브 독서실', ko:true },
+    { t:'Where Thoughts Become Constellations', ko:false },
+    { t:'Read. Think. Expand.', ko:false },
+    { t:'Illuminate Your Thoughts', ko:false },
+  ];
+  const el = document.getElementById('luma-tagline');
+  if (!el) return;
+  let i = 0;
+  function show(idx) {
+    const p = phrases[idx];
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-5px)';
+    setTimeout(() => {
+      el.textContent = p.t;
+      el.style.fontFamily = p.ko ? "'Pretendard',sans-serif" : "'DM Serif Display',serif";
+      el.style.letterSpacing = p.ko ? '.05em' : '.14em';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 500);
+  }
+  show(0);
+  setInterval(() => { i = (i + 1) % phrases.length; show(i); }, 10000);
+})();
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BOOT
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+document.addEventListener('DOMContentLoaded', () => {
+  initNav();
+  if (MODE === 'room' && curRoomId) {
+    /* Auto-enter the server-provided room */
+    const u = getStoredUser();
+    myName  = u.display_name || u.email || '독서인';
+    myEmoji = u.emoji || myEmoji;
+    document.getElementById('local-name-tag').textContent  = myName;
+    document.getElementById('local-emoji').textContent     = myEmoji;
+    document.getElementById('my-participant-name').textContent = myName;
+    startMedia();
+    startRoomTimer();
+    startPolling();
+  } else if (MODE !== 'room') {
+    /* Lobby: refresh room list */
+    loadRooms();
+    setInterval(loadRooms, 10000);
+  }
+});
+
+(function(){
+  const phrases=[
+    {t:'생각은 빛이 된다',ko:true},
+    {t:'읽을수록 더 깊은 우주로',ko:true},
+    {t:'당신의 생각은 하나의 우주가 됩니다',ko:true},
+    {t:'한 문장이 하나의 별이 되듯',ko:true},
+    {t:'책으로 시작된 생각의 우주',ko:true},
+    {t:'Where Thoughts Become Constellations',ko:false},
+    {t:'Read. Think. Expand.',ko:false},
+    {t:'Illuminate Your Thoughts',ko:false},
+  ];
+  const el=document.getElementById('luma-tagline');
+  if(!el)return;
+  let i=0;
+  function show(idx){
+    const p=phrases[idx];
+    el.style.opacity='0';el.style.transform='translateY(-5px)';
+    setTimeout(()=>{
+      el.textContent=p.t;
+      el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"'Cinzel','DM Serif Display',serif";
+      el.style.letterSpacing=p.ko?'.05em':'.14em';
+      el.style.opacity='1';el.style.transform='translateY(0)';
+    },500);
+  }
+  show(0);
+  setInterval(()=>{i=(i+1)%phrases.length;show(i);},10000);
+})();
+
+function initNav(){
+  const el=document.getElementById('nav-user');
+  if(!el)return;
+  const user=JSON.parse(localStorage.getItem('luma_user')||'{}');
+  if(user.display_name||user.email){
+    el.innerHTML=`<span>${user.emoji||'✨'}</span><span>${user.display_name||user.email}</span><button onclick="logout()" class="nav-logout">로그아웃</button>`;
+  } else {
+    el.innerHTML='<a href="/auth" class="nav-login-btn">로그인</a>';
+  }
+}
+function logout(){
+  localStorage.removeItem('luma_token');
+  localStorage.removeItem('luma_user');
+  window.location.href='/auth';
+}
+document.addEventListener('DOMContentLoaded',initNav);
+</script>
+</body>
+</html>

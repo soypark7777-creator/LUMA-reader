@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMA — 탐사 성운</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Cinzel:wght@400;500&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07130f;--bg2:rgba(7,20,14,.96);--bg3:rgba(10,28,18,.86);
+  --line:rgba(125,232,168,.12);--card:rgba(255,255,255,.04);
+  --text:#e8f5ee;--muted:#7da88e;--sub:#4d7a5e;
+  --mint:#7de8a8;--sage:#4a9e6d;--emerald:#2e7d52;
+  --gold:#f5c86b;--gold-lt:#ffe8a1;
+  --green:#4ade80;--red:#f87171;
+  --glow-mint:rgba(125,232,168,.18);--glow-gold:rgba(245,200,107,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Pretendard','Noto Sans KR',sans-serif;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+button,input,select{font-family:inherit}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(125,232,168,.18);border-radius:2px}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:rgba(7,19,15,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}
+.logo{display:flex;align-items:center;gap:10px;color:var(--text)}
+.nav{display:flex;gap:3px}
+.npill{padding:6px 14px;border-radius:18px;font-size:.76rem;color:var(--muted);transition:.18s;font-weight:500;border:1px solid transparent}
+.npill:hover{color:var(--text);background:var(--card)}
+.npill.active{color:#07130f;background:linear-gradient(135deg,var(--mint),var(--green));border-color:transparent}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted)}
+.nav-login-btn{background:rgba(125,232,168,.1);border:1px solid rgba(125,232,168,.3);color:var(--mint);padding:6px 14px;border-radius:18px;font-size:.76rem}
+.nav-logout{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);color:var(--red);padding:5px 11px;border-radius:8px;font-size:.72rem;cursor:pointer}
+
+/* HERO */
+.hero{min-height:460px;display:flex;align-items:center;padding:52px 0 44px;background:linear-gradient(160deg,rgba(20,50,32,.45) 0%,transparent 65%)}
+.hero-inner{max-width:1080px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:1fr 310px;gap:44px;align-items:center;width:100%}
+.hero-copy .eyebrow{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(125,232,168,.1);border:1px solid rgba(125,232,168,.25);color:var(--mint);font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+.hero-copy h1{font-family:'Noto Serif KR',serif;font-size:clamp(1.8rem,3.2vw,2.6rem);line-height:1.28;color:var(--text);margin-bottom:14px}
+.hero-copy p{font-size:.88rem;color:var(--muted);line-height:1.78;margin-bottom:28px;max-width:440px}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Hero book card */
+.hero-book{background:var(--bg2);border:1px solid rgba(125,232,168,.15);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(125,232,168,.06);transition:.3s}
+.hero-book:hover{transform:translateY(-4px);box-shadow:0 28px 80px rgba(0,0,0,.55),0 0 40px var(--glow-mint)}
+.hero-book-cover{height:220px;position:relative;background:linear-gradient(135deg,rgba(125,232,168,.1),rgba(46,125,82,.14));display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-book-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-cover-fallback{z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.hero-cover-fallback-char{font-family:'Pretendard','Noto Sans KR',sans-serif;font-weight:700;font-size:2.6rem;color:var(--mint);line-height:1}
+.hero-book-cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(7,20,14,.88) 0%,transparent 50%);z-index:2}
+.hero-book-meta{padding:14px 18px 0}
+.hero-book-badge{display:inline-block;padding:2px 10px;border-radius:20px;background:rgba(125,232,168,.1);border:1px solid rgba(125,232,168,.2);color:var(--mint);font-size:.62rem;font-weight:700;letter-spacing:.08em;margin-bottom:8px}
+.hero-book-title{font-family:'Noto Serif KR',serif;font-size:1.05rem;color:var(--text);margin-bottom:3px;line-height:1.35}
+.hero-book-author{font-size:.74rem;color:var(--muted);margin-bottom:6px}
+.hero-book-extra{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.hero-book-extra span{font-size:.62rem;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.hero-book-extra .genre-tag{color:var(--mint);border-color:rgba(125,232,168,.2);background:rgba(125,232,168,.06)}
+.hero-book-reason{font-size:.74rem;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hero-book-actions{padding:12px 18px 16px;display:flex;gap:8px}
+
+/* SEARCH DOCK */
+.search-dock-wrap{max-width:680px;margin:-24px auto 0;padding:0 22px;position:relative;z-index:10}
+.search-dock{background:rgba(7,20,14,.9);border:1px solid rgba(125,232,168,.2);border-radius:18px;padding:6px 6px 6px 20px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(20px);box-shadow:0 8px 40px rgba(0,0,0,.4);transition:.25s}
+.search-dock:focus-within{border-color:rgba(125,232,168,.45);box-shadow:0 8px 40px rgba(0,0,0,.4),0 0 24px var(--glow-mint)}
+.search-icon{color:var(--sub);font-size:1rem;flex-shrink:0}
+.search-input{flex:1;background:none;border:none;color:var(--text);font-size:.9rem;outline:none;padding:8px 0}
+.search-input::placeholder{color:var(--sub)}
+.search-btn{background:linear-gradient(135deg,var(--mint),var(--green));border:none;border-radius:12px;padding:11px 22px;color:#07130f;font-weight:700;font-size:.84rem;cursor:pointer;transition:.18s;flex-shrink:0}
+.search-btn:hover{transform:scale(1.03);box-shadow:0 4px 20px var(--glow-mint)}
+
+/* FILTER CHIPS */
+.chips-section{max-width:1080px;margin:36px auto 0;padding:0 32px}
+.explore-board{background:rgba(7,20,14,.7);border:1px solid rgba(125,232,168,.14);border-radius:16px;padding:16px;box-shadow:0 16px 45px rgba(0,0,0,.26)}
+.explore-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.explore-title{font-size:.92rem;font-weight:700;color:var(--text)}
+.explore-sub{font-size:.72rem;color:var(--muted);margin-top:3px}
+.chips-label{font-size:.62rem;color:var(--sub);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.chips-group{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.chip-group-label{font-size:.64rem;color:var(--sub);align-self:center;margin-right:3px;white-space:nowrap;font-weight:600}
+.chip{padding:5px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:.74rem;cursor:pointer;transition:.2s;font-weight:500;white-space:nowrap}
+.chip:hover{border-color:rgba(125,232,168,.35);color:var(--mint);background:rgba(125,232,168,.06)}
+.chip.active{border-color:rgba(125,232,168,.55);color:var(--mint);background:rgba(125,232,168,.1);font-weight:700}
+.chip.type-emotion.active{border-color:rgba(245,200,107,.55);color:var(--gold);background:rgba(245,200,107,.1)}
+.chip.type-mbti.active{border-color:rgba(74,222,128,.55);color:var(--green);background:rgba(74,222,128,.08)}
+.control-row,.section-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.select-control{height:34px;border:1px solid var(--line);border-radius:10px;background:rgba(10,28,18,.8);color:var(--text);font-size:.74rem;padding:0 10px;outline:none}
+.select-control option{background:#0a1c12;color:var(--text)}
+.refresh-btn{height:34px;border:1px solid rgba(125,232,168,.25);border-radius:10px;background:rgba(125,232,168,.07);color:var(--mint);font-size:.74rem;font-weight:700;padding:0 12px;cursor:pointer;transition:.18s}
+.refresh-btn:hover{background:rgba(125,232,168,.14);box-shadow:0 0 18px var(--glow-mint)}
+
+/* BOOK SECTIONS */
+.sections{max-width:1080px;margin:0 auto;padding:36px 32px 60px}
+.book-section{margin-bottom:52px}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.section-head-left .section-eyebrow{font-size:.62rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.section-head-left h2{font-family:'Noto Serif KR',serif;font-size:1.3rem;color:var(--text)}
+
+/* Carousel */
+.book-carousel{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.book-carousel::-webkit-scrollbar{height:3px}
+.book-carousel::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
+
+/* Grid */
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:16px}
+
+/* Book card */
+.book-card{flex-shrink:0;width:158px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.25s;cursor:pointer;scroll-snap-align:start}
+.book-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.5),0 0 20px var(--glow-mint);border-color:rgba(125,232,168,.25)}
+.book-card.grid-card{width:auto}
+
+/* Cover */
+.book-cover{height:196px;position:relative;background:linear-gradient(135deg,rgba(125,232,168,.09),rgba(46,125,82,.12));display:flex;align-items:center;justify-content:center;overflow:hidden}
+.book-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:.3s}
+.book-card:hover .book-cover img{transform:scale(1.04)}
+.book-cover-fallback{z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px;text-align:center}
+.book-cover-fallback-initial{font-family:'Pretendard','Noto Sans KR',sans-serif;font-weight:700;font-size:2rem;color:var(--mint);line-height:1;letter-spacing:0}
+.book-cover-fallback-label{font-family:'Pretendard','Noto Sans KR',sans-serif;font-size:.56rem;color:var(--muted);text-align:center;max-width:90px;line-height:1.3;letter-spacing:0}
+.book-cover-shine{position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,.05) 60%,transparent 70%);pointer-events:none;z-index:3}
+
+/* Book info */
+.book-info{padding:10px 12px}
+.book-title{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:2px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book-author{font-size:.68rem;color:var(--muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-mini-meta{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.book-mini-meta span{border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03);color:var(--sub);font-size:.58rem;line-height:1;padding:3px 7px;white-space:nowrap}
+.score-real{color:var(--gold)!important;border-color:rgba(245,200,107,.18)!important}
+.score-luma{color:var(--mint)!important;border-color:rgba(125,232,168,.18)!important}
+.genre-tag-sm{color:var(--sage)!important;border-color:rgba(74,158,109,.2)!important;background:rgba(74,158,109,.06)!important}
+.book-reason{font-size:.67rem;color:var(--muted);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
+.book-add-btn{width:100%;padding:7px;background:rgba(125,232,168,.07);border:1px solid rgba(125,232,168,.2);border-radius:8px;font-size:.72rem;color:var(--mint);font-weight:600;cursor:pointer;transition:.2s}
+.book-add-btn:hover{background:rgba(125,232,168,.15);box-shadow:0 2px 12px var(--glow-mint)}
+.book-add-btn.added{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.35);color:var(--green);cursor:default}
+.book-add-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Skeleton */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.07) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{flex-shrink:0;width:158px;border-radius:14px;overflow:hidden;background:var(--bg2);border:1px solid var(--line);scroll-snap-align:start}
+.skel-card.grid-card{width:auto}
+.skel-cover{height:196px}
+.skel-info{padding:10px 12px}
+.skel-line{border-radius:4px;margin-bottom:7px}
+
+/* Search results */
+.search-section{display:none;margin-bottom:52px}
+.search-section.show{display:block}
+.search-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.search-header h2{font-family:'Noto Serif KR',serif;font-size:1.2rem;color:var(--text)}
+.search-query{color:var(--mint)}
+.search-close{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:4px 12px;font-size:.74rem;cursor:pointer;transition:.18s}
+.search-close:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+
+/* Filter section */
+.filter-section{display:none;margin-bottom:52px}
+.filter-section.show{display:block}
+
+/* Empty / Error */
+.state-empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.state-empty-icon{font-size:2.5rem;margin-bottom:14px;display:block;opacity:.6}
+.state-empty p{font-size:.85rem;line-height:1.7;max-width:320px;margin:0 auto}
+.retry-btn{margin-top:14px;padding:8px 20px;border:1px solid var(--line);border-radius:10px;background:none;color:var(--muted);font-size:.78rem;cursor:pointer;transition:.18s}
+.retry-btn:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+
+/* Buttons */
+.btn{border:none;border-radius:11px;padding:10px 20px;font:600 .82rem 'Pretendard',sans-serif;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px}
+.btn-mint{background:linear-gradient(135deg,var(--mint),var(--green));color:#07130f}
+.btn-mint:hover{transform:translateY(-1px);box-shadow:0 6px 22px var(--glow-mint)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#07130f}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 22px var(--glow-gold)}
+.btn-outline{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.btn-outline:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+.btn-ghost{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+
+/* Toast */
+.toast{position:fixed;bottom:26px;right:26px;z-index:1000;background:rgba(7,20,14,.98);border:1px solid rgba(125,232,168,.3);border-radius:14px;padding:13px 20px;font-size:.82rem;color:var(--mint);transform:translateY(120px);opacity:0;transition:.38s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{border-color:rgba(248,113,113,.35);color:var(--red)}
+
+/* Detail modal */
+.modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:22px}
+.modal.open{display:flex}
+.modal-box{width:min(760px,96vw);max-height:90vh;overflow-y:auto;background:var(--bg2);border:1px solid rgba(125,232,168,.18);border-radius:20px;box-shadow:0 24px 90px rgba(0,0,0,.55)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);color:var(--mint);font-family:'Noto Serif KR',serif;font-size:1rem}
+.modal-close{border:0;background:transparent;color:var(--muted);font-size:1.1rem;cursor:pointer}
+.book-detail-body{display:grid;grid-template-columns:150px 1fr;gap:22px;padding:22px}
+.detail-cover{width:150px;aspect-ratio:2/3;border-radius:12px;background:linear-gradient(135deg,rgba(125,232,168,.1),rgba(46,125,82,.14));overflow:hidden;display:grid;place-items:center;flex-shrink:0}
+.detail-cover img{width:100%;height:100%;object-fit:cover}
+.detail-cover-fallback{font-family:'Pretendard',sans-serif;font-weight:700;font-size:2.4rem;color:var(--mint);text-align:center;padding:10px}
+.detail-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;line-height:1.25;margin-bottom:5px}
+.detail-author{color:var(--muted);font-size:.83rem;margin-bottom:10px}
+.detail-meta{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.detail-chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:.71rem}
+.detail-chip.score-real{color:var(--gold);border-color:rgba(245,200,107,.2)}
+.detail-chip.score-luma{color:var(--mint);border-color:rgba(125,232,168,.2)}
+.detail-chip.genre{color:var(--sage);border-color:rgba(74,158,109,.22);background:rgba(74,158,109,.07)}
+.detail-section{margin:14px 0}
+.detail-section-label{font-size:.64rem;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;font-weight:700}
+.detail-desc{font-size:.85rem;line-height:1.75;color:var(--muted)}
+.detail-reason{font-size:.85rem;line-height:1.75;color:var(--mint)}
+.detail-question{font-size:.85rem;line-height:1.65;color:var(--text);background:rgba(125,232,168,.06);border:1px solid rgba(125,232,168,.14);border-radius:10px;padding:12px 14px;font-style:italic}
+.detail-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+
+/* Mobile */
+@media(max-width:768px){
+  .hero-inner{grid-template-columns:1fr;padding:0 20px}
+  .hero-book{max-width:280px;margin:0 auto}
+  .hero{min-height:auto;padding:36px 0 32px}
+  .topbar{padding:0 14px;height:52px}
+  .topbar .nav{display:none}
+  .search-dock-wrap{padding:0 14px}
+  .chips-section,.sections{padding-left:14px;padding-right:14px}
+  .chips-group{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .chips-group::-webkit-scrollbar{display:none}
+  .book-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-copy h1{font-size:1.7rem}
+  .book-detail-body{grid-template-columns:1fr}
+  .detail-cover{width:120px;margin:0 auto}
+  .explore-top{align-items:flex-start;flex-direction:column}
+  .section-tools,.control-row{width:100%}
+  .select-control{flex:1;min-width:130px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:32px;object-fit:contain" onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'Noto Serif KR',serif;font-size:1.05rem;color:var(--mint);line-height:1">LUMA</span>
+      <span id="luma-tagline" style="font-size:.58rem;color:var(--muted);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <nav class="nav">
+    <a href="/" class="npill">별자리 지도</a>
+    <a href="/heart" class="npill">마음 행성계</a>
+    <a href="/lounge" class="npill active">탐사 성운</a>
+    <a href="/social" class="npill">독자 광장</a>
+    <a href="/live" class="npill">라이브</a>
+    <a href="/socrates" class="npill">소크라테스</a>
+    <a href="/profile" class="npill">프로필</a>
+  </nav>
+  <div class="nav-user" id="nav-user"></div>
+</header>
+
+<div class="page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <span class="eyebrow">✦ 탐사 성운</span>
+        <h1>오늘 나에게<br>가장 가까운 한 권</h1>
+        <p>독서 페르소나와 감정 기록을 바탕으로,<br>지금의 나에게 꼭 맞는 책을 찾아드립니다.</p>
+        <div class="hero-btns">
+          <button class="btn btn-mint" onclick="scrollToSearch()">✦ 책 찾기</button>
+          <button class="btn btn-outline" onclick="scrollToSections()">추천 책 보기</button>
+        </div>
+      </div>
+
+      <!-- Hero book card -->
+      <div class="hero-book" id="hero-book-card" style="display:none">
+        <div class="hero-book-cover">
+          <img id="hero-img" src="" alt="" style="display:none"
+            onerror="this.style.display='none';document.getElementById('hero-fallback').style.display='flex'">
+          <div class="hero-cover-fallback" id="hero-fallback" style="display:flex">
+            <div class="hero-cover-fallback-char" id="hero-fallback-char">📖</div>
+          </div>
+          <div class="hero-book-cover-overlay"></div>
+        </div>
+        <div class="hero-book-meta">
+          <div class="hero-book-badge">오늘의 큐레이션</div>
+          <div class="hero-book-title" id="hero-title">-</div>
+          <div class="hero-book-author" id="hero-author">-</div>
+          <div class="hero-book-extra" id="hero-extra"></div>
+          <div class="hero-book-reason" id="hero-reason"></div>
+        </div>
+        <div class="hero-book-actions">
+          <button class="book-add-btn" id="hero-add-btn" style="width:auto;flex:1" onclick="plantHeroBook()">씨앗 심기</button>
+          <button class="btn btn-ghost" style="padding:7px 14px;font-size:.72rem" onclick="openHeroDetail()">자세히</button>
+        </div>
+      </div>
+
+      <!-- Hero skeleton -->
+      <div class="hero-book skel-card" id="hero-skel">
+        <div class="skel-cover skeleton"></div>
+        <div class="skel-info">
+          <div class="skel-line skeleton" style="height:8px;width:38%;margin-bottom:8px"></div>
+          <div class="skel-line skeleton" style="height:14px;width:72%"></div>
+          <div class="skel-line skeleton" style="height:10px;width:50%"></div>
+          <div class="skel-line skeleton" style="height:10px;width:88%"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH DOCK -->
+  <div class="search-dock-wrap" id="search-anchor">
+    <div class="search-dock">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-input"
+        placeholder="제목, 저자, 키워드로 검색..."
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter')triggerSearch()">
+      <button class="search-btn" onclick="triggerSearch()">탐색</button>
+    </div>
+  </div>
+
+  <!-- FILTER CHIPS -->
+  <div class="chips-section" id="sections-anchor">
+    <div class="explore-board">
+      <div class="explore-top">
+        <div>
+          <div class="chips-label" style="margin-bottom:4px">감정 · 장르 · MBTI</div>
+          <div class="explore-title">오늘의 독서 레이더</div>
+          <div class="explore-sub">지금의 기분과 취향을 선택하면, 그에 맞는 책을 찾아드립니다.</div>
+        </div>
+        <div class="control-row">
+          <select class="select-control" id="explore-sort" onchange="reloadExplore()">
+            <option value="recent">출간일 가까운순</option>
+            <option value="rating">평판 높은순</option>
+            <option value="reviews">리뷰 많은순</option>
+            <option value="shuffle">새로 섞기</option>
+          </select>
+          <button class="refresh-btn" onclick="refreshExplore()">↻ 다른 책</button>
+        </div>
+      </div>
+      <div class="chips-group">
+        <span class="chip-group-label">감정</span>
+        <button class="chip type-emotion" onclick="filterChip(this,'평온','emotion')">평온</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'영감','emotion')">영감</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'위로','emotion')">위로</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'호기심','emotion')">호기심</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'성장','emotion')">성장</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'몰입','emotion')">몰입</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'설렘','emotion')">설렘</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'사색','emotion')">사색</button>
+        <button class="chip type-emotion" onclick="filterChip(this,'회복','emotion')">회복</button>
+      </div>
+      <div class="chips-group">
+        <span class="chip-group-label">장르</span>
+        <button class="chip type-genre" onclick="filterChip(this,'문학','genre')">문학</button>
+        <button class="chip type-genre" onclick="filterChip(this,'철학','genre')">철학</button>
+        <button class="chip type-genre" onclick="filterChip(this,'과학','genre')">과학</button>
+        <button class="chip type-genre" onclick="filterChip(this,'인문','genre')">인문</button>
+        <button class="chip type-genre" onclick="filterChip(this,'자기계발','genre')">자기계발</button>
+        <button class="chip type-genre" onclick="filterChip(this,'역사','genre')">역사</button>
+        <button class="chip type-genre" onclick="filterChip(this,'SF','genre')">SF</button>
+        <button class="chip type-genre" onclick="filterChip(this,'예술','genre')">예술</button>
+        <button class="chip type-genre" onclick="filterChip(this,'경제경영','genre')">경제경영</button>
+        <button class="chip type-genre" onclick="filterChip(this,'심리','genre')">심리</button>
+        <button class="chip type-genre" onclick="filterChip(this,'시·에세이','genre')">시/에세이</button>
+        <button class="chip type-genre" onclick="filterChip(this,'미스터리','genre')">미스터리</button>
+      </div>
+      <div class="chips-group">
+        <span class="chip-group-label">MBTI</span>
+        <button class="chip type-mbti" onclick="filterChip(this,'INFP','mbti')">INFP</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'INFJ','mbti')">INFJ</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ENFP','mbti')">ENFP</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ENFJ','mbti')">ENFJ</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'INTJ','mbti')">INTJ</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'INTP','mbti')">INTP</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ENTJ','mbti')">ENTJ</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ENTP','mbti')">ENTP</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ISFJ','mbti')">ISFJ</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ISTJ','mbti')">ISTJ</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ISFP','mbti')">ISFP</button>
+        <button class="chip type-mbti" onclick="filterChip(this,'ESTP','mbti')">ESTP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOK SECTIONS -->
+  <div class="sections">
+
+    <!-- Search results -->
+    <div class="search-section" id="search-section">
+      <div class="search-header">
+        <h2>"<span class="search-query" id="search-query-label"></span>" 검색 결과</h2>
+        <button class="search-close" onclick="closeSearch()">✕ 닫기</button>
+      </div>
+      <div class="book-grid" id="search-results-grid"></div>
+    </div>
+
+    <!-- Filter results -->
+    <div class="filter-section" id="filter-section">
+      <div class="section-head">
+        <div class="section-head-left">
+          <div class="section-eyebrow" id="filter-eyebrow">취향 탐색</div>
+          <h2 id="filter-title">선택한 기준에 맞는 책</h2>
+        </div>
+        <div class="section-tools">
+          <select class="select-control" id="filter-sort" onchange="reloadExplore()">
+            <option value="recent">출간일 가까운순</option>
+            <option value="rating">평판 높은순</option>
+            <option value="reviews">리뷰 많은순</option>
+            <option value="shuffle">새로 섞기</option>
+          </select>
+          <button class="refresh-btn" onclick="refreshExplore()">↻</button>
+        </div>
+      </div>
+      <div class="book-carousel" id="filter-books"></div>
+    </div>
+
+    <!-- 페르소나 추천 -->
+    <div class="book-section">
+      <div class="section-head">
+        <div class="section-head-left">
+          <div class="section-eyebrow">내 독서 페르소나</div>
+          <h2>당신에게 어울리는 책</h2>
+        </div>
+        <div class="section-tools">
+          <select class="select-control" id="persona-sort" onchange="reloadSection('persona')">
+            <option value="rating">평판 높은순</option>
+            <option value="recent">출간일 가까운순</option>
+            <option value="reviews">리뷰 많은순</option>
+            <option value="shuffle">새로 섞기</option>
+          </select>
+          <button class="refresh-btn" onclick="refreshSection('persona')">↻ 다른 추천</button>
+        </div>
+      </div>
+      <div class="book-carousel" id="recommended-books">
+        <div class="skel-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:75%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:55%"></div></div></div>
+        <div class="skel-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:65%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:45%"></div></div></div>
+        <div class="skel-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:80%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:60%"></div></div></div>
+        <div class="skel-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:70%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:50%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- 신간 탐색 -->
+    <div class="book-section">
+      <div class="section-head">
+        <div class="section-head-left">
+          <div class="section-eyebrow">신간 탐색</div>
+          <h2>새로 나온 책</h2>
+        </div>
+        <div class="section-tools">
+          <select class="select-control" id="new-sort" onchange="reloadSection('new')">
+            <option value="recent">출간일 가까운순</option>
+            <option value="rating">평판 높은순</option>
+            <option value="reviews">리뷰 많은순</option>
+            <option value="shuffle">새로 섞기</option>
+          </select>
+          <button class="refresh-btn" onclick="refreshSection('new')">↻ 다른 신간</button>
+        </div>
+      </div>
+      <div class="book-carousel" id="new-books">
+        <div class="skel-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:75%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:55%"></div></div></div>
+        <div class="skel-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:65%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:45%"></div></div></div>
+        <div class="skel-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:80%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:60%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- 베스트셀러 -->
+    <div class="book-section">
+      <div class="section-head">
+        <div class="section-head-left">
+          <div class="section-eyebrow">베스트셀러</div>
+          <h2>많이 읽는 책</h2>
+        </div>
+        <div class="section-tools">
+          <select class="select-control" id="popular-sort" onchange="reloadSection('popular')">
+            <option value="reviews">리뷰 많은순</option>
+            <option value="rating">평판 높은순</option>
+            <option value="recent">출간일 가까운순</option>
+            <option value="shuffle">새로 섞기</option>
+          </select>
+          <button class="refresh-btn" onclick="refreshSection('popular')">↻ 다른 인기책</button>
+        </div>
+      </div>
+      <div class="book-grid" id="popular-books">
+        <div class="skel-card grid-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:75%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:55%"></div></div></div>
+        <div class="skel-card grid-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:65%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:45%"></div></div></div>
+        <div class="skel-card grid-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:80%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:60%"></div></div></div>
+        <div class="skel-card grid-card"><div class="skel-cover skeleton"></div><div class="skel-info"><div class="skel-line skeleton" style="height:11px;width:70%;margin-bottom:6px"></div><div class="skel-line skeleton" style="height:9px;width:50%"></div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="book-detail-modal" onclick="if(event.target===this)closeBookDetail()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span>책 상세 보기</span>
+      <button class="modal-close" onclick="closeBookDetail()">✕</button>
+    </div>
+    <div class="book-detail-body" id="book-detail-body"></div>
+  </div>
+</div>
+
+<script>
+/* ─── State ─────────────────────────────────────── */
+const TOKEN=localStorage.getItem('luma_token')||'';
+const USER=(()=>{try{return JSON.parse(localStorage.getItem('luma_user')||'{}');}catch(e){return {};}})();
+const UID=USER.user_id||'user_demo';
+let heroBook=null,activeChipEl=null;
+const addedSet=new Set();
+const bookCache=new Map();
+const TODAY_TS=new Date(new Date().toISOString().slice(0,10)).getTime();
+
+const SECTION_STATE={
+  explore:{type:'',value:'',queries:[],queryIndex:0,query:'',base:[],seed:0,sort:'recent'},
+  persona:{base:[],seed:0,sort:'rating'},
+  new:{base:[],seed:0,sort:'recent'},
+  popular:{base:[],seed:0,sort:'reviews'}
+};
+
+/* ─── Search strategies ──────────────────────────── */
+const EMOTION_STRATEGIES={
+  '평온':{queries:['평온한 에세이','마음 고요 책','잔잔한 소설','삶의 여백 에세이'],preferred_genres:['에세이','문학']},
+  '영감':{queries:['창작 영감 에세이','예술가 이야기','창의성 책','상상력 자극'],preferred_genres:['예술','에세이','인문']},
+  '위로':{queries:['위로 에세이','마음 회복','불안 치유','따뜻한 한국 소설'],preferred_genres:['에세이','문학','심리']},
+  '호기심':{queries:['과학 교양 책','지식 탐험','호기심 자극 교양','교양 과학'],preferred_genres:['과학','인문']},
+  '성장':{queries:['성장 소설','자기 발견 에세이','변화 이야기','청춘 성장'],preferred_genres:['문학','자기계발','에세이']},
+  '몰입':{queries:['몰입감 높은 소설','흡입력 강한 책','스릴러 미스터리'],preferred_genres:['소설','미스터리']},
+  '설렘':{queries:['설레는 사랑 소설','따뜻한 로맨스','청춘 소설'],preferred_genres:['문학','로맨스']},
+  '사색':{queries:['철학 인문 에세이','삶의 의미','사유 에세이','고전 철학'],preferred_genres:['철학','인문']},
+  '회복':{queries:['마음 회복 에세이','치유 심리 책','힘든 시간 위로','심리 에세이'],preferred_genres:['에세이','심리']}
+};
+
+const MBTI_STRATEGIES={
+  INFP:{queries:['감성 에세이','자아 탐색 소설','상상력 문학','내면 성장'],preferred_genres:['에세이','문학','시']},
+  INFJ:{queries:['자기이해 심리','관계 심리 에세이','철학 에세이','내면 성장'],preferred_genres:['심리','문학','인문']},
+  ENFP:{queries:['모험 여행 에세이','창의적 아이디어 책','상상력 소설','도전 이야기'],preferred_genres:['에세이','문학','인문']},
+  ENFJ:{queries:['관계 리더십 책','따뜻한 이야기','공감 소설','사람 이야기'],preferred_genres:['문학','심리','자기계발']},
+  INTJ:{queries:['전략 미래 과학','지식 체계 교양','사회 구조 분석','과학 기술'],preferred_genres:['과학','인문','경제경영']},
+  INTP:{queries:['철학 사유 책','과학 지식 탐구','논리 인문 교양'],preferred_genres:['철학','과학','인문']},
+  ENTJ:{queries:['경영 리더십 책','비즈니스 전략','목표 달성 도서'],preferred_genres:['경제경영','자기계발']},
+  ENTP:{queries:['논쟁 아이디어 책','역발상 인문','창의적 사고 교양'],preferred_genres:['인문','철학','과학']},
+  ISFJ:{queries:['따뜻한 가족 소설','마음 치유 에세이','위로 이야기'],preferred_genres:['문학','에세이','심리']},
+  ISTJ:{queries:['역사 교양 책','고전 명작','체계적 지식 인문'],preferred_genres:['역사','인문','문학']},
+  ISFP:{queries:['예술 감성 에세이','자연 아름다움','조용한 이야기'],preferred_genres:['예술','에세이','문학']},
+  ESTP:{queries:['스릴러 액션 소설','모험 이야기','실전 경험 에세이'],preferred_genres:['소설','에세이']}
+};
+
+const GENRE_STRATEGIES={
+  '문학':{queries:['한국 문학 신간','현대 소설 추천','문학 수상작'],preferred_genres:['문학','소설']},
+  '철학':{queries:['철학 에세이 신간','사유 인문 책','철학 입문'],preferred_genres:['철학','인문']},
+  '과학':{queries:['과학 교양 추천','과학 신간','과학 에세이'],preferred_genres:['과학']},
+  '인문':{queries:['인문 신간','철학 에세이','사회 인문 추천'],preferred_genres:['인문','철학','사회']},
+  '자기계발':{queries:['자기계발 신간','성장 습관 책','삶의 변화 도서'],preferred_genres:['자기계발']},
+  '역사':{queries:['역사 교양 책','역사 인문 신간','역사 에세이'],preferred_genres:['역사']},
+  'SF':{queries:['SF 과학소설 추천','SF 신간','미래 소설'],preferred_genres:['SF','소설']},
+  '예술':{queries:['예술 에세이 추천','디자인 아트 책','예술가 이야기'],preferred_genres:['예술']},
+  '경제경영':{queries:['경제 경영 신간','비즈니스 책 추천','투자 경제'],preferred_genres:['경제경영']},
+  '심리':{queries:['심리 교양 추천','심리학 에세이','관계 심리학'],preferred_genres:['심리']},
+  '시·에세이':{queries:['에세이 신간 추천','시집 추천','감성 에세이'],preferred_genres:['에세이','시']},
+  '미스터리':{queries:['미스터리 소설 추천','추리 소설 신간'],preferred_genres:['소설','미스터리']}
+};
+
+function getStrategy(type,value){
+  if(type==='emotion')return EMOTION_STRATEGIES[value]||{queries:[`${value} 에세이 소설`],preferred_genres:[]};
+  if(type==='mbti')return MBTI_STRATEGIES[value]||{queries:[`${value} 추천 책`],preferred_genres:[]};
+  if(type==='genre')return GENRE_STRATEGIES[value]||{queries:[`${value} 신간 추천`],preferred_genres:[]};
+  return {queries:[value],preferred_genres:[]};
+}
+
+const QUERY_VARIANTS={
+  new:['신간 도서 새로나온 책','2026 신간 소설 에세이','최근 출간 도서 추천','새 책 한국 문학'],
+  popular:['베스트셀러 도서','인기 도서 추천','화제의 책','많이 읽는 한국 책']
+};
+
+/* ─── Auth ───────────────────────────────────────── */
+function hdr(){return TOKEN?{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN}:{'Content-Type':'application/json'};}
+
+/* ─── Toast ──────────────────────────────────────── */
+function showToast(msg,err=false){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast'+(err?' error':'');
+  setTimeout(()=>el.classList.add('show'),10);
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+/* ─── Utilities ──────────────────────────────────── */
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+function normalizeBook(b){
+  return {
+    book_id:b.book_id||b.id||b.isbn||b.title||'',
+    title:b.title||'제목 없음',
+    author:b.author||b.authors||'저자 미상',
+    cover_url:b.cover_url||b.thumbnail||'',
+    reason:b.reason||'',
+    summary:b.summary||'',
+    description:b.description||b.summary||'',
+    isbn:b.isbn||'',
+    publisher:b.publisher||'',
+    published_date:b.published_date||b.publishedDate||'',
+    genre:b.genre||b.category||b.categoryName||'',
+    external_url:b.external_url||b.link||'',
+    source:b.source||'',
+    question:b.question||'',
+    total_pages:b.total_pages||0,
+    rating:Number(b.rating||b.averageRating||b.luma_score||0),
+    review_count:Number(b.review_count||b.ratingsCount||b.saved_count||b.reviews||0)
+  };
+}
+function bookKey(b){return String(b.isbn||b.book_id||`${b.title}|${b.author}`);}
+function rememberBook(book){const b=normalizeBook(book);const key=bookKey(b);bookCache.set(key,b);return {book:b,key};}
+
+function stableHash(s){
+  let h=0;String(s||'').split('').forEach(ch=>{h=((h<<5)-h)+ch.charCodeAt(0);h|=0;});
+  return Math.abs(h);
+}
+function parseBookDate(value){
+  const raw=String(value||'').trim();
+  if(!raw)return 0;
+  if(/^\d{8}$/.test(raw))return new Date(`${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`).getTime()||0;
+  if(/^\d{4}$/.test(raw))return new Date(`${raw}-01-01`).getTime()||0;
+  return new Date(raw).getTime()||0;
+}
+function formatDate(raw){
+  const s=String(raw||'').trim();
+  if(/^\d{8}$/.test(s))return `${s.slice(0,4)}.${s.slice(4,6)}.${s.slice(6,8)}`;
+  if(/^\d{4}$/.test(s))return s;
+  if(!s)return '';
+  return s.replace(/[/-]/g,'.');
+}
+function isRealRating(book){return normalizeBook(book).rating>0;}
+function lumaScore(book){
+  const b=normalizeBook(book);
+  if(b.rating>0)return Math.min(5,b.rating);
+  const date=parseBookDate(b.published_date);
+  const recentBoost=date?Math.max(0,1-Math.abs(TODAY_TS-date)/(1000*60*60*24*365*5))*.35:0;
+  const imageBoost=String(b.cover_url||'').trim()?0.22:0;
+  return Math.min(5,4.05+((stableHash(`${b.title}|${b.author}`)%55)/100)+recentBoost+imageBoost);
+}
+function reviewCount(book){
+  const b=normalizeBook(book);
+  return b.review_count>0?b.review_count:80+(stableHash(`${b.title}|${b.publisher}`)%920);
+}
+function sortedBooks(books,sort='recent',seed=0){
+  const arr=(books||[]).map(normalizeBook).filter(b=>b.title);
+  const decorated=arr.map((b,i)=>({b,i,h:stableHash(`${b.title}|${b.author}|${seed}`),date:parseBookDate(b.published_date),score:lumaScore(b),reviews:reviewCount(b),hasCover:b.cover_url?1:0}));
+  if(sort==='shuffle')decorated.sort((a,b)=>a.h-b.h);
+  else if(sort==='rating')decorated.sort((a,b)=>b.score-a.score||b.reviews-a.reviews||b.hasCover-a.hasCover);
+  else if(sort==='reviews')decorated.sort((a,b)=>b.reviews-a.reviews||b.score-a.score||b.hasCover-a.hasCover);
+  else decorated.sort((a,b)=>{
+    const da=a.date?Math.abs(TODAY_TS-a.date):Number.MAX_SAFE_INTEGER;
+    const db=b.date?Math.abs(TODAY_TS-b.date):Number.MAX_SAFE_INTEGER;
+    return da-db||b.score-a.score||b.hasCover-a.hasCover;
+  });
+  return decorated.map(x=>x.b);
+}
+function sectionSort(name){return document.getElementById(`${name}-sort`)?.value||SECTION_STATE[name]?.sort||'recent';}
+function renderSorted(containerId,books,isGrid=false,sort='recent',seed=0){render(containerId,sortedBooks(books,sort,seed),isGrid);}
+
+/* ─── Book sentence ──────────────────────────────── */
+const GENERIC_PHRASES=['국내 도서 검색에서','당신의 독서 페르소나를 넓혀줄','생각의 씨앗입니다'];
+function bookSentence(b){
+  const src=b.description||b.reason||b.summary||'';
+  if(!src)return '';
+  if(GENERIC_PHRASES.some(g=>src.includes(g)))return '';
+  const first=(src.split(/[.。!?！？]/)[0]||'').trim();
+  if(first.length>90)return first.slice(0,87)+'...';
+  if(first.length>10)return first;
+  return src.slice(0,80);
+}
+
+/* ─── Fallback data ──────────────────────────────── */
+const FALLBACK_BOOKS=[
+  {title:'코스모스',author:'칼 세이건',publisher:'사이언스북스',description:'우주의 광활함 속에서 인간 존재의 소중함을 탐구합니다'},
+  {title:'데미안',author:'헤르만 헤세',publisher:'민음사',description:'자기 자신을 찾아가는 여정을 섬세하게 따라가는 성장 소설'},
+  {title:'총 균 쇠',author:'재레드 다이아몬드',publisher:'문학사상',description:'문명의 흥망성쇠를 새로운 시각으로 조명합니다'},
+  {title:'사피엔스',author:'유발 하라리',publisher:'김영사',description:'인류의 역사를 대담하게 재해석한 걸작'},
+  {title:'어린 왕자',author:'생텍쥐페리',publisher:'열린책들',description:'순수한 시선으로 바라본 인생의 진정한 가치'},
+  {title:'1984',author:'조지 오웰',publisher:'민음사',description:'자유와 권력에 관한 불멸의 디스토피아 소설'},
+];
+const NEW_RELEASE_FALLBACK=[
+  {title:'새로운 문장을 기다리는 밤',author:'LUMA 큐레이션',description:'오늘 막 발견한 신간처럼 가볍게 첫 장을 열기 좋은 책입니다'},
+  {title:'처음 만나는 사유의 숲',author:'LUMA 큐레이션',description:'새로운 관점과 문장을 찾는 독자에게 어울리는 책입니다'},
+  {title:'계절이 바뀌는 책장',author:'LUMA 큐레이션',description:'요즘의 기분으로 새롭게 읽기 좋은 책입니다'},
+  {title:'오늘의 첫 문장',author:'LUMA 큐레이션',description:'지금 이 순간, 한 문장을 만나보세요'}
+];
+const BESTSELLER_FALLBACK=[
+  {title:'사피엔스',author:'유발 하라리',description:'많은 독자가 오래 읽고 이야기해온 인문 베스트셀러입니다'},
+  {title:'불편한 편의점',author:'김호연',description:'폭넓은 독자에게 사랑받은 따뜻한 한국 소설입니다'},
+  {title:'아몬드',author:'손원평',description:'감정과 성장의 이야기로 꾸준히 읽히는 소설입니다'},
+  {title:'코스모스',author:'칼 세이건',description:'과학 교양 분야에서 오랫동안 사랑받는 고전입니다'},
+  {title:'데미안',author:'헤르만 헤세',description:'자기 발견의 질문으로 계속 읽히는 문학 베스트셀러입니다'},
+  {title:'물고기는 존재하지 않는다',author:'룰루 밀러',description:'지식과 삶을 흔드는 논픽션으로 많은 독자가 찾는 책입니다'}
+];
+
+/* ─── Render book card ───────────────────────────── */
+function render(containerId,books,isGrid=false){
+  const el=document.getElementById(containerId);if(!el)return;
+  if(!books||!books.length){
+    el.innerHTML=`<div class="state-empty"><span class="state-empty-icon">🌿</span><p>책 정보가 없습니다.<br>다른 키워드나 취향으로 탐색해보세요.</p><button class="retry-btn" onclick="initDiscoverPage()">↺ 다시 불러오기</button></div>`;
+    return;
+  }
+  el.innerHTML=books.map((raw,i)=>{
+    const remembered=rememberBook(raw);
+    const b=remembered.book;
+    const id=`${containerId}-${i}`;
+    const key=remembered.key;
+    const safeKey=encodeURIComponent(key);
+    const isAdded=addedSet.has(key);
+    const realRating=isRealRating(b);
+    const score=lumaScore(b).toFixed(1);
+    const pub=formatDate(b.published_date);
+    const sentence=bookSentence(b);
+    const shortTitle=b.title&&b.title.length<=5?b.title:(b.title?b.title.slice(0,1):'');
+    return `
+    <div class="book-card${isGrid?' grid-card':''}" onclick="openBookDetail('${safeKey}')">
+      <div class="book-cover">
+        ${b.cover_url
+          ?`<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+          :''}
+        <div class="book-cover-fallback" style="${b.cover_url?'display:none':'display:flex'}">
+          <div class="book-cover-fallback-initial">${esc(shortTitle)}</div>
+          ${b.genre?`<div class="book-cover-fallback-label">${esc(b.genre.slice(0,8))}</div>`:''}
+        </div>
+        <div class="book-cover-shine"></div>
+      </div>
+      <div class="book-info">
+        <div class="book-title">${esc(b.title)}</div>
+        <div class="book-author">${esc(b.author)}</div>
+        <div class="book-mini-meta">
+          <span class="${realRating?'score-real':'score-luma'}">${realRating?'★':'LUMA'} ${score}</span>
+          ${pub?`<span>${esc(pub)}</span>`:''}
+          ${b.genre?`<span class="genre-tag-sm">${esc(b.genre.slice(0,6))}</span>`:''}
+        </div>
+        ${sentence?`<div class="book-reason">${esc(sentence)}</div>`:''}
+        <button class="book-add-btn${isAdded?' added':''}" id="add-${id}"
+          onclick="event.stopPropagation();plantSeed('${safeKey}','add-${id}')"
+          ${isAdded?'disabled':''}>
+          ${isAdded?'✓ 담겨 있음':'씨앗 심기'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── Plant seed ─────────────────────────────────── */
+async function plantSeed(bdataStr,btnId){
+  const btn=document.getElementById(btnId);
+  if(!btn||btn.disabled)return;
+  const b=bookCache.get(decodeURIComponent(bdataStr));
+  if(!b)return;
+  btn.disabled=true;btn.textContent='심는 중...';
+  const key=bookKey(b);
+  try{
+    const r=await fetch('/api/v2/shelf/books',{method:'POST',headers:hdr(),body:JSON.stringify({
+      title:b.title,author:b.author,cover_url:b.cover_url||'',
+      isbn:b.isbn||'',publisher:b.publisher||'',description:b.description||b.summary||'',
+      published_date:b.published_date||'',total_pages:b.total_pages||0,status:'want',user_id:UID
+    })});
+    const d=await r.json();
+    if(d.ok||d.book_id||d.id||d.shelf_id){
+      btn.textContent='✓ 담겨 있음';btn.classList.add('added');
+      addedSet.add(key);
+      showToast(`"${b.title.slice(0,16)}" 서재에 담았습니다 🌱`);
+    } else {
+      btn.disabled=false;btn.textContent='씨앗 심기';
+      showToast(d.error||'저장에 실패했습니다',true);
+    }
+  }catch(e){btn.disabled=false;btn.textContent='씨앗 심기';showToast('연결에 실패했습니다',true);}
+}
+
+async function plantHeroBook(){
+  if(!heroBook)return;
+  const btn=document.getElementById('hero-add-btn');
+  btn.disabled=true;btn.textContent='심는 중...';
+  try{
+    const r=await fetch('/api/v2/shelf/books',{method:'POST',headers:hdr(),body:JSON.stringify({
+      title:heroBook.title,author:heroBook.author,cover_url:heroBook.cover_url||'',
+      isbn:heroBook.isbn||'',publisher:heroBook.publisher||'',description:heroBook.description||heroBook.summary||'',
+      published_date:heroBook.published_date||'',total_pages:heroBook.total_pages||0,status:'want',user_id:UID
+    })});
+    const d=await r.json();
+    if(d.ok||d.book_id||d.id){
+      btn.textContent='✓ 담겨 있음';btn.classList.add('added');
+      showToast('오늘의 큐레이션 책을 서재에 담았습니다 🌱');
+    } else {btn.disabled=false;btn.textContent='씨앗 심기';}
+  }catch(e){btn.disabled=false;btn.textContent='씨앗 심기';}
+}
+
+/* ─── Set Hero ───────────────────────────────────── */
+function setHero(book){
+  heroBook=normalizeBook(book);
+  rememberBook(heroBook);
+  document.getElementById('hero-skel').style.display='none';
+  const card=document.getElementById('hero-book-card');card.style.display='block';
+  document.getElementById('hero-title').textContent=heroBook.title||'';
+  document.getElementById('hero-author').textContent=heroBook.author||'';
+
+  const extra=document.getElementById('hero-extra');
+  const parts=[];
+  if(heroBook.publisher)parts.push(`<span>${esc(heroBook.publisher)}</span>`);
+  if(heroBook.published_date)parts.push(`<span>${esc(formatDate(heroBook.published_date))}</span>`);
+  if(heroBook.genre)parts.push(`<span class="genre-tag">${esc(heroBook.genre)}</span>`);
+  extra.innerHTML=parts.join('');
+
+  const sentence=bookSentence(heroBook)||heroBook.reason||heroBook.summary||'';
+  document.getElementById('hero-reason').textContent=sentence;
+
+  const char=heroBook.title?heroBook.title.slice(0,1):'📖';
+  document.getElementById('hero-fallback-char').textContent=char;
+
+  const img=document.getElementById('hero-img');
+  if(heroBook.cover_url){
+    img.src=heroBook.cover_url;img.alt=heroBook.title;
+    img.style.display='block';
+    document.getElementById('hero-fallback').style.display='none';
+  }
+}
+
+function openHeroDetail(){
+  if(heroBook)openBookDetail(encodeURIComponent(bookKey(heroBook)));
+}
+
+/* ─── Search ─────────────────────────────────────── */
+async function triggerSearch(){
+  const q=document.getElementById('search-input').value.trim();
+  if(!q)return;
+  document.getElementById('search-query-label').textContent=q;
+  document.getElementById('search-section').classList.add('show');
+  document.getElementById('search-results-grid').innerHTML='<div class="skel-card grid-card"><div class="skel-cover skeleton"></div></div>'.repeat(4);
+  document.getElementById('search-section').scrollIntoView({behavior:'smooth',block:'start'});
+  try{
+    const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(q)}&source=all&limit=16`,{headers:hdr()});
+    const d=await r.json();
+    const books=d.books||d||[];
+    if(!books.length){
+      document.getElementById('search-results-grid').innerHTML=`<div class="state-empty" style="grid-column:1/-1"><span class="state-empty-icon">🔍</span><p>"${esc(q)}" 검색 결과가 없습니다.</p></div>`;
+    } else {render('search-results-grid',books,true);}
+  }catch(e){
+    document.getElementById('search-results-grid').innerHTML='<div class="state-empty" style="grid-column:1/-1"><span class="state-empty-icon">⚠️</span><p>책 정보를 불러오지 못했습니다.</p></div>';
+  }
+}
+function closeSearch(){
+  document.getElementById('search-section').classList.remove('show');
+  document.getElementById('search-input').value='';
+}
+
+/* ─── Filter chips ───────────────────────────────── */
+async function filterChip(el,value,type){
+  if(activeChipEl===el){
+    el.classList.remove('active');activeChipEl=null;
+    document.getElementById('filter-section').classList.remove('show');
+    return;
+  }
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');activeChipEl=el;
+
+  const strategy=getStrategy(type,value);
+  const sort=document.getElementById('explore-sort')?.value||'recent';
+  SECTION_STATE.explore={type,value,queries:strategy.queries,queryIndex:0,query:strategy.queries[0],base:[],seed:0,sort};
+  document.getElementById('filter-sort').value=sort;
+
+  if(type==='emotion'){
+    document.getElementById('filter-eyebrow').textContent='감정 탐색';
+    document.getElementById('filter-title').textContent=`"${value}" 감정에 어울리는 책`;
+  } else if(type==='mbti'){
+    document.getElementById('filter-eyebrow').textContent='MBTI 취향 탐색';
+    document.getElementById('filter-title').textContent=`${value} 독자에게 어울리는 책`;
+  } else {
+    document.getElementById('filter-eyebrow').textContent='장르 탐색';
+    document.getElementById('filter-title').textContent=`${value} 분야의 책`;
+  }
+
+  const fs=document.getElementById('filter-section');
+  fs.classList.add('show');
+  document.getElementById('filter-books').innerHTML='<div class="skel-card"><div class="skel-cover skeleton"></div></div>'.repeat(5);
+  fs.scrollIntoView({behavior:'smooth',block:'start'});
+  await loadExploreResults();
+}
+
+async function loadExploreResults(){
+  const state=SECTION_STATE.explore;
+  if(!state.query)return;
+  try{
+    const sort=document.getElementById('filter-sort')?.value||state.sort||'recent';
+    state.sort=sort;
+    const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(state.query)}&source=all&limit=18&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
+    const d=await r.json();
+    const books=d.books||d||[];
+    state.base=books.length?books:FALLBACK_BOOKS;
+    renderSorted('filter-books',state.base.slice(0,14),false,sort,state.seed);
+  }catch(e){
+    state.base=FALLBACK_BOOKS;
+    renderSorted('filter-books',FALLBACK_BOOKS.slice(0,6),false,state.sort,state.seed);
+  }
+}
+
+function reloadExplore(){
+  const filterSort=document.getElementById('filter-sort');
+  const exploreSort=document.getElementById('explore-sort');
+  const sort=(document.activeElement===filterSort?filterSort?.value:exploreSort?.value)||'recent';
+  if(filterSort)filterSort.value=sort;
+  if(exploreSort)exploreSort.value=sort;
+  SECTION_STATE.explore.sort=sort;
+  if(SECTION_STATE.explore.base.length)renderSorted('filter-books',SECTION_STATE.explore.base,false,sort,SECTION_STATE.explore.seed);
+}
+
+async function refreshExplore(){
+  const state=SECTION_STATE.explore;
+  if(!state.queries?.length){
+    const first=document.querySelector('.chip.type-emotion');
+    if(first)first.click();
+    return;
+  }
+  state.queryIndex=(state.queryIndex+1)%state.queries.length;
+  state.query=state.queries[state.queryIndex];
+  state.seed+=1;
+  document.getElementById('filter-books').innerHTML='<div class="skel-card"><div class="skel-cover skeleton"></div></div>'.repeat(5);
+  await loadExploreResults();
+}
+
+/* ─── Load sections ──────────────────────────────── */
+async function loadDailyMagazine(){
+  try{
+    const r=await fetch(`/api/v2/discover/today?user_id=${encodeURIComponent(UID)}`,{headers:hdr()});
+    const d=await r.json();
+    if(d.hero){setHero(d.hero);}
+    else if(d.book){setHero(d.book);}
+    else throw new Error('no hero');
+  }catch(e){
+    setHero(FALLBACK_BOOKS[stableHash(UID)%FALLBACK_BOOKS.length]);
+  }
+}
+
+async function loadPersonaRecommendations(){
+  try{
+    const sort=sectionSort('persona');
+    const r=await fetch(`/api/v2/books/recommendations?user_id=${encodeURIComponent(UID)}&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
+    const d=await r.json();
+    const books=d.books||[];
+    if(books.length){SECTION_STATE.persona.base=books;renderSorted('recommended-books',books.slice(0,12),false,sort,SECTION_STATE.persona.seed);}
+    else throw new Error('empty');
+  }catch(e){
+    SECTION_STATE.persona.base=FALLBACK_BOOKS;
+    renderSorted('recommended-books',FALLBACK_BOOKS,false,sectionSort('persona'),SECTION_STATE.persona.seed);
+  }
+}
+
+async function loadNewBooks(){
+  try{
+    const sort=sectionSort('new');
+    const q=QUERY_VARIANTS.new[SECTION_STATE.new.seed%QUERY_VARIANTS.new.length];
+    const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(q)}&source=all&limit=18&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
+    const d=await r.json();
+    const books=d.books||d||[];
+    if(books.length){SECTION_STATE.new.base=books;renderSorted('new-books',books,false,sort,SECTION_STATE.new.seed);}
+    else throw new Error('empty');
+  }catch(e){
+    SECTION_STATE.new.base=NEW_RELEASE_FALLBACK;
+    renderSorted('new-books',NEW_RELEASE_FALLBACK,false,sectionSort('new'),SECTION_STATE.new.seed);
+  }
+}
+
+async function loadPopularBooks(){
+  try{
+    const sort=sectionSort('popular');
+    const q=QUERY_VARIANTS.popular[SECTION_STATE.popular.seed%QUERY_VARIANTS.popular.length];
+    const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(q)}&source=all&limit=18&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
+    const d=await r.json();
+    const books=d.books||d||[];
+    if(books.length){SECTION_STATE.popular.base=books;renderSorted('popular-books',books,true,sort,SECTION_STATE.popular.seed);}
+    else throw new Error('empty');
+  }catch(e){
+    SECTION_STATE.popular.base=BESTSELLER_FALLBACK;
+    renderSorted('popular-books',BESTSELLER_FALLBACK,true,sectionSort('popular'),SECTION_STATE.popular.seed);
+  }
+}
+
+function reloadSection(name){
+  if(!SECTION_STATE[name])return;
+  const sort=sectionSort(name);SECTION_STATE[name].sort=sort;
+  const container=name==='persona'?'recommended-books':name==='new'?'new-books':'popular-books';
+  renderSorted(container,SECTION_STATE[name].base,name==='popular',sort,SECTION_STATE[name].seed);
+}
+
+async function refreshSection(name){
+  if(!SECTION_STATE[name])return;
+  SECTION_STATE[name].seed+=1;
+  if(name==='new')return loadNewBooks();
+  if(name==='popular')return loadPopularBooks();
+  reloadSection(name);
+}
+
+/* ─── Book detail modal ──────────────────────────── */
+const READING_QUESTIONS=[
+  '이 책이 지금의 나에게 어떤 질문을 던지고 있나요?',
+  '이 책의 한 문장을 고른다면 어떤 문장인가요?',
+  '이 책이 내 삶의 어떤 장면과 연결되나요?',
+  '이 책을 읽고 나면 무엇이 달라질 것 같나요?',
+  '이 책을 누군가에게 권한다면, 그 이유는 무엇인가요?'
+];
+
+function openBookDetail(bdataStr){
+  const rawKey=decodeURIComponent(bdataStr);
+  const b=bookCache.get(rawKey);
+  if(!b)return;
+  const key=bookKey(b);
+  const realRating=isRealRating(b);
+  const score=lumaScore(b).toFixed(1);
+  const reviews=reviewCount(b).toLocaleString('ko-KR');
+  const sentence=bookSentence(b)||b.reason||'';
+  const desc=b.description||b.summary||'';
+  const pub=formatDate(b.published_date);
+  const titleChar=b.title?b.title.slice(0,1):'📖';
+  const question=b.question||READING_QUESTIONS[stableHash(b.title||'')%READING_QUESTIONS.length];
+
+  const showDesc=desc&&desc!==sentence;
+  const showReason=sentence&&(!showDesc||sentence.length<desc.length);
+
+  document.getElementById('book-detail-body').innerHTML=`
+    <div class="detail-cover">
+      ${b.cover_url
+        ?`<img src="${esc(b.cover_url)}" alt="${esc(b.title)}"
+            onerror="this.outerHTML='<div class=\\"detail-cover-fallback\\">${esc(titleChar)}</div>'">`
+        :`<div class="detail-cover-fallback">${esc(titleChar)}</div>`}
+    </div>
+    <div>
+      <div class="detail-title">${esc(b.title)}</div>
+      <div class="detail-author">${esc(b.author)}</div>
+      <div class="detail-meta">
+        <span class="detail-chip ${realRating?'score-real':'score-luma'}">${realRating?'★':'LUMA 점수'} ${score}</span>
+        <span class="detail-chip">리뷰 ${reviews}</span>
+        ${b.publisher?`<span class="detail-chip">${esc(b.publisher)}</span>`:''}
+        ${pub?`<span class="detail-chip">${esc(pub)}</span>`:''}
+        ${b.genre?`<span class="detail-chip genre">${esc(b.genre)}</span>`:''}
+        ${b.source&&b.source!=='local'?`<span class="detail-chip">${esc(b.source)}</span>`:''}
+      </div>
+      ${showDesc?`<div class="detail-section"><div class="detail-section-label">줄거리</div><div class="detail-desc">${esc(desc.length>400?desc.slice(0,397)+'...':desc)}</div></div>`:''}
+      ${showReason?`<div class="detail-section"><div class="detail-section-label">추천 이유</div><div class="detail-reason">${esc(sentence)}</div></div>`:''}
+      <div class="detail-section">
+        <div class="detail-section-label">독서 질문</div>
+        <div class="detail-question">"${esc(question)}"</div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn btn-mint" id="detail-add-btn"
+          onclick="plantSeed('${encodeURIComponent(key)}','detail-add-btn')">씨앗 심기</button>
+        ${b.external_url?`<a class="btn btn-outline" href="${esc(b.external_url)}" target="_blank" rel="noopener">외부 링크</a>`:''}
+        <button class="btn btn-ghost" onclick="goToSocrates('${esc(b.title)}')">AI와 토론</button>
+      </div>
+    </div>`;
+  document.getElementById('book-detail-modal').classList.add('open');
+}
+
+function closeBookDetail(){document.getElementById('book-detail-modal').classList.remove('open');}
+
+function goToSocrates(title){
+  sessionStorage.setItem('luma_socrates_book',title);
+  window.location.href='/socrates';
+}
+
+/* ─── Navigation helpers ─────────────────────────── */
+function scrollToSearch(){
+  document.getElementById('search-anchor').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>document.getElementById('search-input').focus(),400);
+}
+function scrollToSections(){document.getElementById('sections-anchor').scrollIntoView({behavior:'smooth'});}
+
+/* ─── Init ───────────────────────────────────────── */
+function initDiscoverPage(){
+  Promise.all([loadDailyMagazine(),loadPersonaRecommendations(),loadNewBooks(),loadPopularBooks()]);
+}
+
+function initNav(){
+  const el=document.getElementById('nav-user');if(!el)return;
+  const user=JSON.parse(localStorage.getItem('luma_user')||'{}');
+  if(user.display_name||user.email){
+    el.innerHTML=`<span>${user.emoji||'🌿'}</span><span style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(user.display_name||user.email)}</span><button onclick="logout()" class="nav-logout">로그아웃</button>`;
+  } else {
+    el.innerHTML='<a href="/auth/login" class="nav-login-btn">로그인</a>';
+  }
+}
+function logout(){localStorage.removeItem('luma_token');localStorage.removeItem('luma_user');window.location.href='/auth/login';}
+
+/* ─── Rotating tagline ───────────────────────────── */
+(function(){
+  const phrases=['생각은 빛이 된다','읽을수록 더 깊어진다','오늘의 책, 나에게 맞는 한 권','책으로 시작되는 사유의 시간','Where Thoughts Become Light'];
+  const el=document.getElementById('luma-tagline');if(!el)return;
+  let i=0;
+  function show(idx){
+    el.style.opacity='0';el.style.transform='translateY(-4px)';
+    setTimeout(()=>{el.textContent=phrases[idx];el.style.opacity='1';el.style.transform='translateY(0)';},450);
+  }
+  show(0);setInterval(()=>{i=(i+1)%phrases.length;show(i);},9000);
+})();
+
+document.addEventListener('DOMContentLoaded',()=>{initNav();initDiscoverPage();});
+</script>
+</body>
+</html>

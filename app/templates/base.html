@@ -1,0 +1,235 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}LUMA — 생각을 별자리로{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#2D4A3E;--amber:#C17F3B;--amber-lt:#E8A85A;
+  --bg:#0D1B14;--bg2:#111F18;--bg3:#162B20;
+  --text:#E8DCC8;--sub:#8FA89A;
+  --card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.07);
+  --glow:rgba(193,127,59,0.22);
+  --green:#4ADE80;--red:#F87171;--blue:#60A5FA;--purple:#A5B4FC;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard',sans-serif;}
+a{text-decoration:none;color:inherit;}
+
+/* ?? 怨듯넻 ?ㅻ퉬寃뚯씠???? */
+.luma-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:60px;
+  background:rgba(13,27,20,.97);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;backdrop-filter:blur(12px);
+}
+.luma-nav .logo{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--amber);display:flex;align-items:center;gap:9px;text-decoration:none;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 0 8px transparent}}
+.nav-links{display:flex;gap:3px;}
+.nav-link{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px;border-radius:18px;
+  font-size:.76rem;color:var(--sub);
+  transition:.2s;cursor:pointer;
+}
+.nav-link:hover{background:var(--card);color:var(--text);}
+.nav-link.active{background:rgba(193,127,59,.15);color:var(--amber);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-user{
+  display:flex;align-items:center;gap:8px;
+  padding:5px 12px 5px 8px;border-radius:20px;
+  background:var(--card);border:1px solid var(--border);
+  cursor:pointer;transition:.2s;
+}
+.nav-user:hover{border-color:rgba(193,127,59,.3);}
+.nav-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--forest),var(--amber));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;}
+.nav-username{font-size:.75rem;color:var(--text);max-width:80px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.nav-login-btn{padding:7px 16px;border-radius:18px;background:rgba(193,127,59,.15);border:1px solid rgba(193,127,59,.3);color:var(--amber);font-size:.76rem;cursor:pointer;transition:.2s;font-family:'Pretendard',sans-serif;}
+.nav-login-btn:hover{background:rgba(193,127,59,.25);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- 怨듯넻 ?ㅻ퉬寃뚯씠??-->
+<nav class="luma-nav">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:32px;object-fit:contain" onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--amber);line-height:1">LUMA</span>
+      <span id="luma-tagline" style="font-size:.58rem;color:var(--sub);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link {% if active_page=='dashboard' %}active{% endif %}">별자리 지도</a>
+    <a href="/heart" class="nav-link {% if active_page=='heart' %}active{% endif %}">마음 행성계</a>
+    <a href="/lounge" class="nav-link {% if active_page=='lounge' %}active{% endif %}">탐사 성운</a>
+    <a href="/social" class="nav-link {% if active_page=='social' %}active{% endif %}">독자 광장</a>
+    <a href="/live" class="nav-link {% if active_page=='live' %}active{% endif %}">라이브</a>
+    <a href="/socrates" class="nav-link {% if active_page=='socrates' %}active{% endif %}">소크라테스</a>
+    <a href="/profile" class="nav-link {% if active_page=='profile' %}active{% endif %}">프로필</a>
+  </div>
+  <div class="nav-right">
+    <div id="nav-user-area">
+      <a href="/auth" class="nav-login-btn">로그인</a>
+    </div>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<!-- 怨듯넻 JS: ?ㅻ퉬 ?ъ슜???곹깭 -->
+<script>
+(async function checkNavUser() {
+  try {
+    const r = await fetch('/auth/api/me');
+    const d = await r.json();
+    if (d.ok && d.user) {
+      const u = d.user;
+      document.getElementById('nav-user-area').innerHTML = `
+        <div class="nav-user" onclick="window.location='/auth/profile'">
+          <div class="nav-avatar">${u.display_name?.[0]||'✨'﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}LUMA — 생각을 별자리로{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#2D4A3E;--amber:#C17F3B;--amber-lt:#E8A85A;
+  --bg:#0D1B14;--bg2:#111F18;--bg3:#162B20;
+  --text:#E8DCC8;--sub:#8FA89A;
+  --card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.07);
+  --glow:rgba(193,127,59,0.22);
+  --green:#4ADE80;--red:#F87171;--blue:#60A5FA;--purple:#A5B4FC;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard',sans-serif;}
+a{text-decoration:none;color:inherit;}
+
+/* ?? 怨듯넻 ?ㅻ퉬寃뚯씠???? */
+.luma-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:60px;
+  background:rgba(13,27,20,.97);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;backdrop-filter:blur(12px);
+}
+.luma-nav .logo{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--amber);display:flex;align-items:center;gap:9px;text-decoration:none;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 0 8px transparent}}
+.nav-links{display:flex;gap:3px;}
+.nav-link{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px;border-radius:18px;
+  font-size:.76rem;color:var(--sub);
+  transition:.2s;cursor:pointer;
+}
+.nav-link:hover{background:var(--card);color:var(--text);}
+.nav-link.active{background:rgba(193,127,59,.15);color:var(--amber);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-user{
+  display:flex;align-items:center;gap:8px;
+  padding:5px 12px 5px 8px;border-radius:20px;
+  background:var(--card);border:1px solid var(--border);
+  cursor:pointer;transition:.2s;
+}
+.nav-user:hover{border-color:rgba(193,127,59,.3);}
+.nav-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--forest),var(--amber));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;}
+.nav-username{font-size:.75rem;color:var(--text);max-width:80px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.nav-login-btn{padding:7px 16px;border-radius:18px;background:rgba(193,127,59,.15);border:1px solid rgba(193,127,59,.3);color:var(--amber);font-size:.76rem;cursor:pointer;transition:.2s;font-family:'Pretendard',sans-serif;}
+.nav-login-btn:hover{background:rgba(193,127,59,.25);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- 怨듯넻 ?ㅻ퉬寃뚯씠??-->
+<nav class="luma-nav">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:32px;object-fit:contain" onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--amber);line-height:1">LUMA</span>
+      <span id="luma-tagline" style="font-size:.58rem;color:var(--sub);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link {% if active_page=='dashboard' %}active{% endif %}">별자리 지도</a>
+    <a href="/heart" class="nav-link {% if active_page=='heart' %}active{% endif %}">마음 행성계</a>
+    <a href="/lounge" class="nav-link {% if active_page=='lounge' %}active{% endif %}">탐사 성운</a>
+    <a href="/social" class="nav-link {% if active_page=='social' %}active{% endif %}">독자 광장</a>
+    <a href="/live" class="nav-link {% if active_page=='live' %}active{% endif %}">라이브</a>
+    <a href="/socrates" class="nav-link {% if active_page=='socrates' %}active{% endif %}">소크라테스</a>
+    <a href="/profile" class="nav-link {% if active_page=='profile' %}active{% endif %}">프로필</a>
+  </div>
+  <div class="nav-right">
+    <div id="nav-user-area">
+      <a href="/auth" class="nav-login-btn">로그인</a>
+    </div>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<!-- 怨듯넻 JS: ?ㅻ퉬 ?ъ슜???곹깭 -->
+<script>
+(async function checkNavUser() {
+  try {
+    const r = await fetch('/auth/api/me');
+    const d = await r.json();
+    if (d.ok && d.user) {
+      const u = d.user;
+      document.getElementById('nav-user-area').innerHTML = `
+        <div class="nav-user" onclick="window.location='/auth/profile'">
+          <div class="nav-avatar">${u.display_name?.[0]||'??}</div>
+          <span class="nav-username">${u.display_name||u.email}</span>
+        </div>`;
+    }
+  } catch(e) {}
+})();
+
+(function(){
+  const phrases=[
+    {t:'생각은 빛이 된다',ko:true},
+    {t:'읽을수록 더 깊은 우주로',ko:true},
+    {t:'당신의 생각은 하나의 우주가 됩니다',ko:true},
+    {t:'한 문장이 하나의 별이 되듯',ko:true},
+    {t:'책으로 시작된 생각의 우주',ko:true},
+    {t:'Where Thoughts Become Constellations',ko:false},
+    {t:'Read. Think. Expand.',ko:false},
+    {t:'Illuminate Your Thoughts',ko:false},
+  ];
+  const el=document.getElementById('luma-tagline');
+  if(!el)return;
+  let i=0;
+  function show(idx){
+    const p=phrases[idx];
+    el.style.opacity='0';el.style.transform='translateY(-5px)';
+    setTimeout(()=>{
+      el.textContent=p.t;
+      el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"'Cinzel','DM Serif Display',serif";
+      el.style.letterSpacing=p.ko?'.05em':'.14em';
+      el.style.opacity='1';el.style.transform='translateY(0)';
+    },500);
+  }
+  show(0);
+  setInterval(()=>{i=(i+1)%phrases.length;show(i);},10000);
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
+

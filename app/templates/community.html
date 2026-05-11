@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMA — 독서 모임방</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050815;--panel:rgba(9,14,32,.86);--panel2:rgba(12,18,40,.95);
+  --gold:#f5c86b;--gold-dim:rgba(245,200,107,.18);--gold-border:rgba(245,200,107,.3);
+  --green:#4ade80;--text:#eef3ff;--sub:rgba(238,243,255,.45);
+  --border:rgba(255,255,255,.07);--card:rgba(255,255,255,.04);
+  --glow:rgba(245,200,107,.22);--red:#f87171;--blue:#93c5fd;--purple:#c4b5fd;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--bg);color:var(--text);font-family:'Pretendard',sans-serif;
+  height:100vh;display:grid;grid-template-rows:60px 1fr;overflow:hidden;
+}
+a{text-decoration:none;color:inherit;}
+button,input,textarea,select{font-family:inherit;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(245,200,107,.2);border-radius:2px;}
+
+/* STARFIELD */
+#stars-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
+
+/* NAV */
+.luma-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:60px;
+  background:rgba(5,8,21,.97);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;backdrop-filter:blur(14px);
+  position:relative;
+}
+.logo{font-family:'DM Serif Display',serif;color:var(--gold);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo img{height:32px;object-fit:contain;}
+.logo-text{display:flex;flex-direction:column;gap:1px;}
+.logo-brand{font-size:1.1rem;line-height:1;}
+#luma-tagline{font-size:.58rem;color:var(--sub);letter-spacing:.09em;font-style:italic;transition:opacity .5s,transform .5s;}
+.nav-links{display:flex;gap:2px;}
+.nav-link{
+  padding:7px 12px;border-radius:18px;font-size:.76rem;color:var(--sub);
+  transition:.2s;cursor:pointer;display:flex;align-items:center;gap:5px;
+}
+.nav-link:hover{background:var(--card);color:var(--text);}
+.nav-link.active{background:rgba(245,200,107,.12);color:var(--gold);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+#nav-user-area .nav-user{
+  display:flex;align-items:center;gap:8px;padding:5px 12px 5px 8px;
+  border-radius:20px;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:.2s;
+}
+#nav-user-area .nav-user:hover{border-color:var(--gold-border);}
+.nav-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,var(--gold));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;}
+.nav-username{font-size:.75rem;color:var(--text);max-width:80px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.nav-login-btn{padding:7px 16px;border-radius:18px;background:rgba(245,200,107,.1);border:1px solid var(--gold-border);color:var(--gold);font-size:.76rem;cursor:pointer;transition:.2s;}
+.nav-login-btn:hover{background:rgba(245,200,107,.2);}
+
+/* MAIN GRID */
+.main-area{display:grid;grid-template-columns:260px 1fr;overflow:hidden;position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sidebar{
+  background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar-header{padding:14px 14px 12px;border-bottom:1px solid var(--border);}
+.btn-create-club{
+  width:100%;padding:10px 14px;border-radius:11px;
+  background:linear-gradient(135deg,rgba(245,200,107,.2),rgba(245,200,107,.08));
+  border:1px solid var(--gold-border);color:var(--gold);
+  font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-create-club:hover{background:linear-gradient(135deg,rgba(245,200,107,.32),rgba(245,200,107,.15));box-shadow:0 0 18px var(--glow);}
+.sidebar-label{font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);margin:14px 14px 8px;}
+.clubs-list{flex:1;overflow-y:auto;padding:0 10px 14px;}
+.club-item{
+  display:block;padding:11px 10px;border-radius:11px;margin-bottom:6px;
+  background:var(--card);border:1px solid var(--border);cursor:pointer;transition:.22s;
+}
+.club-item:hover{border-color:rgba(245,200,107,.3);background:rgba(245,200,107,.05);}
+.club-item.active{border-color:rgba(245,200,107,.5);background:rgba(245,200,107,.08);box-shadow:inset 0 0 20px rgba(245,200,107,.04);}
+.ci-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.ci-emoji{font-size:1.2rem;line-height:1;}
+.ci-name{font-size:.82rem;color:var(--text);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-members{font-size:.65rem;color:var(--green);background:rgba(74,222,128,.1);padding:2px 7px;border-radius:20px;}
+.ci-book{font-size:.71rem;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-join-btn{
+  margin-top:8px;width:100%;padding:6px;border-radius:8px;font-size:.72rem;
+  background:rgba(245,200,107,.1);border:1px solid var(--gold-border);
+  color:var(--gold);cursor:pointer;transition:.2s;
+}
+.ci-join-btn:hover{background:rgba(245,200,107,.2);}
+.sidebar-empty{padding:24px 14px;text-align:center;color:var(--sub);font-size:.82rem;}
+
+/* CONTENT AREA */
+.content-area{display:flex;flex-direction:column;overflow:hidden;}
+
+/* WELCOME HERO */
+.welcome-hero{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow-y:auto;padding:48px 24px;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(245,200,107,.07),transparent 70%);
+}
+.hero-constellation{font-size:3rem;margin-bottom:18px;opacity:.8;}
+.hero-title{
+  font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);
+  color:var(--text);text-align:center;line-height:1.3;margin-bottom:12px;
+  background:linear-gradient(135deg,var(--text) 40%,var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{font-size:.9rem;color:var(--sub);text-align:center;max-width:420px;line-height:1.7;margin-bottom:40px;}
+.feature-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:700px;width:100%;margin-bottom:36px;}
+.feature-card{
+  background:var(--panel);border:1px solid var(--border);border-radius:16px;
+  padding:22px 18px;text-align:center;transition:.22s;
+}
+.feature-card:hover{border-color:var(--gold-border);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.3);}
+.feature-icon{font-size:1.6rem;margin-bottom:10px;}
+.feature-title{font-size:.85rem;color:var(--text);font-weight:600;margin-bottom:6px;}
+.feature-desc{font-size:.75rem;color:var(--sub);line-height:1.6;}
+.hero-cta{
+  padding:13px 32px;border-radius:14px;
+  background:linear-gradient(135deg,var(--gold),#e8a85a);
+  color:#07110f;font-size:.9rem;font-weight:700;cursor:pointer;
+  border:none;transition:.2s;box-shadow:0 6px 24px rgba(245,200,107,.3);
+}
+.hero-cta:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(245,200,107,.4);}
+
+/* CLUB CONTENT */
+.club-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.club-header{
+  padding:18px 22px 0;background:var(--panel);
+  border-bottom:1px solid var(--border);
+}
+.club-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.club-title-row{display:flex;align-items:center;gap:12px;}
+.club-big-emoji{font-size:2rem;line-height:1;}
+.club-name{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--text);}
+.club-meta{display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap;}
+.club-member-pill{font-size:.72rem;color:var(--green);background:rgba(74,222,128,.1);padding:3px 10px;border-radius:20px;}
+.club-book-label{font-size:.72rem;color:var(--sub);}
+.club-book-label strong{color:var(--gold);}
+.club-actions{display:flex;gap:8px;}
+.btn-ai-guide{
+  padding:8px 14px;border-radius:10px;font-size:.76rem;cursor:pointer;transition:.2s;
+  background:rgba(196,181,253,.1);border:1px solid rgba(196,181,253,.3);color:var(--purple);
+  display:flex;align-items:center;gap:5px;
+}
+.btn-ai-guide:hover{background:rgba(196,181,253,.2);}
+.btn-report{
+  padding:8px 14px;border-radius:10px;font-size:.76rem;cursor:pointer;transition:.2s;
+  background:rgba(147,197,253,.1);border:1px solid rgba(147,197,253,.3);color:var(--blue);
+  display:flex;align-items:center;gap:5px;
+}
+.btn-report:hover{background:rgba(147,197,253,.2);}
+
+/* TABS */
+.club-tabs{display:flex;gap:0;padding:0 22px;}
+.ctab{
+  padding:11px 18px;font-size:.79rem;color:var(--sub);cursor:pointer;
+  border:none;background:transparent;border-bottom:2px solid transparent;
+  transition:.15s;font-family:'Pretendard',sans-serif;
+}
+.ctab:hover{color:var(--text);}
+.ctab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-body{flex:1;overflow-y:auto;padding:20px 22px;}
+
+/* COMPOSE */
+.compose-area{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px;margin-bottom:20px;transition:.2s;
+}
+.compose-area:focus-within{border-color:var(--gold-border);}
+.compose-textarea{
+  width:100%;min-height:72px;background:transparent;border:none;outline:none;
+  resize:vertical;color:var(--text);font-size:.87rem;line-height:1.7;
+  placeholder-color:var(--sub);
+}
+.compose-textarea::placeholder{color:var(--sub);}
+.compose-footer{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.btn-post{
+  padding:8px 20px;border-radius:10px;font-size:.78rem;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,rgba(245,200,107,.25),rgba(245,200,107,.1));
+  border:1px solid var(--gold-border);color:var(--gold);transition:.2s;
+}
+.btn-post:hover{background:linear-gradient(135deg,rgba(245,200,107,.4),rgba(245,200,107,.2));}
+
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.card-item{
+  background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:16px;transition:.2s;display:flex;flex-direction:column;gap:10px;
+}
+.card-item:hover{border-color:rgba(245,200,107,.25);transform:translateY(-2px);}
+.card-passage{
+  font-family:'Noto Serif KR',serif;font-size:.88rem;line-height:1.8;
+  color:var(--text);flex:1;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-author-row{display:flex;align-items:center;gap:8px;}
+.card-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,var(--gold));display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;flex-shrink:0;}
+.card-author-name{font-size:.72rem;color:var(--sub);}
+.card-actions{display:flex;align-items:center;gap:8px;margin-top:2px;}
+.btn-like{
+  display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;
+  font-size:.72rem;cursor:pointer;transition:.2s;border:1px solid var(--border);
+  background:var(--card);color:var(--sub);
+}
+.btn-like:hover,.btn-like.liked{border-color:rgba(248,113,113,.4);color:var(--red);background:rgba(248,113,113,.08);}
+.btn-comment{
+  display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;
+  font-size:.72rem;cursor:pointer;transition:.2s;border:1px solid var(--border);
+  background:var(--card);color:var(--sub);
+}
+.btn-comment:hover{border-color:var(--gold-border);color:var(--gold);}
+.card-comments{
+  border-top:1px solid var(--border);padding-top:10px;margin-top:2px;display:none;
+}
+.card-comments.open{display:block;}
+.comment-item{font-size:.76rem;color:var(--sub);padding:4px 0;line-height:1.5;border-bottom:1px solid rgba(255,255,255,.03);}
+.comment-item:last-child{border:none;}
+.comment-input-row{display:flex;gap:8px;margin-top:8px;}
+.comment-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:.76rem;color:var(--text);outline:none;}
+.comment-input:focus{border-color:var(--gold-border);}
+.btn-comment-send{padding:7px 12px;border-radius:8px;font-size:.72rem;cursor:pointer;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);transition:.2s;}
+.btn-comment-send:hover{background:rgba(245,200,107,.3);}
+
+/* PLACES TAB */
+.map-explorer{
+  height:100%;min-height:620px;display:grid;grid-template-columns:310px minmax(380px,1fr) 330px;
+  gap:12px;overflow:hidden;
+  --map-green:#36d07f;--map-green-soft:rgba(54,208,127,.14);--map-green-border:rgba(54,208,127,.32);
+}
+.map-panel{
+  background:linear-gradient(180deg,rgba(9,26,22,.94),rgba(7,15,25,.9));
+  border:1px solid rgba(54,208,127,.14);border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;min-height:0;
+}
+.map-panel-head{padding:12px 14px;border-bottom:1px solid rgba(54,208,127,.12);background:linear-gradient(180deg,rgba(54,208,127,.07),transparent);}
+.map-kicker{font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--map-green);margin-bottom:4px;}
+.map-title{font-family:'DM Serif Display',serif;font-size:1.22rem;color:var(--text);}
+.map-copy{font-size:.71rem;color:rgba(238,243,255,.58);line-height:1.45;margin-top:4px;}
+.places-search-row{display:flex;gap:10px;margin-bottom:18px;}
+.places-search-input{
+  flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;font-size:.84rem;color:var(--text);outline:none;transition:.2s;
+}
+.places-search-input:focus{border-color:var(--gold-border);}
+.map-search-stack{padding:10px;border-bottom:1px solid rgba(54,208,127,.12);display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+.map-search-row{display:flex;gap:7px;margin-bottom:8px;}
+.map-search-input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(54,208,127,.14);border-radius:9px;padding:8px 10px;color:var(--text);font-size:.76rem;outline:none;}
+.map-search-input:focus{border-color:var(--map-green-border);box-shadow:0 0 0 3px rgba(54,208,127,.08);}
+.btn-search{
+  padding:8px 13px;border-radius:9px;font-size:.76rem;cursor:pointer;
+  background:var(--map-green-soft);border:1px solid var(--map-green-border);color:var(--map-green);transition:.2s;
+}
+.btn-search:hover{background:rgba(54,208,127,.24);}
+.btn-locate,.btn-map-research{
+  padding:7px 9px;border-radius:9px;border:1px solid rgba(54,208,127,.13);background:rgba(255,255,255,.035);
+  color:rgba(238,243,255,.68);font-size:.7rem;cursor:pointer;transition:.2s;white-space:nowrap;
+}
+.btn-locate:hover,.btn-map-research:hover{border-color:var(--map-green-border);color:var(--map-green);}
+.filter-block{border:1px solid rgba(54,208,127,.11);border-radius:11px;background:rgba(255,255,255,.022);padding:8px;}
+.filter-title{font-size:.58rem;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.filter-title strong{font-size:.7rem;color:var(--text);letter-spacing:0;text-transform:none;}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.filter-control{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(54,208,127,.12);border-radius:8px;color:var(--text);font-size:.68rem;padding:7px;outline:none;}
+.filter-control:focus{border-color:var(--map-green-border);}
+.filter-control option{background:#0b1024;color:var(--text);}
+.quick-filters{display:flex;gap:5px;flex-wrap:wrap;}
+.quick-chip{border:1px solid rgba(54,208,127,.12);background:rgba(255,255,255,.035);color:var(--sub);border-radius:999px;padding:4px 7px;font-size:.64rem;cursor:pointer;transition:.18s;}
+.quick-chip:hover,.quick-chip.active{border-color:var(--map-green-border);color:var(--map-green);background:var(--map-green-soft);}
+.result-tools{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;}
+.result-count{font-size:.68rem;color:var(--sub);white-space:nowrap;}
+.saved-strip{display:flex;gap:6px;overflow-x:auto;padding:0 1px 2px;min-height:0;}
+.saved-mini{flex:0 0 132px;border:1px solid rgba(54,208,127,.16);border-radius:9px;background:rgba(54,208,127,.06);padding:7px;cursor:pointer;transition:.18s;}
+.saved-mini:hover{border-color:var(--map-green-border);background:rgba(54,208,127,.12);}
+.saved-mini-name{font-size:.68rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.saved-mini-meta{font-size:.6rem;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.place-results{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.08);min-height:220px;}
+.place-result-card{border:1px solid rgba(54,208,127,.12);background:rgba(255,255,255,.035);border-radius:11px;padding:10px;cursor:pointer;transition:.18s;}
+.place-result-card:hover,.place-result-card.active{border-color:var(--map-green-border);background:rgba(54,208,127,.08);}
+.place-result-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px;}
+.place-result-name{font-size:.82rem;font-weight:700;color:var(--text);line-height:1.35;}
+.saved-pill{font-size:.6rem;color:var(--green);border:1px solid rgba(74,222,128,.28);border-radius:999px;padding:2px 6px;background:rgba(74,222,128,.08);}
+.place-result-addr{font-size:.7rem;color:var(--sub);line-height:1.45;margin-bottom:7px;}
+.place-metrics{display:flex;gap:5px;flex-wrap:wrap;}
+.place-metrics span{font-size:.62rem;color:var(--sub);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:3px 6px;background:rgba(255,255,255,.035);}
+.place-metrics .gold{color:var(--gold);border-color:rgba(245,200,107,.18);}
+.place-metrics .good{color:var(--green);border-color:rgba(74,222,128,.18);}
+.map-shell{position:relative;min-height:0;}
+#map-container{width:100%;height:100%;min-height:620px;border-radius:14px;border:1px solid rgba(54,208,127,.14);overflow:hidden;background:linear-gradient(135deg,rgba(21,83,54,.22),rgba(5,13,21,.92));display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:.84rem;}
+#map{width:100%;height:100%;}
+.map-status{position:absolute;left:14px;bottom:14px;z-index:5;max-width:calc(100% - 28px);background:rgba(5,18,16,.88);border:1px solid rgba(54,208,127,.18);border-radius:12px;padding:8px 11px;color:rgba(238,243,255,.7);font-size:.7rem;backdrop-filter:blur(10px);}
+.my-location-legend{position:absolute;right:14px;bottom:14px;z-index:5;background:rgba(5,8,21,.86);border:1px solid rgba(147,197,253,.35);border-radius:999px;padding:7px 10px;color:#bfdbfe;font-size:.68rem;display:flex;align-items:center;gap:7px;backdrop-filter:blur(10px);}
+.my-location-dot{width:12px;height:12px;border-radius:50%;background:#60a5fa;box-shadow:0 0 0 4px rgba(96,165,250,.18),0 0 16px rgba(96,165,250,.6);}
+.btn-map-research{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(9,14,32,.92);display:none;}
+.btn-map-research.show{display:block;}
+.place-detail{flex:1;overflow:auto;}
+.detail-photo{height:170px;background:linear-gradient(135deg,rgba(245,200,107,.12),rgba(147,197,253,.08));display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:2rem;overflow:hidden;}
+.detail-photo img{width:100%;height:100%;object-fit:cover;}
+.detail-body{padding:14px;}
+.detail-name{font-family:'DM Serif Display',serif;font-size:1.25rem;line-height:1.25;margin-bottom:6px;}
+.detail-address{font-size:.75rem;color:var(--sub);line-height:1.55;margin-bottom:10px;}
+.detail-summary{border:1px solid rgba(245,200,107,.16);background:rgba(245,200,107,.06);border-radius:12px;padding:10px;color:rgba(238,243,255,.78);font-size:.75rem;line-height:1.6;margin:10px 0;}
+.detail-actions{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0;}
+.detail-btn{border:1px solid var(--border);background:var(--card);color:var(--sub);border-radius:9px;padding:8px 10px;font-size:.72rem;cursor:pointer;transition:.18s;}
+.detail-btn:hover{border-color:var(--gold-border);color:var(--gold);}
+.detail-btn.primary{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold);font-weight:700;}
+.detail-btn.danger:hover{border-color:rgba(248,113,113,.35);color:var(--red);}
+.meta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0;}
+.meta-item{border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.035);padding:9px;}
+.meta-label{font-size:.62rem;color:var(--sub);margin-bottom:4px;}
+.meta-value{font-size:.78rem;color:var(--text);font-weight:600;}
+.edit-form,.review-form{border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:grid;gap:8px;}
+.edit-form{display:none;}
+.edit-form.open{display:grid;}
+.form-mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mini-input,.mini-select,.mini-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:.74rem;padding:8px;outline:none;}
+.mini-textarea{min-height:64px;resize:vertical;grid-column:1/-1;}
+.reviews-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.review-item{border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.035);padding:9px;}
+.review-head{display:flex;justify-content:space-between;gap:8px;font-size:.7rem;color:var(--sub);margin-bottom:5px;}
+.review-content{font-size:.75rem;color:rgba(238,243,255,.82);line-height:1.55;}
+.places-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.place-card{
+  background:var(--panel);border:1px solid var(--border);border-radius:13px;
+  padding:14px;transition:.2s;
+}
+.place-card:hover{border-color:rgba(245,200,107,.25);}
+.place-type-badge{font-size:.63rem;color:var(--gold);background:var(--gold-dim);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px;}
+.place-name{font-size:.88rem;color:var(--text);font-weight:500;margin-bottom:4px;}
+.place-addr{font-size:.73rem;color:var(--sub);margin-bottom:8px;line-height:1.5;}
+.place-bottom{display:flex;align-items:center;justify-content:space-between;}
+.place-rating{font-size:.75rem;color:#fbbf24;}
+.btn-save-place{
+  padding:5px 12px;border-radius:8px;font-size:.72rem;cursor:pointer;
+  background:var(--card);border:1px solid var(--border);color:var(--sub);transition:.2s;
+}
+.btn-save-place:hover{border-color:var(--gold-border);color:var(--gold);}
+
+/* SETTINGS TAB */
+.settings-section{margin-bottom:28px;}
+.settings-section h3{font-size:.78rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;}
+.book-setting-card{
+  background:var(--card);border:1px solid var(--border);border-radius:13px;
+  padding:16px;display:flex;gap:16px;align-items:flex-start;
+}
+.book-cover-area{
+  width:72px;height:100px;border-radius:9px;border:1px dashed var(--border);
+  background:rgba(245,200,107,.05);display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;flex-shrink:0;cursor:pointer;transition:.2s;
+}
+.book-cover-area:hover{border-color:var(--gold-border);}
+.book-info-fields{flex:1;}
+.field-label{font-size:.7rem;color:var(--sub);margin-bottom:5px;}
+.field-input{
+  width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:8px 11px;font-size:.82rem;color:var(--text);outline:none;margin-bottom:10px;
+}
+.field-input:focus{border-color:var(--gold-border);}
+.schedule-row{
+  background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
+}
+.schedule-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.schedule-info{flex:1;}
+.schedule-title{font-size:.82rem;color:var(--text);}
+.schedule-time{font-size:.72rem;color:var(--sub);margin-top:2px;}
+.members-list{display:flex;flex-direction:column;gap:8px;}
+.member-row{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+}
+.member-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,var(--gold));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;flex-shrink:0;}
+.member-name{flex:1;font-size:.82rem;color:var(--text);}
+.member-role{font-size:.65rem;padding:2px 8px;border-radius:20px;}
+.role-host{background:rgba(245,200,107,.15);color:var(--gold);}
+.role-member{background:rgba(255,255,255,.06);color:var(--sub);}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;}
+.modal.open{display:flex;}
+.modal-box{width:min(480px,96vw);max-height:92vh;overflow:auto;background:var(--panel2);border:1px solid rgba(245,200,107,.25);border-radius:20px;padding:26px;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+.modal-title{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--gold);}
+.btn-close{background:none;border:none;color:var(--sub);font-size:1.2rem;cursor:pointer;padding:0;transition:.2s;}
+.btn-close:hover{color:var(--text);}
+.form-field{margin-bottom:16px;}
+.form-label{font-size:.73rem;color:var(--sub);margin-bottom:7px;display:block;}
+.form-input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:10px 13px;font-size:.86rem;color:var(--text);outline:none;transition:.2s;
+}
+.form-input:focus{border-color:var(--gold-border);}
+.emoji-picker{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.ep-btn{
+  width:44px;height:44px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;font-size:1.3rem;transition:.2s;display:flex;align-items:center;justify-content:center;
+}
+.ep-btn:hover,.ep-btn.selected{border-color:var(--gold-border);background:var(--gold-dim);}
+.form-select{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:10px 13px;font-size:.86rem;color:var(--text);outline:none;
+}
+.btn-primary{
+  width:100%;padding:12px;border-radius:12px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold),#e8a85a);
+  color:#07110f;font-size:.9rem;font-weight:700;transition:.2s;margin-top:6px;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(245,200,107,.3);}
+.modal-msg{font-size:.78rem;color:var(--sub);text-align:center;margin-top:10px;min-height:18px;}
+
+/* LOADING */
+.loading-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px;text-align:center;color:var(--sub);font-size:.84rem;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--sub);}
+.empty-state .es-icon{font-size:2.2rem;margin-bottom:12px;opacity:.5;}
+.empty-state p{font-size:.84rem;line-height:1.7;}
+
+@media(max-width:760px){
+  .main-area{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .feature-cards{grid-template-columns:1fr;}
+  .club-header-top{flex-direction:column;gap:10px;}
+  .cards-grid{grid-template-columns:1fr;}
+  .map-explorer{grid-template-columns:1fr;height:auto;overflow:visible;}
+  #map-container{height:360px;min-height:360px;}
+  body{overflow:auto;height:auto;min-height:100vh;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+
+<!-- NAV -->
+<nav class="luma-nav">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" onerror="this.style.display='none'">
+    <div class="logo-text">
+      <span class="logo-brand">LUMA</span>
+      <span id="luma-tagline">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">별자리 지도</a>
+    <a href="/heart" class="nav-link">마음 행성계</a>
+    <a href="/lounge" class="nav-link">탐사 성운</a>
+    <a href="/social" class="nav-link">독자 광장</a>
+    <a href="/live" class="nav-link">라이브</a>
+    <a href="/socrates" class="nav-link">소크라테스</a>
+    <a href="/profile" class="nav-link">프로필</a>
+    <a href="/community" class="nav-link active">모임방</a>
+  </div>
+  <div class="nav-right">
+    <div id="nav-user-area">
+      <a href="/auth" class="nav-login-btn">로그인</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN LAYOUT -->
+<div class="main-area">
+
+  <!-- SIDEBAR: Club List -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <button class="btn-create-club" onclick="openCreateModal()">
+        ✦ 모임방 만들기
+      </button>
+    </div>
+    <div class="sidebar-label">참여 중인 모임방</div>
+    <div class="clubs-list" id="clubs-list">
+      {% if clubs %}
+        {% for club in clubs %}
+        <a href="/community/?club={{ club.club_id or club.id }}" class="club-item {% if active_club and active_club.club_id == club.club_id %}active{% endif %}" id="club-item-{{ club.club_id or club.id }}">
+          <div class="ci-top">
+            <span class="ci-emoji">{{ club.emoji or '📚' }}</span>
+            <span class="ci-name">{{ club.name }}</span>
+            <span class="ci-members">{{ club.member_count or 0 }}명</span>
+          </div>
+          <div class="ci-book">
+            {% if club.current_book %}📖 {{ club.current_book }}{% else %}현재 읽는 책 없음{% endif %}
+          </div>
+          {% if not (active_club and active_club.club_id == club.club_id) %}
+          <button class="ci-join-btn" onclick="joinClub(event,'{{ club.club_id or club.id }}')">입장</button>
+          {% endif %}
+        </a>
+        {% endfor %}
+      {% else %}
+        <div class="sidebar-empty">
+          <div style="font-size:1.6rem;margin-bottom:8px;opacity:.4;">⬡</div>
+          <p>아직 참여한 모임방이 없어요.<br>첫 모임방을 만들어보세요!</p>
+        </div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content-area" id="content-area">
+
+    {% if active_club %}
+    <!-- CLUB VIEW -->
+    <div class="club-content">
+
+      <!-- Club Header -->
+      <div class="club-header">
+        <div class="club-header-top">
+          <div>
+            <div class="club-title-row">
+              <span class="club-big-emoji">{{ active_club.emoji or '📚' }}</span>
+              <h1 class="club-name">{{ active_club.name }}</h1>
+            </div>
+            <div class="club-meta">
+              <span class="club-member-pill">{{ active_club.member_count or 0 }}명</span>
+              <span class="club-book-label">
+                현재 책:
+                <strong>{% if active_club.current_book %}{{ active_club.current_book }}{% else %}미정{% endif %}</strong>
+              </span>
+            </div>
+          </div>
+          <div class="club-actions">
+            <button class="btn-ai-guide" onclick="requestAIGuide('{{ active_club.club_id or active_club.id }}')">
+              ✦ AI 토론 가이드
+            </button>
+            <button class="btn-report" onclick="requestReport('{{ active_club.club_id or active_club.id }}')">
+              ◎ 회의 리포트
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="club-tabs">
+          <button class="ctab active" onclick="switchTab('feed',this)">카드 피드</button>
+          <button class="ctab" onclick="switchTab('places',this)">독서 장소</button>
+          <button class="ctab" onclick="switchTab('settings',this)">모임 설정</button>
+        </div>
+      </div>
+
+      <!-- TAB: 카드 피드 -->
+      <div class="tab-body" id="tab-feed">
+        <!-- Compose -->
+        <div class="compose-area">
+          <textarea class="compose-textarea" id="compose-text" placeholder="책에서 발견한 문장을 나눠보세요 — 밑줄 친 문장, 떠오른 생각, 질문..."></textarea>
+          <div class="compose-footer">
+            <button class="btn-post" onclick="postCard('{{ active_club.club_id or active_club.id }}')">✦ 공유하기</button>
+          </div>
+        </div>
+
+        <!-- Cards -->
+        <div class="cards-grid" id="cards-grid">
+          {% if active_cards %}
+            {% for card in active_cards %}
+            <div class="card-item" id="card-{{ card.card_id or card.id }}">
+              <p class="card-passage">{{ card.content }}</p>
+              <div class="card-author-row">
+                <div class="card-avatar">{{ (card.author_name or '익명')[0] }}</div>
+                <span class="card-author-name">{{ card.author_name or '익명' }}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn-like {% if card.liked or card.is_liked %}liked{% endif %}" onclick="toggleLike(this,'{{ card.card_id or card.id }}')">
+                  ♡ <span class="like-count">{{ card.like_count or 0 }}</span>
+                </button>
+                <button class="btn-comment" onclick="toggleComments(this,'{{ card.card_id or card.id }}')">
+                  ◎ <span class="comment-count">{{ card.comment_count or 0 }}</span>
+                </button>
+              </div>
+              <div class="card-comments" id="comments-{{ card.card_id or card.id }}">
+                <div class="comments-list" id="comments-list-{{ card.card_id or card.id }}">
+                  {% if card.comments %}
+                    {% for c in card.comments %}
+                    <div class="comment-item"><strong style="color:var(--text);font-size:.74rem;">{{ c.author_name or '익명' }}</strong> {{ c.content }}</div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+                <div class="comment-input-row">
+                  <input class="comment-input" id="comment-input-{{ card.card_id or card.id }}" placeholder="댓글 달기..." onkeydown="if(event.key==='Enter')submitComment('{{ card.card_id or card.id }}')">
+                  <button class="btn-comment-send" onclick="submitComment('{{ card.card_id or card.id }}')">전송</button>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="es-icon">✦</div>
+              <p>아직 공유된 카드가 없어요.<br>첫 번째 문장을 나눠보세요!</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- TAB: 독서 장소 -->
+      <div class="tab-body" id="tab-places" style="display:none;">
+        <section class="map-explorer view-map" id="view-map">
+          <aside class="map-panel">
+            <div class="map-panel-head">
+              <div class="map-kicker">offline reading map</div>
+              <div class="map-title">오프라인 독서모임 장소 찾기</div>
+              <p class="map-copy">지역, 분위기, 모임 인원을 자연어로 검색하고 LUMA 장소로 저장하세요.</p>
+            </div>
+            <div class="map-search-stack">
+              <div class="filter-block">
+                <div class="filter-title"><strong>장소 검색</strong><span>자연어</span></div>
+                <div class="map-search-row" style="margin-bottom:0">
+                  <input class="map-search-input" id="places-search-input" placeholder="성수 조용한 카페, 강남역 6명 모임..." onkeydown="if(event.key==='Enter')searchPlaces()">
+                  <button class="btn-search" onclick="searchPlaces()">검색</button>
+                </div>
+              </div>
+              <div class="map-search-row" style="margin-bottom:0">
+                <button class="btn-locate" onclick="useMyLocation()">내 위치로 찾기</button>
+                <button class="btn-locate" onclick="loadSavedPlaces()">저장 장소</button>
+              </div>
+              <div class="filter-block">
+                <div class="filter-title"><strong>거리와 품질</strong><span>주변 탐색</span></div>
+                <div class="filter-grid">
+                  <select class="filter-control" id="places-radius" onchange="searchPlaces()">
+                    <option value="1000">1km 이내</option>
+                    <option value="3000">3km 이내</option>
+                    <option value="5000" selected>5km 이내</option>
+                    <option value="8000">8km 이내</option>
+                    <option value="15000">15km 이내</option>
+                  </select>
+                  <select class="filter-control" id="places-min-rating" onchange="applyPlaceFilters()">
+                    <option value="0">평점 전체</option>
+                    <option value="4">4.0 이상</option>
+                    <option value="4.3">4.3 이상</option>
+                    <option value="4.5">4.5 이상</option>
+                  </select>
+                  <select class="filter-control" id="places-sort" onchange="applyPlaceFilters()">
+                    <option value="distance">거리 가까운순</option>
+                    <option value="rating">평점 높은순</option>
+                    <option value="reading">독서점수 높은순</option>
+                  </select>
+                  <input class="filter-control" id="places-result-filter" placeholder="결과 내 검색" oninput="applyPlaceFilters()">
+                </div>
+              </div>
+              <div class="filter-block">
+                <div class="filter-title"><strong>취향 조건</strong><span>중복 선택 가능</span></div>
+                <div class="quick-filters">
+                  <button class="quick-chip" data-filter="quiet" onclick="togglePlaceFilter(this,'quiet')">조용한 곳</button>
+                  <button class="quick-chip" data-filter="capacity" onclick="togglePlaceFilter(this,'capacity')">4명 이상</button>
+                  <button class="quick-chip" data-filter="reservation" onclick="togglePlaceFilter(this,'reservation')">예약 가능</button>
+                  <button class="quick-chip" data-filter="evening" onclick="togglePlaceFilter(this,'evening')">저녁 영업</button>
+                  <button class="quick-chip" data-filter="outlet" onclick="togglePlaceFilter(this,'outlet')">콘센트</button>
+                  <button class="quick-chip" data-filter="wifi" onclick="togglePlaceFilter(this,'wifi')">와이파이</button>
+                  <button class="quick-chip" data-filter="parking" onclick="togglePlaceFilter(this,'parking')">주차 가능</button>
+                  <button class="quick-chip" data-filter="library" onclick="togglePlaceFilter(this,'library')">도서관</button>
+                  <button class="quick-chip" data-filter="bookstore" onclick="togglePlaceFilter(this,'bookstore')">서점/북카페</button>
+                </div>
+              </div>
+              <div class="result-tools">
+                <button class="btn-locate" onclick="clearPlaceFilters()">조건 초기화</button>
+                <span class="result-count" id="places-result-count">0곳</span>
+              </div>
+              <div class="filter-block saved-places-block">
+                <div class="filter-title"><strong>저장한 곳</strong><span id="saved-places-count">0곳</span></div>
+                <div class="saved-strip" id="saved-places-strip">
+                  <div class="saved-mini"><div class="saved-mini-name">저장한 장소 없음</div><div class="saved-mini-meta">마음에 드는 곳을 저장해보세요</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="place-results" id="places-results">
+              <div class="loading-card">장소를 불러오는 중...</div>
+            </div>
+          </aside>
+          <main class="map-shell">
+            <button class="btn-map-research" id="map-research-btn" onclick="searchHere()">이 지역에서 다시 검색</button>
+            <div id="map-container">
+              {% if maps_api_key %}
+              <div id="map"></div>
+              {% else %}
+              <div>지도 API 키가 없습니다. 검색 결과 목록으로 장소를 탐색할 수 있어요.</div>
+              {% endif %}
+            </div>
+            <div class="map-status" id="map-status">서울 중심으로 독서모임 장소를 준비하고 있습니다.</div>
+            <div class="my-location-legend" id="my-location-legend" style="display:none"><span class="my-location-dot"></span>내 위치</div>
+          </main>
+          <aside class="map-panel">
+            <div class="map-panel-head">
+              <div class="map-kicker">place detail</div>
+              <div class="map-title">장소 판단 노트</div>
+            </div>
+            <div class="place-detail" id="place-detail">
+              <div class="empty-state"><div class="es-icon">🗺️</div><p>왼쪽에서 장소를 선택하면 사진, 영업정보, 저장과 후기 작성이 열립니다.</p></div>
+            </div>
+          </aside>
+        </section>
+      </div>
+
+      <!-- TAB: 모임 설정 -->
+      <div class="tab-body" id="tab-settings" style="display:none;">
+
+        <div class="settings-section">
+          <h3>현재 읽는 책</h3>
+          <div class="book-setting-card">
+            <div class="book-cover-area" id="book-cover-preview" title="커버 변경">
+              {% if active_club.current_book %}📖{% else %}＋{% endif %}
+            </div>
+            <div class="book-info-fields">
+              <div class="field-label">책 제목</div>
+              <input class="field-input" id="setting-book-title" value="{{ active_club.current_book or '' }}" placeholder="읽는 책 제목">
+              <div class="field-label">저자</div>
+              <input class="field-input" id="setting-book-author" value="{{ active_club.current_book_author or '' }}" placeholder="저자 이름">
+              <button class="btn-primary" style="margin-top:0;padding:9px;" onclick="saveBookSetting('{{ active_club.club_id or active_club.id }}')">저장</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>모임 일정</h3>
+          {% if active_club.schedules %}
+            {% for s in active_club.schedules %}
+            <div class="schedule-row">
+              <div class="schedule-dot"></div>
+              <div class="schedule-info">
+                <div class="schedule-title">{{ s.title or '정기 모임' }}</div>
+                <div class="schedule-time">{{ s.datetime or '' }}{% if s.location %} · {{ s.location }}{% endif %}</div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="schedule-row" style="color:var(--sub);font-size:.82rem;">
+              <div class="schedule-dot" style="background:var(--sub);"></div>
+              <div>아직 등록된 일정이 없습니다.</div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="settings-section">
+          <h3>멤버 목록</h3>
+          <div class="members-list">
+            {% if active_club.members %}
+              {% for m in active_club.members %}
+              <div class="member-row">
+                <div class="member-avatar">{{ (m.display_name or '익명')[0] }}</div>
+                <span class="member-name">{{ m.display_name or '익명' }}</span>
+                <span class="member-role {% if m.role == 'host' %}role-host{% else %}role-member{% endif %}">
+                  {% if m.role == 'host' %}모임장{% else %}멤버{% endif %}
+                </span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-state">
+                <p>멤버 목록을 불러올 수 없습니다.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </div><!-- /tab-settings -->
+
+    </div><!-- /club-content -->
+
+    {% else %}
+    <!-- MAP VIEW (no club selected) -->
+    <div class="tab-body" style="height:100%;padding:14px;">
+      <section class="map-explorer view-map" id="view-map">
+        <aside class="map-panel">
+          <div class="map-panel-head">
+            <div class="map-kicker">LUMA community</div>
+            <div class="map-title">공독의 장 · 독서 지도</div>
+            <p class="map-copy">오프라인 독서모임을 열기 좋은 카페, 도서관, 서점 공간을 검색하고 저장하세요.</p>
+          </div>
+          <div class="map-search-stack">
+            <div class="filter-block">
+              <div class="filter-title"><strong>장소 검색</strong><span>자연어</span></div>
+              <div class="map-search-row" style="margin-bottom:0">
+                <input class="map-search-input" id="places-search-input" placeholder="성수 조용한 카페, 강남역 6명 모임..." onkeydown="if(event.key==='Enter')searchPlaces()">
+                <button class="btn-search" onclick="searchPlaces()">검색</button>
+              </div>
+            </div>
+            <div class="map-search-row" style="margin-bottom:0">
+              <button class="btn-locate" onclick="useMyLocation()">내 위치로 찾기</button>
+              <button class="btn-locate" onclick="loadSavedPlaces()">저장 장소</button>
+              <button class="btn-locate" onclick="openCreateModal()">모임방 만들기</button>
+            </div>
+            <div class="filter-block">
+              <div class="filter-title"><strong>거리와 품질</strong><span>주변 탐색</span></div>
+              <div class="filter-grid">
+                <select class="filter-control" id="places-radius" onchange="searchPlaces()">
+                  <option value="1000">1km 이내</option>
+                  <option value="3000">3km 이내</option>
+                  <option value="5000" selected>5km 이내</option>
+                  <option value="8000">8km 이내</option>
+                  <option value="15000">15km 이내</option>
+                </select>
+                <select class="filter-control" id="places-min-rating" onchange="applyPlaceFilters()">
+                  <option value="0">평점 전체</option>
+                  <option value="4">4.0 이상</option>
+                  <option value="4.3">4.3 이상</option>
+                  <option value="4.5">4.5 이상</option>
+                </select>
+                <select class="filter-control" id="places-sort" onchange="applyPlaceFilters()">
+                  <option value="distance">거리 가까운순</option>
+                  <option value="rating">평점 높은순</option>
+                  <option value="reading">독서점수 높은순</option>
+                </select>
+                <input class="filter-control" id="places-result-filter" placeholder="결과 내 검색" oninput="applyPlaceFilters()">
+              </div>
+            </div>
+            <div class="filter-block">
+              <div class="filter-title"><strong>취향 조건</strong><span>중복 선택 가능</span></div>
+              <div class="quick-filters">
+                <button class="quick-chip" data-filter="quiet" onclick="togglePlaceFilter(this,'quiet')">조용한 곳</button>
+                <button class="quick-chip" data-filter="capacity" onclick="togglePlaceFilter(this,'capacity')">4명 이상</button>
+                <button class="quick-chip" data-filter="reservation" onclick="togglePlaceFilter(this,'reservation')">예약 가능</button>
+                <button class="quick-chip" data-filter="evening" onclick="togglePlaceFilter(this,'evening')">저녁 영업</button>
+                <button class="quick-chip" data-filter="outlet" onclick="togglePlaceFilter(this,'outlet')">콘센트</button>
+                <button class="quick-chip" data-filter="wifi" onclick="togglePlaceFilter(this,'wifi')">와이파이</button>
+                <button class="quick-chip" data-filter="parking" onclick="togglePlaceFilter(this,'parking')">주차 가능</button>
+                <button class="quick-chip" data-filter="library" onclick="togglePlaceFilter(this,'library')">도서관</button>
+                <button class="quick-chip" data-filter="bookstore" onclick="togglePlaceFilter(this,'bookstore')">서점/북카페</button>
+              </div>
+            </div>
+            <div class="result-tools">
+              <button class="btn-locate" onclick="clearPlaceFilters()">조건 초기화</button>
+              <span class="result-count" id="places-result-count">0곳</span>
+            </div>
+            <div class="filter-block saved-places-block">
+              <div class="filter-title"><strong>저장한 곳</strong><span id="saved-places-count">0곳</span></div>
+              <div class="saved-strip" id="saved-places-strip">
+                <div class="saved-mini"><div class="saved-mini-name">저장한 장소 없음</div><div class="saved-mini-meta">마음에 드는 곳을 저장해보세요</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="place-results" id="places-results">
+            <div class="loading-card">장소를 불러오는 중...</div>
+          </div>
+        </aside>
+        <main class="map-shell">
+          <button class="btn-map-research" id="map-research-btn" onclick="searchHere()">이 지역에서 다시 검색</button>
+          <div id="map-container">
+            {% if maps_api_key %}
+            <div id="map"></div>
+            {% else %}
+            <div>지도 API 키가 없습니다. 검색 결과 목록으로 장소를 탐색할 수 있어요.</div>
+            {% endif %}
+          </div>
+          <div class="map-status" id="map-status">서울 중심으로 독서모임 장소를 준비하고 있습니다.</div>
+          <div class="my-location-legend" id="my-location-legend" style="display:none"><span class="my-location-dot"></span>내 위치</div>
+        </main>
+        <aside class="map-panel">
+          <div class="map-panel-head">
+            <div class="map-kicker">place detail</div>
+            <div class="map-title">장소 판단 노트</div>
+          </div>
+          <div class="place-detail" id="place-detail">
+            <div class="empty-state"><div class="es-icon">🗺️</div><p>왼쪽에서 장소를 선택하면 사진, 영업정보, 저장과 후기 작성이 열립니다.</p></div>
+          </div>
+        </aside>
+      </section>
+    </div>
+    {% endif %}
+
+  </div><!-- /content-area -->
+</div><!-- /main-area -->
+
+<!-- CREATE CLUB MODAL -->
+<div class="modal" id="create-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">새 모임방 만들기</span>
+      <button class="btn-close" onclick="closeCreateModal()">×</button>
+    </div>
+    <form id="create-club-form" onsubmit="submitCreateClub(event)">
+      <div class="form-field">
+        <label class="form-label">모임방 이름</label>
+        <input class="form-input" id="club-name-input" placeholder="예: 우주를 읽는 모임" maxlength="40" required>
+      </div>
+      <div class="form-field">
+        <label class="form-label">대표 이모지</label>
+        <div class="emoji-picker" id="emoji-picker">
+          <button type="button" class="ep-btn selected" data-emoji="📚">📚</button>
+          <button type="button" class="ep-btn" data-emoji="🌌">🌌</button>
+          <button type="button" class="ep-btn" data-emoji="🔭">🔭</button>
+          <button type="button" class="ep-btn" data-emoji="✦">✦</button>
+          <button type="button" class="ep-btn" data-emoji="🎭">🎭</button>
+          <button type="button" class="ep-btn" data-emoji="🧩">🧩</button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">최대 인원</label>
+        <select class="form-select" id="max-members-select">
+          <option value="4">4명</option>
+          <option value="6">6명</option>
+          <option value="8">8명</option>
+          <option value="10">10명</option>
+          <option value="15">15명</option>
+          <option value="20">20명</option>
+          <option value="30">30명</option>
+          <option value="50">50명</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-primary">✦ 만들기</button>
+    </form>
+    <div class="modal-msg" id="create-modal-msg"></div>
+  </div>
+</div>
+
+<!-- AI GUIDE MODAL -->
+<div class="modal" id="ai-guide-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">AI 토론 가이드</span>
+      <button class="btn-close" onclick="closeModal('ai-guide-modal')">×</button>
+    </div>
+    <div id="ai-guide-content" style="color:var(--sub);font-size:.84rem;line-height:1.8;">
+      AI 가이드를 생성하는 중...
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal" id="report-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">회의 리포트</span>
+      <button class="btn-close" onclick="closeModal('report-modal')">×</button>
+    </div>
+    <div id="report-content" style="color:var(--sub);font-size:.84rem;line-height:1.8;">
+      리포트를 생성하는 중...
+    </div>
+  </div>
+</div>
+
+{% if maps_api_key %}
+<script>
+function initMap(){
+  const container=document.getElementById('map');
+  if(!container){window.__mapsReady=true;return;}
+  window._map=new google.maps.Map(container,{
+    center:{lat:37.5665,lng:126.9780},zoom:13,
+    mapTypeControl:false,streetViewControl:false,fullscreenControl:true,
+    gestureHandling:'greedy',
+    language:'ko',
+    region:'KR',
+    styles:[
+      {elementType:'geometry',stylers:[{color:'#10251d'}]},
+      {featureType:'landscape.natural',elementType:'geometry',stylers:[{color:'#163421'}]},
+      {featureType:'poi.park',elementType:'geometry',stylers:[{color:'#1e4a2f'}]},
+      {featureType:'water',elementType:'geometry',stylers:[{color:'#123143'}]},
+      {featureType:'road',elementType:'geometry',stylers:[{color:'#244235'}]},
+      {featureType:'road',elementType:'geometry.stroke',stylers:[{color:'#0b1814'}]},
+      {featureType:'poi.business',elementType:'labels',stylers:[{visibility:'simplified'}]},
+      {elementType:'labels.text.fill',stylers:[{color:'#d9fbe6'}]},
+      {elementType:'labels.text.stroke',stylers:[{color:'#06110d'}]}
+    ]
+  });
+  window.__mapsReady=true;
+  window._map.addListener('dragend',()=>document.getElementById('map-research-btn')?.classList.add('show'));
+  if(window.__pendingMapInit)window.__pendingMapInit();
+}
+function gm_authFailure(){
+  window.__mapsReady=false;
+  const status=document.getElementById('map-status');
+  if(status)status.textContent='Google Maps 인증에 실패했습니다. 목록 기반 탐색으로 전환합니다.';
+}
+window.addEventListener('error',e=>{
+  if(String(e.message||'').includes('Google Maps')){
+    const status=document.getElementById('map-status');
+    if(status)status.textContent='Google Maps 로딩에 실패했습니다. Mock 장소 목록은 계속 사용할 수 있습니다.';
+  }
+});
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ maps_api_key }}&language=ko&region=KR&callback=initMap" async defer></script>
+{% endif %}
+
+<script>
+/* ── UTILITIES ── */
+const _cu=JSON.parse(localStorage.getItem('luma_user')||'{}');
+const UID=_cu.user_id||'';
+const TOKEN=localStorage.getItem('luma_token')||'';
+function userId(){return UID||_cu.user_id||'user_demo';}
+function hdr(){return TOKEN?{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`}:{'Content-Type':'application/json'};}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ── STARFIELD ── */
+(function(){
+  const c=document.getElementById('stars-canvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  let stars=[];
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;stars=Array.from({length:160},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.3+.15,o:Math.random()*.45+.08,p:Math.random()*Math.PI*2}));}
+  function draw(t){ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fillStyle=`rgba(238,243,255,${s.o+Math.sin(t*.0016+s.p)*.12})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
+})();
+
+/* ── TAGLINE ROTATION ── */
+function initTagline(){
+  const phrases=[
+    {t:'생각은 빛이 된다',ko:true},{t:'함께 읽으면 더 깊어집니다',ko:true},
+    {t:'독서 모임의 별자리',ko:true},{t:'Read Together, Think Deeper',ko:false},
+    {t:'당신의 독서 우주를 나눠보세요',ko:true},{t:'Where Readers Become Constellations',ko:false},
+  ];
+  const el=document.getElementById('luma-tagline');
+  if(!el)return;
+  let i=0;
+  function show(idx){const p=phrases[idx];el.style.opacity='0';el.style.transform='translateY(-4px)';setTimeout(()=>{el.textContent=p.t;el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"serif";el.style.opacity='1';el.style.transform='translateY(0)';},480);}
+  show(0);setInterval(()=>{i=(i+1)%phrases.length;show(i);},9000);
+}
+
+/* ── NAV USER ── */
+async function initNav(){
+  try{
+    const r=await fetch('/auth/api/me');
+    const d=await r.json();
+    if(d.ok&&d.user){
+      const u=d.user;
+      document.getElementById('nav-user-area').innerHTML=`
+        <div class="nav-user" onclick="location.href='/profile'">
+          <div class="nav-avatar">${esc(u.display_name?.[0]||'✦')}</div>
+          <span class="nav-username">${esc(u.display_name||u.email)}</span>
+        </div>`;
+    }
+  }catch(e){}
+}
+
+/* ── TABS ── */
+function switchTab(name,btn){
+  ['feed','places','settings'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el)el.style.display=t===name?'block':'none';
+  });
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(name==='places'){
+    setTimeout(()=>{if(window._map&&window.google){google.maps.event.trigger(window._map,'resize');window._map.setCenter(placeState.center||DEFAULT_CENTER);}},80);
+    loadPlaces();
+  }
+}
+
+/* ── CREATE CLUB MODAL ── */
+let selectedEmoji='📚';
+function openCreateModal(){
+  document.getElementById('create-modal').classList.add('open');
+  document.getElementById('create-modal-msg').textContent='';
+  document.getElementById('club-name-input').focus();
+}
+function closeCreateModal(){document.getElementById('create-modal').classList.remove('open');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.ep-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.ep-btn').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');selectedEmoji=b.dataset.emoji;
+    });
+  });
+  document.getElementById('create-modal').addEventListener('click',e=>{if(e.target.id==='create-modal')closeCreateModal();});
+  document.getElementById('ai-guide-modal').addEventListener('click',e=>{if(e.target.id==='ai-guide-modal')closeModal('ai-guide-modal');});
+  document.getElementById('report-modal').addEventListener('click',e=>{if(e.target.id==='report-modal')closeModal('report-modal');});
+  initNav();initTagline();
+  loadPlacesIfActive();
+  bootPlacesMap();
+});
+
+async function submitCreateClub(e){
+  e.preventDefault();
+  const name=document.getElementById('club-name-input').value.trim();
+  const max=document.getElementById('max-members-select').value;
+  const msg=document.getElementById('create-modal-msg');
+  if(!name){msg.textContent='모임방 이름을 입력해주세요.';return;}
+  msg.textContent='생성 중...';
+  try{
+    const r=await fetch('/community/api/create',{method:'POST',headers:hdr(),body:JSON.stringify({name,emoji:selectedEmoji,max_members:Number(max)})});
+    const d=await r.json();
+    if(d.ok){const cid=d.club_id||d.club?.id;msg.textContent='모임방이 생성되었습니다!';setTimeout(()=>{window.location=cid?'/community/?club='+cid:'/community/';},800);}
+    else{msg.textContent=d.error||'생성 실패. 다시 시도해주세요.';}
+  }catch(err){msg.textContent='연결 오류가 발생했습니다.';}
+}
+
+/* ── JOIN CLUB ── */
+async function joinClub(event,clubId){
+  event.preventDefault();event.stopPropagation();
+  if(!clubId){alert('모임 정보를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');return;}
+  try{
+    const r=await fetch(`/community/api/${encodeURIComponent(clubId)}/join`,{method:'POST',headers:hdr(),body:JSON.stringify({user_id:userId()})});
+    const d=await r.json();
+    if(d.ok)window.location='/community/?club='+clubId;
+    else alert(d.error||'입장 실패');
+  }catch(e){alert('연결 오류');}
+}
+
+/* ── POST CARD ── */
+async function postCard(clubId){
+  const text=document.getElementById('compose-text').value.trim();
+  if(!text)return;
+  try{
+    const r=await fetch(`/community/api/${encodeURIComponent(clubId)}/cards`,{method:'POST',headers:hdr(),body:JSON.stringify({content:text,user_id:userId(),user_name:_cu.display_name||'나',user_emoji:_cu.emoji||'⭐'})});
+    const d=await r.json();
+    if(d.ok){
+      const cardId=d.card_id||d.card?.card_id||d.card?.id;
+      document.getElementById('compose-text').value='';
+      const grid=document.getElementById('cards-grid');
+      const emptyState=grid.querySelector('.empty-state');
+      if(emptyState)emptyState.remove();
+      const card=document.createElement('div');
+      card.className='card-item';card.id='card-'+cardId;
+      card.innerHTML=`<p class="card-passage">${esc(text)}</p>
+        <div class="card-author-row"><div class="card-avatar">${esc((_cu.display_name||'나')[0])}</div><span class="card-author-name">${esc(_cu.display_name||'나')}</span></div>
+        <div class="card-actions">
+          <button class="btn-like" onclick="toggleLike(this,'${cardId}')">♡ <span class="like-count">0</span></button>
+          <button class="btn-comment" onclick="toggleComments(this,'${cardId}')">◎ <span class="comment-count">0</span></button>
+        </div>
+        <div class="card-comments" id="comments-${cardId}">
+          <div class="comments-list" id="comments-list-${cardId}"></div>
+          <div class="comment-input-row">
+            <input class="comment-input" id="comment-input-${cardId}" placeholder="댓글 달기..." onkeydown="if(event.key==='Enter')submitComment('${cardId}')">
+            <button class="btn-comment-send" onclick="submitComment('${cardId}')">전송</button>
+          </div>
+        </div>`;
+      grid.prepend(card);
+    }
+  }catch(err){console.error(err);}
+}
+
+/* ── LIKE ── */
+async function toggleLike(btn,cardId){
+  const liked=btn.classList.contains('liked');
+  btn.classList.toggle('liked',!liked);
+  const cnt=btn.querySelector('.like-count');
+  cnt.textContent=Number(cnt.textContent)+(liked?-1:1);
+  try{await fetch(`/community/api/cards/${cardId}/like`,{method:'POST',headers:hdr(),body:JSON.stringify({liked:!liked})});}
+  catch(e){}
+}
+
+/* ── COMMENTS ── */
+function toggleComments(btn,cardId){
+  const box=document.getElementById('comments-'+cardId);
+  if(box){const open=box.classList.toggle('open');if(open){const inp=document.getElementById('comment-input-'+cardId);if(inp)inp.focus();}}
+}
+async function submitComment(cardId){
+  const inp=document.getElementById('comment-input-'+cardId);
+  if(!inp||!inp.value.trim())return;
+  const text=inp.value.trim();
+  try{
+    const r=await fetch(`/community/api/cards/${cardId}/comment`,{method:'POST',headers:hdr(),body:JSON.stringify({content:text})});
+    const d=await r.json();
+    if(d.ok){
+      inp.value='';
+      const list=document.getElementById('comments-list-'+cardId);
+      if(list){const item=document.createElement('div');item.className='comment-item';item.innerHTML=`<strong style="color:var(--text);font-size:.74rem;">${esc(_cu.display_name||'나')}</strong> ${esc(text)}`;list.appendChild(item);}
+      const cnt=document.querySelector(`#card-${cardId} .comment-count`);
+      if(cnt)cnt.textContent=Number(cnt.textContent)+1;
+    }
+  }catch(e){}
+}
+
+/* ── PLACES ── */
+const DEFAULT_CENTER={lat:37.5665,lng:126.9780};
+const placeState={
+  query:'독서모임 카페 도서관',
+  center:{...DEFAULT_CENTER},
+  userLocation:null,
+  rawResults:[],
+  searchResults:[],
+  visibleResults:[],
+  savedPlaces:[],
+  selectedPlace:null,
+  selectedSummary:null,
+  markers:[],
+  userMarker:null,
+  activeFilters:new Set(),
+  mode:'search',
+  loaded:false
+};
+function setMapStatus(text){const el=document.getElementById('map-status');if(el)el.textContent=text;}
+function mapEl(id){return document.getElementById(id);}
+function normalizePlace(p){
+  return {
+    place_id:p.place_id||p.id||p.google_place_id||'',
+    google_place_id:p.google_place_id||p.place_id||'',
+    name:p.name||'이름 없는 장소',
+    address:p.address||p.vicinity||p.formatted_address||'주소 정보 없음',
+    lat:Number(p.lat||p.latitude||0),
+    lng:Number(p.lng||p.longitude||0),
+    phone:p.phone||p.formatted_phone_number||'',
+    website:p.website||'',
+    google_maps_url:p.google_maps_url||'',
+    google_rating:p.google_rating??p.rating??'',
+    user_ratings_total:p.user_ratings_total||0,
+    price_level:p.price_level??'',
+    open_now:p.open_now,
+    opening_hours:p.opening_hours||[],
+    photo_url:p.photo_url||'',
+    place_types:Array.isArray(p.place_types)?p.place_types:(p.place_types?[p.place_types]:[]),
+    saved:!!p.saved,
+    reading_score:Number(p.reading_score||0),
+    distance_km:p.distance_km,
+    meeting_capacity:p.meeting_capacity||'',
+    noise_level:p.noise_level||'unknown',
+    outlet_score:p.outlet_score||'',
+    wifi_score:p.wifi_score||'',
+    parking:p.parking||p.parking_available||false,
+    reservation_url:p.reservation_url||'',
+    memo:p.memo||'',
+    source:p.source||'mock',
+    reviews:p.reviews||[]
+  };
+}
+function placeTypeLabel(p){
+  const types=(p.place_types||[]).join(' ');
+  if(types.includes('library'))return '도서관';
+  if(types.includes('book'))return '서점/북카페';
+  if(types.includes('cafe'))return '카페';
+  return '모임 장소';
+}
+function openLabel(v){return v===true?'영업 중':v===false?'영업 종료':'영업정보 없음';}
+function noiseLabel(v){return ({quiet:'조용함',moderate:'보통',lively:'활기 있음',unknown:'미확인'})[v||'unknown']||'미확인';}
+function hasAmenity(p,type){
+  const text=`${p.name} ${p.address} ${(p.place_types||[]).join(' ')} ${p.memo||''}`.toLowerCase();
+  const score=Number(p.reading_score||0);
+  if(type==='quiet')return p.noise_level==='quiet'||score>=8.8||text.includes('library')||text.includes('도서관')||text.includes('조용');
+  if(type==='capacity')return Number(p.meeting_capacity||0)>=4||score>=8.2;
+  if(type==='reservation')return !!p.reservation_url||text.includes('스터디')||text.includes('room')||text.includes('예약');
+  if(type==='evening')return (p.opening_hours||[]).join(' ').includes('21')||(p.opening_hours||[]).join(' ').includes('22')||text.includes('cafe')||text.includes('카페');
+  if(type==='outlet')return Number(p.outlet_score||0)>=3||text.includes('콘센트')||text.includes('카페')||text.includes('cafe');
+  if(type==='wifi')return Number(p.wifi_score||0)>=3||text.includes('wifi')||text.includes('와이파이')||text.includes('카페')||text.includes('cafe');
+  if(type==='parking')return !!p.parking||text.includes('주차')||text.includes('parking')||text.includes('도서관');
+  if(type==='library')return text.includes('library')||text.includes('도서관');
+  if(type==='bookstore')return text.includes('book')||text.includes('서점')||text.includes('북카페');
+  return true;
+}
+function selectedRadius(){
+  return Number(mapEl('places-radius')?.value||5000);
+}
+function filterQueryText(){
+  return String(mapEl('places-result-filter')?.value||'').trim().toLowerCase();
+}
+function filteredPlaces(){
+  const minRating=Number(mapEl('places-min-rating')?.value||0);
+  const sort=mapEl('places-sort')?.value||'distance';
+  const q=filterQueryText();
+  let places=[...(placeState.searchResults||[])];
+  if(q){
+    places=places.filter(p=>`${p.name} ${p.address} ${placeTypeLabel(p)} ${p.memo||''}`.toLowerCase().includes(q));
+  }
+  if(minRating>0){
+    places=places.filter(p=>Number(p.google_rating||0)>=minRating);
+  }
+  placeState.activeFilters.forEach(f=>{
+    places=places.filter(p=>hasAmenity(p,f));
+  });
+  places.sort((a,b)=>{
+    if(sort==='rating')return Number(b.google_rating||0)-Number(a.google_rating||0)||Number(a.distance_km||999)-Number(b.distance_km||999);
+    if(sort==='reading')return Number(b.reading_score||0)-Number(a.reading_score||0)||Number(a.distance_km||999)-Number(b.distance_km||999);
+    return Number(a.distance_km||999)-Number(b.distance_km||999)||Number(b.google_rating||0)-Number(a.google_rating||0);
+  });
+  return places;
+}
+function applyPlaceFilters(){
+  placeState.visibleResults=filteredPlaces();
+  renderPlaceList(placeState.visibleResults);
+  updateMarkers();
+  const count=mapEl('places-result-count');
+  if(count)count.textContent=`${placeState.visibleResults.length}곳`;
+}
+function togglePlaceFilter(btn,key){
+  if(placeState.activeFilters.has(key))placeState.activeFilters.delete(key);
+  else placeState.activeFilters.add(key);
+  btn?.classList.toggle('active',placeState.activeFilters.has(key));
+  applyPlaceFilters();
+}
+function clearPlaceFilters(){
+  placeState.activeFilters.clear();
+  document.querySelectorAll('.quick-chip').forEach(c=>c.classList.remove('active'));
+  const rating=mapEl('places-min-rating');if(rating)rating.value='0';
+  const sort=mapEl('places-sort');if(sort)sort.value='distance';
+  const result=mapEl('places-result-filter');if(result)result.value='';
+  applyPlaceFilters();
+}
+function markerIcon(active=false,saved=false){
+  if(!window.google)return undefined;
+  return {
+    path:google.maps.SymbolPath.CIRCLE,
+    scale:active?10:7,
+    fillColor:saved?'#4ade80':active?'#f5c86b':'#93c5fd',
+    fillOpacity:.95,
+    strokeColor:'#050815',
+    strokeWeight:2,
+  };
+}
+function clearMarkers(){
+  placeState.markers.forEach(m=>m.setMap(null));
+  placeState.markers=[];
+}
+function updateMarkers(){
+  if(!window._map||!window.google)return;
+  clearMarkers();
+  const bounds=new google.maps.LatLngBounds();
+  let hasBounds=false;
+  const visible=placeState.loaded?placeState.visibleResults:placeState.searchResults;
+  visible.forEach((p,idx)=>{
+    if(!p.lat||!p.lng)return;
+    const active=placeState.selectedPlace&&(placeState.selectedPlace.google_place_id===p.google_place_id||placeState.selectedPlace.place_id===p.place_id);
+    const marker=new google.maps.Marker({position:{lat:p.lat,lng:p.lng},map:window._map,title:p.name,label:active?String(idx+1):undefined,icon:markerIcon(active,p.saved)});
+    marker.addListener('click',()=>selectPlace(p));
+    placeState.markers.push(marker);
+    bounds.extend(marker.getPosition());hasBounds=true;
+  });
+  if(placeState.userLocation){
+    if(placeState.userMarker)placeState.userMarker.setMap(null);
+    placeState.userMarker=new google.maps.Marker({
+      position:placeState.userLocation,map:window._map,title:'내 위치',
+      label:{text:'내 위치',color:'#dbeafe',fontSize:'12px',fontWeight:'700'},
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:'#60a5fa',fillOpacity:1,strokeColor:'#dbeafe',strokeWeight:3}
+    });
+    bounds.extend(placeState.userMarker.getPosition());hasBounds=true;
+  }
+  if(hasBounds)window._map.fitBounds(bounds,{top:60,right:60,bottom:60,left:60});
+}
+function renderPlaceList(places=placeState.searchResults){
+  const el=mapEl('places-results');
+  if(!el)return;
+  const count=mapEl('places-result-count');
+  if(count)count.textContent=`${places.length}곳`;
+  if(!places.length){
+    el.innerHTML='<div class="empty-state"><div class="es-icon">🗺️</div><p>조건에 맞는 장소가 없습니다.<br>다른 지역이나 조건으로 검색해보세요.</p></div>';
+    return;
+  }
+  const selected=placeState.selectedPlace;
+  el.innerHTML=places.map((p,i)=>{
+    const active=selected&&(selected.google_place_id===p.google_place_id||selected.place_id===p.place_id);
+    return `<div class="place-result-card ${active?'active':''}" onclick="selectPlaceByIndex(${i})">
+      <div class="place-result-top">
+        <div class="place-result-name">${esc(p.name)}</div>
+        ${p.saved?'<span class="saved-pill">저장됨</span>':''}
+      </div>
+      <div class="place-result-addr">${esc(p.address)}</div>
+      <div class="place-metrics">
+        <span class="gold">★ ${esc(p.google_rating||'-')}</span>
+        <span>LUMA ${p.reading_score?p.reading_score.toFixed(1):'검토중'}</span>
+        <span>${esc(openLabel(p.open_now))}</span>
+        ${p.distance_km?`<span>${Number(p.distance_km).toFixed(1)}km</span>`:''}
+        <span>${esc(placeTypeLabel(p))}</span>
+        ${hasAmenity(p,'outlet')?'<span class="good">콘센트</span>':''}
+        ${hasAmenity(p,'wifi')?'<span class="good">와이파이</span>':''}
+        ${hasAmenity(p,'parking')?'<span class="good">주차</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderSavedStrip(){
+  const strip=mapEl('saved-places-strip');
+  const count=mapEl('saved-places-count');
+  if(!strip)return;
+  const places=(placeState.savedPlaces||[]).slice(0,8);
+  if(count)count.textContent=`${placeState.savedPlaces.length}곳`;
+  if(!places.length){
+    strip.innerHTML='<div class="saved-mini"><div class="saved-mini-name">저장한 장소 없음</div><div class="saved-mini-meta">마음에 드는 곳을 저장해보세요</div></div>';
+    return;
+  }
+  strip.innerHTML=places.map((p,i)=>`
+    <button class="saved-mini" type="button" onclick="selectSavedPlace(${i})">
+      <div class="saved-mini-name">${esc(p.name)}</div>
+      <div class="saved-mini-meta">${esc(placeTypeLabel(p))} · ${p.reading_score?p.reading_score.toFixed(1):'검토중'}</div>
+    </button>
+  `).join('');
+}
+function selectSavedPlace(i){
+  const p=placeState.savedPlaces[i];
+  if(p)selectPlace(p);
+}
+function renderDetail(){
+  const p=placeState.selectedPlace;
+  const el=document.getElementById('place-detail');
+  if(!el)return;
+  if(!p){
+    el.innerHTML='<div class="empty-state"><div class="es-icon">🗺️</div><p>왼쪽에서 장소를 선택하면 사진, 영업정보, 저장과 후기 작성이 열립니다.</p></div>';
+    return;
+  }
+  const summary=placeState.selectedSummary||{};
+  const hours=(p.opening_hours||[]).slice(0,4).map(h=>`<div>${esc(h)}</div>`).join('');
+  const reviews=(p.reviews||[]).map(r=>`<div class="review-item">
+    <div class="review-head"><span>${esc(r.emoji||'⭐')} ${esc(r.display_name||'익명')} · ★ ${esc(r.rating||'-')}</span><span>${esc(r.group_size?`${r.group_size}명`:'')}</span></div>
+    <div class="review-content">${esc(r.content||r.text||'')}</div>
+  </div>`).join('')||'<div class="empty-state" style="padding:18px 8px;"><p>아직 후기가 없습니다. 첫 독서모임 경험을 남겨주세요.</p></div>';
+  el.innerHTML=`
+    <div class="detail-photo">${p.photo_url?`<img src="${esc(p.photo_url)}" alt="${esc(p.name)}" onerror="this.parentElement.textContent='🗺️'">`:'🗺️'}</div>
+    <div class="detail-body">
+      <div class="detail-name">${esc(p.name)}</div>
+      <div class="detail-address">${esc(p.address)}</div>
+      <div class="place-metrics">
+        <span class="gold">Google ★ ${esc(p.google_rating||'-')}</span>
+        <span>${esc(openLabel(p.open_now))}</span>
+        ${p.distance_km?`<span>${Number(p.distance_km).toFixed(1)}km</span>`:''}
+        <span>${esc(placeTypeLabel(p))}</span>
+      </div>
+      ${summary.summary?`<div class="detail-summary"><strong>${esc(summary.best_for||'독서모임 적합도')}</strong><br>${esc(summary.summary)}${summary.caution?`<br><span style="color:var(--sub)">${esc(summary.caution)}</span>`:''}</div>`:''}
+      <div class="meta-grid">
+        <div class="meta-item"><div class="meta-label">독서모임 점수</div><div class="meta-value">${p.reading_score?p.reading_score.toFixed(1):'검토중'}</div></div>
+        <div class="meta-item"><div class="meta-label">추천 인원</div><div class="meta-value">${esc(p.meeting_capacity||'미정')}</div></div>
+        <div class="meta-item"><div class="meta-label">소음</div><div class="meta-value">${esc(noiseLabel(p.noise_level))}</div></div>
+        <div class="meta-item"><div class="meta-label">콘센트</div><div class="meta-value">${hasAmenity(p,'outlet')?'좋음':'미확인'} ${p.outlet_score?`(${esc(p.outlet_score)})`:''}</div></div>
+        <div class="meta-item"><div class="meta-label">와이파이</div><div class="meta-value">${hasAmenity(p,'wifi')?'좋음':'미확인'} ${p.wifi_score?`(${esc(p.wifi_score)})`:''}</div></div>
+        <div class="meta-item"><div class="meta-label">주차</div><div class="meta-value">${hasAmenity(p,'parking')?'가능성 높음':'확인 필요'}</div></div>
+      </div>
+      ${hours?`<div class="detail-summary">${hours}</div>`:''}
+      ${p.memo?`<div class="detail-summary">${esc(p.memo)}</div>`:''}
+      <div class="detail-actions">
+        <button class="detail-btn primary" onclick="saveSelectedPlace()">${p.saved?'저장됨':'LUMA에 저장'}</button>
+        <button class="detail-btn" onclick="toggleEditForm()">수정</button>
+        ${p.place_id?`<button class="detail-btn danger" onclick="deleteSelectedPlace()">삭제</button>`:''}
+        ${p.google_maps_url?`<a class="detail-btn" href="${esc(p.google_maps_url)}" target="_blank" rel="noopener">길찾기</a>`:''}
+        ${p.website?`<a class="detail-btn" href="${esc(p.website)}" target="_blank" rel="noopener">웹사이트</a>`:''}
+      </div>
+      <div class="edit-form" id="place-edit-form">
+        <div class="form-mini-row">
+          <input class="mini-input" id="edit-reading-score" type="number" min="0" max="10" step="0.1" placeholder="독서 점수" value="${esc(p.reading_score||'')}">
+          <input class="mini-input" id="edit-capacity" type="number" min="1" max="30" placeholder="추천 인원" value="${esc(p.meeting_capacity||'')}">
+        </div>
+        <div class="form-mini-row">
+          <select class="mini-select" id="edit-noise">
+            <option value="unknown" ${p.noise_level==='unknown'?'selected':''}>소음 미확인</option>
+            <option value="quiet" ${p.noise_level==='quiet'?'selected':''}>조용함</option>
+            <option value="moderate" ${p.noise_level==='moderate'?'selected':''}>보통</option>
+            <option value="lively" ${p.noise_level==='lively'?'selected':''}>활기 있음</option>
+          </select>
+          <input class="mini-input" id="edit-reservation" placeholder="예약 링크" value="${esc(p.reservation_url||'')}">
+        </div>
+        <div class="form-mini-row">
+          <input class="mini-input" id="edit-outlet" type="number" min="0" max="5" placeholder="콘센트 0-5" value="${esc(p.outlet_score||'')}">
+          <input class="mini-input" id="edit-wifi" type="number" min="0" max="5" placeholder="와이파이 0-5" value="${esc(p.wifi_score||'')}">
+        </div>
+        <textarea class="mini-textarea" id="edit-memo" placeholder="운영 메모">${esc(p.memo||'')}</textarea>
+        <button class="detail-btn primary" onclick="updateSelectedPlace()">장소 정보 저장</button>
+      </div>
+      <div class="review-form">
+        <div class="map-kicker">reviews</div>
+        <div class="form-mini-row">
+          <input class="mini-input" id="review-rating" type="number" min="1" max="5" placeholder="별점 1-5">
+          <input class="mini-input" id="review-group-size" type="number" min="1" max="30" placeholder="모임 인원">
+        </div>
+        <div class="form-mini-row">
+          <input class="mini-input" id="review-purpose" placeholder="방문 목적">
+          <select class="mini-select" id="review-noise"><option value="quiet">조용함</option><option value="moderate">보통</option><option value="lively">활기 있음</option><option value="unknown">미확인</option></select>
+        </div>
+        <textarea class="mini-textarea" id="review-content" placeholder="이 장소에서 독서모임을 해본 느낌을 남겨주세요."></textarea>
+        <button class="detail-btn primary" onclick="submitPlaceReview()">후기 남기기</button>
+      </div>
+      <div class="reviews-list">${reviews}</div>
+    </div>`;
+}
+async function fetchPlaceDetail(place){
+  if(place.google_place_id){
+    const r=await fetch(`/api/places/google/${encodeURIComponent(place.google_place_id)}`);
+    const d=await r.json();
+    if(d.ok&&d.place){
+      placeState.selectedSummary=d.summary||null;
+      return normalizePlace({...place,...d.place});
+    }
+  }
+  placeState.selectedSummary=null;
+  return place;
+}
+async function selectPlace(place){
+  const base=normalizePlace(place);
+  placeState.selectedPlace=base;
+  renderPlaceList();renderDetail();updateMarkers();
+  if(window._map&&base.lat&&base.lng)window._map.panTo({lat:base.lat,lng:base.lng});
+  try{
+    const detail=await fetchPlaceDetail(base);
+    const reviews=await fetchReviews(detail.place_id||detail.google_place_id);
+    placeState.selectedPlace={...detail,reviews};
+    const idx=placeState.searchResults.findIndex(p=>(p.google_place_id&&p.google_place_id===detail.google_place_id)||(p.place_id&&p.place_id===detail.place_id));
+    if(idx>=0)placeState.searchResults[idx]={...placeState.searchResults[idx],...detail};
+    applyPlaceFilters();renderDetail();updateMarkers();
+  }catch(e){renderDetail();}
+}
+function selectPlaceByIndex(i){const p=(placeState.visibleResults.length?placeState.visibleResults:placeState.searchResults)[i];if(p)selectPlace(p);}
+async function fetchReviews(placeId){
+  if(!placeId)return [];
+  try{
+    const r=await fetch(`/api/places/${encodeURIComponent(placeId)}/reviews?limit=20`);
+    const d=await r.json();
+    return d.ok?(d.reviews||[]):[];
+  }catch(e){return [];}
+}
+function loadPlacesIfActive(){
+  const tab=document.getElementById('tab-places');
+  if(tab&&tab.style.display!=='none')loadPlaces();
+}
+async function loadPlaces(query=placeState.query){
+  const list=mapEl('places-results');
+  if(!list)return;
+  placeState.query=query||'독서모임 카페 도서관';
+  list.innerHTML='<div class="loading-card">장소를 검색하는 중...</div>';
+  const params=new URLSearchParams({q:placeState.query,limit:'20',radius:String(selectedRadius())});
+  if(placeState.center?.lat&&placeState.center?.lng){
+    params.set('lat',placeState.center.lat);
+    params.set('lng',placeState.center.lng);
+  }
+  try{
+    const r=await fetch(`/api/places/search?${params}`);
+    const d=await r.json();
+    placeState.rawResults=(d.places||[]).map(normalizePlace);
+    placeState.searchResults=[...placeState.rawResults];
+    placeState.mode='search';
+    applyPlaceFilters();
+    renderSavedStrip();
+    setMapStatus(`${d.source||'mock'} 기반으로 ${placeState.searchResults.length}곳을 찾았습니다. 거리 ${selectedRadius()/1000}km, 조건 ${placeState.activeFilters.size}개 적용 중.`);
+    mapEl('map-research-btn')?.classList.remove('show');
+    if(placeState.visibleResults[0])selectPlace(placeState.visibleResults[0]);
+  }catch(err){
+    list.innerHTML='<div class="empty-state"><p>장소 정보를 불러올 수 없습니다.</p></div>';
+    setMapStatus('장소 검색에 실패했습니다. 잠시 후 다시 시도해주세요.');
+  }
+}
+function searchPlaces(){
+  const q=mapEl('places-search-input')?.value.trim()||'';
+  loadPlaces(q||'독서모임 카페 도서관');
+}
+function quickSearch(q){
+  const input=mapEl('places-search-input');
+  if(input)input.value=q;
+  loadPlaces(q);
+}
+function searchHere(){
+  if(window._map){
+    const c=window._map.getCenter();
+    placeState.center={lat:c.lat(),lng:c.lng()};
+  }
+  loadPlaces(placeState.query);
+}
+function useMyLocation(){
+  if(!navigator.geolocation){
+    setMapStatus('브라우저가 현재 위치를 지원하지 않아 서울 중심으로 검색합니다.');
+    return loadPlaces('내 주변 독서모임 카페');
+  }
+  setMapStatus('현재 위치를 확인하는 중입니다...');
+  navigator.geolocation.getCurrentPosition(pos=>{
+      placeState.userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      placeState.center={...placeState.userLocation};
+      const legend=mapEl('my-location-legend');if(legend)legend.style.display='flex';
+      const input=mapEl('places-search-input');
+      if(input&&!input.value.trim())input.value='내 주변 독서모임 카페 도서관';
+      const radius=mapEl('places-radius');if(radius&&Number(radius.value)<5000)radius.value='5000';
+      if(window._map)window._map.setCenter(placeState.center);
+      setMapStatus(`현재 위치 기준 검색 · 정확도 약 ${Math.round(pos.coords.accuracy)}m`);
+    loadPlaces(input?.value?.trim()||'내 주변 독서모임 카페 도서관');
+  },()=>{
+    placeState.center={...DEFAULT_CENTER};
+    setMapStatus('위치 권한이 없어 서울 중심으로 검색합니다.');
+    loadPlaces('서울 독서모임 카페 도서관');
+  },{enableHighAccuracy:true,timeout:7000});
+}
+async function loadSavedPlaces(){
+  try{
+    const r=await fetch(`/api/places/saved?user_id=${encodeURIComponent(userId())}&limit=50`);
+    const d=await r.json();
+    placeState.savedPlaces=(d.places||[]).map(normalizePlace);
+    placeState.rawResults=placeState.savedPlaces;
+    placeState.searchResults=[...placeState.savedPlaces];
+    placeState.mode='saved';
+    applyPlaceFilters();
+    renderSavedStrip();
+    setMapStatus(`저장한 독서모임 장소 ${placeState.savedPlaces.length}곳`);
+    if(placeState.visibleResults[0])selectPlace(placeState.visibleResults[0]);
+  }catch(e){setMapStatus('저장 장소를 불러오지 못했습니다.');}
+}
+async function refreshSavedPlaces(){
+  try{
+    const r=await fetch(`/api/places/saved?user_id=${encodeURIComponent(userId())}&limit=50`);
+    const d=await r.json();
+    placeState.savedPlaces=(d.places||[]).map(normalizePlace);
+    renderSavedStrip();
+  }catch(e){
+    renderSavedStrip();
+  }
+}
+async function saveSelectedPlace(){
+  const p=placeState.selectedPlace;
+  if(!p)return;
+  try{
+    const r=await fetch('/api/places/save',{method:'POST',headers:hdr(),body:JSON.stringify({...p,user_id:userId(),reading_score:p.reading_score||8.0})});
+    const d=await r.json();
+    if(d.ok&&d.place){
+      placeState.selectedPlace=normalizePlace({...p,...d.place,saved:true});
+      placeState.searchResults=placeState.searchResults.map(x=>(x.google_place_id&&x.google_place_id===p.google_place_id)||(x.place_id&&x.place_id===p.place_id)?{...x,...placeState.selectedPlace}:x);
+      if(!placeState.savedPlaces.some(x=>x.place_id===placeState.selectedPlace.place_id||x.google_place_id===placeState.selectedPlace.google_place_id)){
+        placeState.savedPlaces.unshift(placeState.selectedPlace);
+      }
+      renderSavedStrip();renderPlaceList();renderDetail();updateMarkers();
+      setMapStatus('LUMA 독서모임 장소로 저장했습니다.');
+    } else alert(d.error||'저장하지 못했습니다.');
+  }catch(e){alert('저장 중 오류가 발생했습니다.');}
+}
+function toggleEditForm(){document.getElementById('place-edit-form')?.classList.toggle('open');}
+async function updateSelectedPlace(){
+  const p=placeState.selectedPlace;
+  if(!p?.place_id){await saveSelectedPlace();if(!placeState.selectedPlace?.place_id)return;}
+  const body={
+    user_id:userId(),
+    reading_score:document.getElementById('edit-reading-score').value,
+    meeting_capacity:document.getElementById('edit-capacity').value,
+    noise_level:document.getElementById('edit-noise').value,
+    outlet_score:document.getElementById('edit-outlet').value,
+    wifi_score:document.getElementById('edit-wifi').value,
+    reservation_url:document.getElementById('edit-reservation').value,
+    memo:document.getElementById('edit-memo').value,
+    photo_url:p.photo_url||''
+  };
+  try{
+    const r=await fetch(`/api/places/${encodeURIComponent(placeState.selectedPlace.place_id)}`,{method:'PUT',headers:hdr(),body:JSON.stringify(body)});
+    const d=await r.json();
+    if(d.ok&&d.place){
+      placeState.selectedPlace=normalizePlace({...placeState.selectedPlace,...d.place,saved:true});
+      placeState.searchResults=placeState.searchResults.map(x=>x.place_id===placeState.selectedPlace.place_id?placeState.selectedPlace:x);
+      placeState.savedPlaces=placeState.savedPlaces.map(x=>x.place_id===placeState.selectedPlace.place_id?placeState.selectedPlace:x);
+      renderSavedStrip();renderPlaceList();renderDetail();setMapStatus('장소 메타데이터를 수정했습니다.');
+    }else alert(d.error||'수정하지 못했습니다.');
+  }catch(e){alert('수정 중 오류가 발생했습니다.');}
+}
+async function deleteSelectedPlace(){
+  const p=placeState.selectedPlace;
+  if(!p?.place_id)return;
+  if(!confirm('저장한 장소와 LUMA 후기를 삭제할까요?'))return;
+  try{
+    const r=await fetch(`/api/places/${encodeURIComponent(p.place_id)}?user_id=${encodeURIComponent(userId())}`,{method:'DELETE',headers:hdr()});
+    const d=await r.json();
+    if(d.ok){
+      placeState.searchResults=placeState.searchResults.filter(x=>x.place_id!==p.place_id);
+      placeState.savedPlaces=placeState.savedPlaces.filter(x=>x.place_id!==p.place_id);
+      placeState.selectedPlace=placeState.searchResults[0]||null;
+      renderSavedStrip();renderPlaceList();renderDetail();updateMarkers();setMapStatus('저장 장소를 삭제했습니다.');
+    }else alert(d.error||'삭제하지 못했습니다.');
+  }catch(e){alert('삭제 중 오류가 발생했습니다.');}
+}
+async function submitPlaceReview(){
+  let p=placeState.selectedPlace;
+  if(!p)return;
+  if(!p.place_id){await saveSelectedPlace();p=placeState.selectedPlace;}
+  const content=document.getElementById('review-content').value.trim();
+  if(!content){alert('후기 내용을 입력해주세요.');return;}
+  const body={
+    user_id:userId(),display_name:_cu.display_name||'나',emoji:_cu.emoji||'⭐',
+    rating:Number(document.getElementById('review-rating').value||5),
+    noise_level:document.getElementById('review-noise').value,
+    group_size:Number(document.getElementById('review-group-size').value||0),
+    visit_purpose:document.getElementById('review-purpose').value||'offline_reading',
+    content
+  };
+  try{
+    const r=await fetch(`/api/places/${encodeURIComponent(p.place_id)}/review`,{method:'POST',headers:hdr(),body:JSON.stringify(body)});
+    const d=await r.json();
+    if(d.ok){
+      const reviews=await fetchReviews(p.place_id);
+      placeState.selectedPlace={...placeState.selectedPlace,reviews};
+      renderDetail();setMapStatus('후기를 저장했습니다.');
+    }else alert(d.error||'후기를 저장하지 못했습니다.');
+  }catch(e){alert('후기 저장 중 오류가 발생했습니다.');}
+}
+function bootPlacesMap(){
+  if(!document.getElementById('view-map')||placeState.loaded)return;
+  placeState.loaded=true;
+  refreshSavedPlaces();
+  loadPlaces();
+}
+window.__pendingMapInit=bootPlacesMap;
+
+/* ── AI GUIDE / REPORT ── */
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+async function requestAIGuide(clubId){
+  document.getElementById('ai-guide-modal').classList.add('open');
+  document.getElementById('ai-guide-content').textContent='AI 토론 가이드를 생성하는 중...';
+  try{
+    const r=await fetch(`/community/api/${clubId}/ai-guide`,{method:'POST',headers:hdr()});
+    const d=await r.json();
+    const el=document.getElementById('ai-guide-content');
+    if(d.ok&&d.guide){el.innerHTML=d.guide.split('\n').map(line=>line?`<p style="margin-bottom:10px;">${esc(line)}</p>`:'').join('');}
+    else{el.textContent=d.error||'가이드를 생성할 수 없습니다.';}
+  }catch(e){document.getElementById('ai-guide-content').textContent='연결 오류가 발생했습니다.';}
+}
+async function requestReport(clubId){
+  document.getElementById('report-modal').classList.add('open');
+  document.getElementById('report-content').textContent='회의 리포트를 생성하는 중...';
+  try{
+    const r=await fetch(`/community/api/${clubId}/report`,{method:'POST',headers:hdr()});
+    const d=await r.json();
+    const el=document.getElementById('report-content');
+    if(d.ok&&d.report){el.innerHTML=d.report.split('\n').map(line=>line?`<p style="margin-bottom:10px;">${esc(line)}</p>`:'').join('');}
+    else{el.textContent=d.error||'리포트를 생성할 수 없습니다.';}
+  }catch(e){document.getElementById('report-content').textContent='연결 오류가 발생했습니다.';}
+}
+
+/* ── SETTINGS SAVE ── */
+async function saveBookSetting(clubId){
+  const title=document.getElementById('setting-book-title').value.trim();
+  const author=document.getElementById('setting-book-author').value.trim();
+  try{
+    const r=await fetch(`/community/api/${clubId}/settings`,{method:'POST',headers:hdr(),body:JSON.stringify({current_book:title,current_book_author:author})});
+    const d=await r.json();
+    if(d.ok){const cover=document.getElementById('book-cover-preview');if(cover)cover.textContent=title?'📖':'+';}
+    else{alert(d.error||'저장 실패');}
+  }catch(e){alert('연결 오류');}
+}
+</script>
+</body>
+</html>

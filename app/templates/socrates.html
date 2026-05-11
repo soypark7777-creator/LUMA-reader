@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LUMA — AI 소크라테스 철학 토론광장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07130f; --bg2:#0b1d16; --bg3:#10271e;
+  --green-deep:#123524; --green-soft:#2f5d46;
+  --green-glow:rgba(80,180,120,.22);
+  --gold:#f5c86b; --gold-dim:rgba(245,200,107,.12); --gold-border:rgba(245,200,107,.28);
+  --text:#f3f7f0; --sub:#9aa89d;
+  --panel:rgba(255,255,255,.055); --border:rgba(255,255,255,.09);
+  --green-accent:rgba(80,180,120,.8); --green-dim:rgba(80,180,120,.1);
+  --green-border:rgba(80,180,120,.25); --mint:#7de8a8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 55% at 50% 0%,rgba(18,53,36,.6) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 100%,rgba(245,200,107,.03) 0%,transparent 60%);
+  color:var(--text);font-family:'Pretendard',sans-serif;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(80,180,120,.2);border-radius:2px;}
+a{text-decoration:none;color:inherit;}
+
+/* NAV */
+.nav{
+  position:relative;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:52px;
+  background:rgba(7,19,15,.94);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;backdrop-filter:blur(14px);
+}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2.4s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,200,107,.4)}50%{box-shadow:0 0 0 7px transparent}}
+.nav-links{display:flex;gap:2px;}
+.npill{padding:5px 12px;border-radius:14px;font-size:.72rem;color:var(--sub);transition:.2s;}
+.npill:hover{background:rgba(80,180,120,.1);color:var(--mint);}
+.npill.active{background:rgba(80,180,120,.15);color:var(--mint);}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--sub);}
+.nav-login-btn{background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);padding:5px 13px;border-radius:14px;font-size:.72rem;transition:.2s;}
+.nav-login-btn:hover{background:rgba(245,200,107,.2);}
+.nav-logout{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);color:#f87171;padding:4px 10px;border-radius:7px;font-size:.7rem;cursor:pointer;font-family:'Pretendard',sans-serif;}
+
+/* SOCRATES TOP TABS */
+.socrates-top-tabs{
+  display:flex;align-items:center;padding:0 16px;gap:4px;
+  height:44px;flex-shrink:0;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+.socrates-top-tabs::-webkit-scrollbar{display:none;}
+.socrates-tab{
+  flex-shrink:0;padding:6px 13px;border-radius:18px;
+  font-size:.71rem;color:var(--sub);
+  background:none;border:1px solid transparent;
+  cursor:pointer;font-family:'Pretendard',sans-serif;
+  transition:.2s;white-space:nowrap;
+}
+.socrates-tab:hover{border-color:var(--border);color:var(--text);background:var(--panel);}
+.socrates-tab.active{background:var(--green-dim);border-color:var(--green-border);color:var(--mint);}
+.tab-close-btn{
+  margin-left:auto;flex-shrink:0;
+  background:none;border:none;color:var(--sub);
+  font-size:.9rem;cursor:pointer;padding:4px 8px;
+  transition:.2s;font-family:'Pretendard',sans-serif;
+}
+.tab-close-btn:hover{color:var(--text);}
+
+/* TOP PANEL DRAWER */
+.top-panel-drawer{
+  flex-shrink:0;max-height:0;overflow:hidden;
+  transition:max-height .35s ease;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+}
+.top-panel-drawer.open{max-height:38vh;overflow-y:auto;}
+.drawer-inner{padding:14px 20px;}
+.drawer-label{font-size:.59rem;color:var(--sub);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;display:block;}
+.drawer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px;}
+.drawer-empty{font-size:.76rem;color:var(--sub);line-height:1.7;padding:4px 0;}
+
+/* Session / Dict / Action cards in drawer */
+.sess-card{
+  background:rgba(80,180,120,.04);border:1px solid var(--border);
+  border-radius:10px;padding:10px;cursor:pointer;transition:.2s;
+  position:relative;overflow:hidden;
+}
+.sess-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:rgba(80,180,120,.5);border-radius:1px;}
+.sess-card:hover{border-color:var(--green-border);background:rgba(80,180,120,.07);}
+.sess-card.active-sess{border-color:rgba(80,180,120,.4);background:rgba(80,180,120,.1);}
+.sc-num{font-size:.59rem;color:var(--mint);font-weight:600;margin-bottom:3px;letter-spacing:.05em;}
+.sc-title{font-size:.75rem;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-bottom:2px;}
+.sc-meta{font-size:.61rem;color:var(--sub);}
+.sc-bar{height:2px;background:rgba(255,255,255,.06);border-radius:1px;margin-top:6px;overflow:hidden;}
+.sc-fill{height:100%;background:linear-gradient(90deg,rgba(80,180,120,.8),var(--gold));border-radius:1px;transition:width .4s;}
+.dict-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:9px;}
+.di-concept{font-size:.77rem;font-weight:600;color:var(--gold);margin-bottom:3px;}
+.di-def{font-family:'Noto Serif KR',serif;font-size:.71rem;color:var(--text);line-height:1.6;}
+.di-book{font-size:.6rem;color:var(--sub);margin-top:4px;}
+.action-item{background:rgba(80,180,120,.04);border:1px solid var(--border);border-radius:9px;padding:10px;}
+.ai-label{font-size:.59rem;color:var(--mint);letter-spacing:.08em;margin-bottom:3px;}
+.ai-text{font-size:.74rem;color:var(--text);line-height:1.55;}
+.ai-when{font-size:.62rem;color:var(--sub);margin-top:4px;}
+.ai-checkin{width:100%;margin-top:7px;padding:5px;border-radius:6px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.17);color:#4ade80;font-size:.65rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
+.ai-checkin:hover{background:rgba(74,222,128,.14);}
+.ai-checkin.done{opacity:.45;cursor:default;}
+
+/* DQ items in panel */
+.dq-panel-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.dq-panel-item:last-child{border-bottom:none;}
+.dq-type-chip{flex-shrink:0;font-size:.58rem;padding:2px 7px;border-radius:5px;background:var(--green-dim);border:1px solid var(--green-border);color:var(--mint);margin-top:2px;}
+.dq-panel-text{flex:1;font-family:'Noto Serif KR',serif;font-size:.78rem;color:var(--text);line-height:1.65;}
+
+/* PLAZA WRAP */
+.plaza-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+
+/* HERO SCREEN */
+.hero{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  overflow-y:auto;padding:36px 20px 28px;
+}
+.hero-content{
+  position:relative;z-index:1;width:100%;max-width:600px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+}
+.hero-emblem{
+  width:68px;height:68px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(80,180,120,.2),rgba(245,200,107,.12));
+  border:1px solid rgba(80,180,120,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;margin-bottom:18px;
+  box-shadow:0 0 40px rgba(80,180,120,.08),inset 0 0 20px rgba(80,180,120,.04);
+}
+.hero-label-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;width:100%;}
+.hero-label-line{flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(80,180,120,.2),transparent);}
+.hero-label-text{font-size:.62rem;color:var(--sub);letter-spacing:.22em;text-transform:uppercase;white-space:nowrap;}
+.hero-title{font-family:'DM Serif Display',serif;font-size:1.7rem;color:var(--text);line-height:1.25;margin-bottom:10px;}
+.hero-sub{font-size:.83rem;color:var(--sub);line-height:1.85;margin-bottom:26px;}
+
+/* Quick chips */
+.quick-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:22px;}
+.chip{padding:6px 12px;border-radius:17px;border:1px solid var(--border);background:rgba(255,255,255,.025);color:var(--sub);font-size:.7rem;cursor:pointer;transition:.2s;font-family:'Pretendard',sans-serif;}
+.chip:hover{border-color:var(--green-border);color:var(--mint);background:rgba(80,180,120,.07);}
+
+/* Mode selector */
+.mode-section{width:100%;margin-bottom:18px;text-align:left;}
+.mode-section-label{font-size:.62rem;color:var(--sub);letter-spacing:.15em;text-transform:uppercase;margin-bottom:9px;display:block;}
+.mode-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:7px;}
+.mode-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:12px 10px;cursor:pointer;transition:.2s;text-align:left;
+}
+.mode-card:hover{border-color:rgba(80,180,120,.28);background:rgba(80,180,120,.07);}
+.mode-card.active{border-color:rgba(80,180,120,.5);background:rgba(80,180,120,.13);box-shadow:0 0 0 1px rgba(80,180,120,.12);}
+.mode-icon{font-size:1.05rem;margin-bottom:5px;}
+.mode-name{font-size:.71rem;font-weight:600;color:var(--text);margin-bottom:2px;}
+.mode-desc{font-size:.62rem;color:var(--sub);line-height:1.45;}
+
+/* Book brief card */
+.book-brief-card{
+  width:100%;text-align:left;
+  background:rgba(80,180,120,.04);border:1px solid rgba(80,180,120,.18);
+  border-radius:13px;padding:14px;margin-bottom:14px;display:none;
+}
+.book-brief-card.show{display:block;}
+.bbc-label{font-size:.59rem;color:var(--mint);letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px;display:block;}
+.bbc-summary{list-style:none;margin-bottom:9px;}
+.bbc-summary li{font-size:.77rem;color:var(--text);line-height:1.7;padding-left:13px;position:relative;margin-bottom:3px;}
+.bbc-summary li::before{content:'·';position:absolute;left:0;color:var(--mint);}
+.bbc-keywords{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px;}
+.bbc-kw{font-size:.64rem;padding:2px 8px;border-radius:6px;background:var(--green-dim);border:1px solid var(--green-border);color:var(--mint);}
+.bbc-question{font-family:'Noto Serif KR',serif;font-size:.8rem;color:var(--text);font-style:italic;line-height:1.7;border-left:2px solid rgba(245,200,107,.4);padding-left:11px;}
+
+/* Paste area */
+.paste-wrap{width:100%;background:rgba(80,180,120,.04);border:1px solid rgba(80,180,120,.2);border-radius:13px;padding:15px;margin-bottom:11px;text-align:left;transition:.2s;}
+.paste-wrap:focus-within{border-color:rgba(80,180,120,.45);box-shadow:0 0 0 3px rgba(80,180,120,.05);}
+.paste-label{font-size:.62rem;color:var(--mint);letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;display:block;}
+.paste-ta{width:100%;background:none;border:none;outline:none;color:var(--text);font-family:'Noto Serif KR',serif;font-size:.84rem;line-height:1.8;resize:none;min-height:96px;max-height:180px;}
+.paste-ta::placeholder{color:var(--sub);}
+.book-input-wrap{width:100%;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:15px;transition:.2s;}
+.book-input-wrap:focus-within{border-color:rgba(245,200,107,.35);}
+.book-icon{font-size:.95rem;flex-shrink:0;}
+.book-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Pretendard',sans-serif;font-size:.81rem;}
+.book-input::placeholder{color:var(--sub);}
+.start-btn{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,rgba(245,200,107,.85),rgba(245,200,107,.6));border:none;color:#1a1200;font-family:'Pretendard',sans-serif;font-size:.87rem;font-weight:600;cursor:pointer;transition:.25s;letter-spacing:.03em;}
+.start-btn:hover{box-shadow:0 6px 22px rgba(245,200,107,.22);transform:translateY(-1px);}
+.start-btn:active{transform:translateY(0);}
+.start-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* CHAT VIEW */
+#chat-view{flex:1;display:none;flex-direction:column;overflow:hidden;}
+#chat-view.active{display:flex;}
+
+/* Session header */
+.sess-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;border-bottom:1px solid var(--border);
+  flex-shrink:0;background:rgba(11,29,22,.85);backdrop-filter:blur(8px);
+}
+.sh-left{display:flex;flex-direction:column;gap:2px;}
+.sh-mode{font-size:.59rem;color:var(--mint);letter-spacing:.14em;text-transform:uppercase;}
+.sh-title{font-size:.85rem;color:var(--text);font-family:'DM Serif Display',serif;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:55vw;}
+.sh-book{font-size:.65rem;color:var(--sub);}
+.sh-right{display:flex;align-items:center;gap:10px;}
+.q-badge{background:var(--green-dim);border:1px solid var(--green-border);color:var(--mint);font-size:.66rem;padding:4px 10px;border-radius:7px;}
+.new-chat-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:.69rem;padding:5px 11px;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
+.new-chat-btn:hover{border-color:var(--green-border);color:var(--mint);}
+
+/* Progress bar */
+.prog-bar{padding:8px 20px;flex-shrink:0;background:rgba(7,19,15,.7);}
+.pb-row{display:flex;justify-content:space-between;font-size:.6rem;color:var(--sub);margin-bottom:5px;}
+.pb-stage-name{color:var(--mint);}
+.pb-track{height:2px;background:rgba(255,255,255,.06);border-radius:1px;overflow:hidden;}
+.pb-fill{height:100%;background:linear-gradient(90deg,rgba(80,180,120,.8),var(--gold));border-radius:1px;transition:width .5s ease;}
+
+/* Chat messages */
+.chat-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:18px;}
+.msg-ai{display:flex;gap:12px;align-items:flex-start;}
+.ai-av{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(80,180,120,.28),rgba(18,53,36,.7));
+  border:1px solid rgba(80,180,120,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;flex-shrink:0;box-shadow:0 0 14px rgba(80,180,120,.08);
+}
+.ai-bubble{
+  background:rgba(16,39,30,.75);
+  border:1px solid rgba(80,180,120,.16);
+  border-left:2px solid rgba(245,200,107,.45);
+  border-radius:0 14px 14px 14px;
+  padding:14px 17px;max-width:86%;
+  backdrop-filter:blur(4px);
+}
+.ai-msg-label{font-size:.57rem;color:var(--gold);margin-bottom:5px;letter-spacing:.12em;text-transform:uppercase;}
+.ai-msg-text{font-family:'Noto Serif KR',serif;font-size:.85rem;color:var(--text);line-height:1.9;}
+.ai-msg-stage{font-size:.59rem;color:var(--sub);margin-top:8px;}
+.ai-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.ai-action-btn{padding:4px 10px;border-radius:7px;font-size:.64rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;border:1px solid;}
+.btn-save-word{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold);}
+.btn-save-word:hover{background:rgba(245,200,107,.2);}
+.btn-action-plan{background:var(--green-dim);border-color:var(--green-border);color:var(--mint);}
+.btn-action-plan:hover{background:rgba(80,180,120,.18);}
+.msg-user{display:flex;justify-content:flex-end;}
+.user-bubble{background:rgba(18,53,36,.6);border:1px solid rgba(80,180,120,.2);border-radius:14px 0 14px 14px;padding:12px 16px;max-width:84%;}
+.user-text{font-size:.82rem;color:var(--text);line-height:1.75;}
+.typing-wrap{display:flex;gap:5px;align-items:center;padding:6px 0;}
+.tdot{width:6px;height:6px;border-radius:50%;background:rgba(80,180,120,.7);animation:tdot .9s infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}
+.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes tdot{0%,100%{opacity:.35;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+/* Insight card */
+.insight-card{background:linear-gradient(135deg,rgba(18,53,36,.55),rgba(245,200,107,.04));border:1px solid rgba(245,200,107,.28);border-radius:16px;padding:22px;}
+.ins-badge{font-size:.59rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.ins-title{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--text);margin-bottom:12px;}
+.ins-text{font-family:'Noto Serif KR',serif;font-size:.87rem;color:var(--text);line-height:1.9;margin-bottom:10px;}
+.ins-sentence{font-style:italic;font-size:.82rem;color:var(--gold);border-left:2px solid rgba(245,200,107,.35);padding-left:12px;margin:10px 0;line-height:1.75;}
+.ins-meaning{font-size:.77rem;color:var(--sub);line-height:1.65;margin-bottom:12px;}
+.ins-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:15px;}
+.ins-tag{font-size:.62rem;padding:3px 9px;border-radius:7px;background:var(--green-dim);border:1px solid var(--green-border);color:var(--mint);}
+.ins-actions{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:4px;}
+.btn-gold{padding:7px 14px;border-radius:9px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-size:.73rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
+.btn-gold:hover{background:rgba(245,200,107,.22);}
+.btn-green{padding:7px 14px;border-radius:9px;background:var(--green-dim);border:1px solid var(--green-border);color:var(--mint);font-size:.73rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
+.btn-green:hover{background:rgba(80,180,120,.2);}
+.btn-green:disabled,.btn-gold:disabled{opacity:.45;cursor:not-allowed;}
+
+/* Discussion question card */
+.discussion-question-card{background:rgba(11,29,22,.7);border:1px solid var(--green-border);border-radius:13px;padding:16px;margin-top:12px;}
+.dqc-label{font-size:.59rem;color:var(--mint);letter-spacing:.14em;text-transform:uppercase;margin-bottom:11px;display:block;}
+.dq-item{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);}
+.dq-item:last-child{border-bottom:none;}
+.dq-type{flex-shrink:0;font-size:.58rem;padding:2px 7px;border-radius:5px;background:var(--green-dim);border:1px solid var(--green-border);color:var(--mint);margin-top:2px;white-space:nowrap;}
+.dq-text{flex:1;font-family:'Noto Serif KR',serif;font-size:.81rem;color:var(--text);line-height:1.7;}
+.copy-btn{flex-shrink:0;background:none;border:none;color:var(--sub);font-size:.68rem;cursor:pointer;font-family:'Pretendard',sans-serif;padding:2px 6px;border-radius:5px;transition:.2s;}
+.copy-btn:hover{background:rgba(255,255,255,.05);color:var(--text);}
+
+/* Debate card */
+.debate-card{background:rgba(11,29,22,.7);border:1px solid rgba(245,200,107,.18);border-radius:13px;padding:16px;margin-top:12px;}
+.debate-topic{font-family:'DM Serif Display',serif;font-size:.98rem;color:var(--text);margin-bottom:13px;line-height:1.4;}
+.debate-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:11px;}
+.debate-col-label{font-size:.59rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-weight:600;}
+.debate-col-label.pro{color:var(--mint);}
+.debate-col-label.con{color:#f87171;}
+.debate-col ul{list-style:none;}
+.debate-col li{font-size:.75rem;color:var(--sub);line-height:1.6;padding-left:12px;position:relative;margin-bottom:3px;}
+.debate-col.pro li::before{content:'+';position:absolute;left:0;color:var(--mint);}
+.debate-col.con li::before{content:'−';position:absolute;left:0;color:#f87171;}
+.debate-neutral{font-family:'Noto Serif KR',serif;font-size:.79rem;color:var(--gold);font-style:italic;border-top:1px solid var(--border);padding-top:10px;line-height:1.7;}
+
+/* Lounge share card */
+.lounge-share-card{background:linear-gradient(135deg,rgba(11,29,22,.85),rgba(18,53,36,.5));border:1px solid var(--green-border);border-radius:13px;padding:16px;margin-top:12px;}
+.lsc-title{font-family:'DM Serif Display',serif;font-size:.98rem;color:var(--text);margin-bottom:5px;}
+.lsc-book{font-size:.69rem;color:var(--sub);margin-bottom:9px;}
+.lsc-passage{font-family:'Noto Serif KR',serif;font-size:.79rem;color:var(--sub);border-left:2px solid rgba(80,180,120,.3);padding-left:10px;line-height:1.7;margin-bottom:9px;font-style:italic;}
+.lsc-question{font-family:'Noto Serif KR',serif;font-size:.84rem;color:var(--text);line-height:1.7;margin-bottom:9px;}
+.lsc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px;}
+.lsc-tag{font-size:.62rem;padding:2px 8px;border-radius:6px;background:rgba(245,200,107,.08);border:1px solid rgba(245,200,107,.2);color:var(--gold);}
+.lsc-footer{display:flex;gap:7px;}
+
+/* Input area */
+.input-area{padding:11px 20px 15px;border-top:1px solid var(--border);flex-shrink:0;background:rgba(7,19,15,.85);backdrop-filter:blur(10px);}
+.ia-ta{width:100%;background:rgba(80,180,120,.04);border:1px solid var(--border);border-radius:12px;padding:11px 15px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:.83rem;resize:none;outline:none;line-height:1.65;transition:.2s;min-height:52px;max-height:120px;}
+.ia-ta:focus{border-color:rgba(80,180,120,.35);box-shadow:0 0 0 3px rgba(80,180,120,.05);}
+.ia-ta::placeholder{color:var(--sub);}
+.ia-foot{display:flex;align-items:center;justify-content:space-between;margin-top:7px;}
+.ia-hint{font-size:.61rem;color:var(--sub);}
+.ia-send{padding:8px 22px;background:linear-gradient(135deg,rgba(80,180,120,.7),rgba(47,93,70,.9));border:none;border-radius:10px;color:#f3f7f0;font-size:.77rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;font-weight:500;}
+.ia-send:hover{box-shadow:0 4px 16px rgba(80,180,120,.18);}
+.ia-send:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;}
+
+/* Mini spinner */
+.mini-spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(80,180,120,.2);border-top-color:rgba(80,180,120,.8);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:rgba(11,29,22,.96);border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:10px 16px;font-size:.77rem;color:#4ade80;z-index:999;transform:translateY(70px);opacity:0;transition:.35s cubic-bezier(.34,1.56,.64,1);max-width:260px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.warn{border-color:rgba(248,113,113,.3);color:#f87171;}
+.toast.gold{border-color:rgba(245,200,107,.3);color:var(--gold);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(7,19,15,.78);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid rgba(80,180,120,.28);border-radius:18px;padding:26px;width:92%;max-width:420px;}
+.modal-title{font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--text);margin-bottom:16px;}
+.modal-input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:9px 13px;color:var(--text);font-family:'Pretendard',sans-serif;font-size:.81rem;outline:none;margin-bottom:10px;transition:.2s;}
+.modal-input:focus{border-color:rgba(80,180,120,.4);}
+.modal-ta{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:9px 13px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:.81rem;outline:none;resize:none;line-height:1.65;margin-bottom:13px;transition:.2s;}
+.modal-ta:focus{border-color:rgba(80,180,120,.4);}
+.modal-footer{display:flex;gap:9px;justify-content:flex-end;}
+.btn-cancel{padding:8px 16px;border-radius:9px;background:none;border:1px solid var(--border);color:var(--sub);font-size:.77rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
+.btn-cancel:hover{border-color:rgba(255,255,255,.15);color:var(--text);}
+
+/* Mobile */
+@media(max-width:640px){
+  .nav{padding:0 14px;}
+  .nav-links{display:none;}
+  .hero{padding:22px 14px 22px;}
+  .hero-title{font-size:1.45rem;}
+  .mode-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
+  .chat-area{padding:14px;}
+  .sess-header{padding:8px 14px;}
+  .sh-title{max-width:56vw;font-size:.81rem;}
+  .debate-cols{grid-template-columns:1fr;}
+  .ins-actions{flex-direction:column;}
+  .lsc-footer{flex-direction:column;}
+  .drawer-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:28px;object-fit:contain" onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'DM Serif Display',serif;font-size:1.05rem;color:var(--gold);line-height:1">LUMA</span>
+      <span id="luma-tagline" style="font-size:.56rem;color:var(--sub);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="npill">별자리 지도</a>
+    <a href="/heart" class="npill">마음 행성계</a>
+    <a href="/lounge" class="npill">탐사 성운</a>
+    <a href="/social" class="npill">독자 광장</a>
+    <a href="/live" class="npill">라이브</a>
+    <a href="/socrates" class="npill active">소크라테스</a>
+    <a href="/profile" class="npill">프로필</a>
+  </div>
+  <div class="nav-user" id="nav-user">
+    <a href="/auth/login" class="nav-login-btn">로그인</a>
+  </div>
+</nav>
+
+<!-- SOCRATES TOP TABS -->
+<div class="socrates-top-tabs">
+  <button class="socrates-tab" onclick="switchTopPanel('sessions',this)">세션 기록</button>
+  <button class="socrates-tab" onclick="switchTopPanel('dictionary',this)">내 사전</button>
+  <button class="socrates-tab" onclick="switchTopPanel('actions',this)">실행 계획</button>
+  <button class="socrates-tab" id="tab-discussion" onclick="switchTopPanel('discussion',this)">토론 질문</button>
+  <button class="socrates-tab" id="tab-debate" onclick="switchTopPanel('debate',this)">찬반 주제</button>
+  <button class="tab-close-btn" id="tab-close-btn" onclick="closeTopPanel()" style="display:none" title="닫기">✕</button>
+</div>
+
+<!-- TOP PANEL DRAWER -->
+<div class="top-panel-drawer" id="top-panel-drawer">
+  <div id="panel-sessions" class="drawer-inner" style="display:none">
+    <span class="drawer-label">최근 대화 세션</span>
+    <div class="drawer-grid" id="sess-list">
+      <div class="drawer-empty">아직 세션이 없습니다. 구절을 붙여넣고 소크라테스와 대화를 시작해보세요!</div>
+    </div>
+  </div>
+  <div id="panel-dictionary" class="drawer-inner" style="display:none">
+    <span class="drawer-label">저장된 개념과 단어</span>
+    <div class="drawer-grid" id="dict-list">
+      <div class="drawer-empty">저장된 단어가 없습니다.</div>
+    </div>
+  </div>
+  <div id="panel-actions" class="drawer-inner" style="display:none">
+    <span class="drawer-label">인사이트에서 만든 실행 계획</span>
+    <div class="drawer-grid" id="action-list">
+      <div class="drawer-empty">실행 계획이 없습니다. 대화를 완료하면 생성됩니다.</div>
+    </div>
+  </div>
+  <div id="panel-discussion" class="drawer-inner" style="display:none">
+    <span class="drawer-label">독서모임에서 나눌 질문</span>
+    <div id="discussion-panel-content">
+      <div class="drawer-empty">대화를 완료하고 토론 질문을 생성하면 여기에 표시됩니다.</div>
+    </div>
+  </div>
+  <div id="panel-debate" class="drawer-inner" style="display:none">
+    <span class="drawer-label">찬반으로 나눠볼 수 있는 주제</span>
+    <div id="debate-panel-content">
+      <div class="drawer-empty">대화를 완료하고 찬반 주제를 생성하면 여기에 표시됩니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN PLAZA -->
+<div class="plaza-wrap">
+
+  <!-- HERO SCREEN -->
+  <div class="hero" id="hero-screen">
+    <div class="hero-content">
+      <div class="hero-emblem">⊙</div>
+
+      <div class="hero-label-row">
+        <div class="hero-label-line"></div>
+        <span class="hero-label-text">AI 소크라테스 토론광장</span>
+        <div class="hero-label-line"></div>
+      </div>
+
+      <h1 class="hero-title">AI 소크라테스와<br>다섯 번의 물음을 나눕니다</h1>
+      <p class="hero-sub">책 속 한 문장을 놓고, 소크라테스가 깊이 있는 질문을 던집니다<br>생각을 거듭할수록, 당신만의 인사이트가 탄생합니다</p>
+
+      <div class="quick-chips">
+        <button class="chip" onclick="quickStart('덕목을 지식으로만 볼 수 있다면, 무지함은 곧 악이다','소크라테스 변명')">소크라테스 변명 구절</button>
+        <button class="chip" onclick="quickStart('인간은 자유롭도록 선고받았다','실존주의와 인간감정')">실존주의 구절</button>
+        <button class="chip" onclick="quickStart('두 개의 점 사이에는 무수히 많은 길이 있다','사피엔스')">사피엔스 구절</button>
+      </div>
+
+      <!-- Discussion mode -->
+      <div class="mode-section">
+        <span class="mode-section-label">대화 모드 선택</span>
+        <div class="mode-grid">
+          <div class="mode-card active" onclick="selectDiscussionMode('appreciation',this)">
+            <div class="mode-icon">🌿</div>
+            <div class="mode-name">감상형</div>
+            <div class="mode-desc">문장이 남긴 감정을 살펴봅니다</div>
+          </div>
+          <div class="mode-card" onclick="selectDiscussionMode('analysis',this)">
+            <div class="mode-icon">🔭</div>
+            <div class="mode-name">분석형</div>
+            <div class="mode-desc">구절의 구조와 의미를 파고듭니다</div>
+          </div>
+          <div class="mode-card" onclick="selectDiscussionMode('debate',this)">
+            <div class="mode-icon">⚖️</div>
+            <div class="mode-name">토론형</div>
+            <div class="mode-desc">찬반 질문으로 확장합니다</div>
+          </div>
+          <div class="mode-card" onclick="selectDiscussionMode('life',this)">
+            <div class="mode-icon">🌱</div>
+            <div class="mode-name">삶 연결형</div>
+            <div class="mode-desc">문장을 내 경험과 연결합니다</div>
+          </div>
+          <div class="mode-card" onclick="selectDiscussionMode('character',this)">
+            <div class="mode-icon">🎭</div>
+            <div class="mode-name">인물 분석형</div>
+            <div class="mode-desc">등장인물의 선택을 분석합니다</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book brief card -->
+      <div class="book-brief-card" id="book-brief-card">
+        <span class="bbc-label">✦ 책 이해 카드</span>
+        <ul class="bbc-summary" id="bbc-summary"></ul>
+        <div class="bbc-keywords" id="bbc-keywords"></div>
+        <div class="bbc-question" id="bbc-question"></div>
+      </div>
+
+      <div class="paste-wrap">
+        <span class="paste-label">구절 또는 문장 붙여넣기</span>
+        <textarea class="paste-ta" id="hero-passage" rows="4"
+          placeholder="오늘 읽은 구절이나 문장을 여기에 붙여넣으세요...&#10;&#10;책에서 마음에 걸린 한 줄도 좋습니다."
+          oninput="onPassageInput()"></textarea>
+      </div>
+
+      <div class="book-input-wrap">
+        <span class="book-icon">📚</span>
+        <input class="book-input" id="hero-book" type="text"
+          placeholder="어느 책에서 발췌하셨나요? (선택사항)"
+          onblur="onBookBlur()">
+      </div>
+
+      <button class="start-btn" id="hero-start-btn" onclick="startFromHero()">✦ 철학 토론 시작하기</button>
+    </div>
+  </div>
+
+  <!-- CHAT VIEW -->
+  <div id="chat-view">
+    <div class="sess-header">
+      <div class="sh-left">
+        <span class="sh-mode" id="sh-mode-label">AI 소크라테스 · 철학 토론광장</span>
+        <span class="sh-title" id="sh-title">대화 진행 중...</span>
+        <span class="sh-book" id="sh-book"></span>
+      </div>
+      <div class="sh-right">
+        <span class="q-badge" id="q-badge">1 / 5 질문</span>
+        <button class="new-chat-btn" onclick="returnToHero()">새 대화</button>
+      </div>
+    </div>
+
+    <div class="prog-bar">
+      <div class="pb-row">
+        <span id="pb-stage"><span class="pb-stage-name">1단계 이해하기</span></span>
+        <span id="pb-pct">20%</span>
+      </div>
+      <div class="pb-track"><div class="pb-fill" id="pb-fill" style="width:20%"></div></div>
+    </div>
+
+    <div class="chat-area" id="chat-area"></div>
+
+    <div class="input-area" id="input-area">
+      <textarea class="ia-ta" id="answer-input" rows="2"
+        placeholder="소크라테스의 질문에 솔직하게 답해보세요... 정답은 없습니다."
+        onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();sendAnswer();}"></textarea>
+      <div class="ia-foot">
+        <span class="ia-hint">Ctrl+Enter로 전송</span>
+        <button class="ia-send" id="send-btn" onclick="sendAnswer()">답하기 →</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .plaza-wrap -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Word save modal -->
+<div class="modal-overlay" id="word-modal">
+  <div class="modal">
+    <div class="modal-title">단어 / 개념 저장하기</div>
+    <input class="modal-input" id="modal-concept" placeholder="개념 또는 단어 이름">
+    <textarea class="modal-ta" id="modal-def" rows="3" placeholder="이 개념에 대한 나의 생각이나 정의를 적어보세요..."></textarea>
+    <input class="modal-input" id="modal-book" placeholder="출처 책 (선택)">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeWordModal()">취소</button>
+      <button class="btn-green" onclick="saveWordEntry()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────
+const UID = JSON.parse(localStorage.getItem('luma_user') || '{}').user_id || 'user_demo';
+let curSession          = null;
+let isWaiting           = false;
+let sessions            = [];
+let dictEntries         = [];
+let actionPlans         = [];
+let pendingWord         = null;
+let selectedDiscussionMode = 'appreciation';
+let activeTopPanel      = null;
+let discussionQuestions = null;
+let debateTopic         = null;
+
+const STAGE_LABELS = ['이해하기','느끼기','해석하기','삶과 연결하기','토론으로 확장하기'];
+const MODE_LABELS  = {appreciation:'감상형',analysis:'분석형',debate:'토론형',life:'삶 연결형',character:'인물 분석형'};
+
+// ── AUTH ─────────────────────────────────────────────────
+function authHeaders(){
+  const t = localStorage.getItem('luma_token');
+  return t ? {'Content-Type':'application/json','Authorization':'Bearer '+t}
+           : {'Content-Type':'application/json'};
+}
+
+// ── NAV ──────────────────────────────────────────────────
+function initNav(){
+  const el = document.getElementById('nav-user');
+  if(!el) return;
+  const u = JSON.parse(localStorage.getItem('luma_user') || '{}');
+  if(u.display_name || u.email){
+    el.innerHTML = `<span style="font-size:.72rem;color:var(--sub)">${u.display_name||u.email}</span><button class="nav-logout" onclick="logout()">로그아웃</button>`;
+  }
+}
+function logout(){
+  localStorage.removeItem('luma_token');
+  localStorage.removeItem('luma_user');
+  window.location.href = '/landing';
+}
+
+// ── TOP TABS ─────────────────────────────────────────────
+function switchTopPanel(name, btn){
+  const drawer  = document.getElementById('top-panel-drawer');
+  const closeBtn= document.getElementById('tab-close-btn');
+  if(activeTopPanel === name){ closeTopPanel(); return; }
+  activeTopPanel = name;
+  document.querySelectorAll('.socrates-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  ['sessions','dictionary','actions','discussion','debate'].forEach(n=>{
+    document.getElementById('panel-'+n).style.display = n===name?'':'none';
+  });
+  drawer.classList.add('open');
+  closeBtn.style.display = '';
+  if(name==='dictionary') loadDict();
+  if(name==='actions') loadActions();
+}
+function closeTopPanel(){
+  document.getElementById('top-panel-drawer').classList.remove('open');
+  document.getElementById('tab-close-btn').style.display = 'none';
+  document.querySelectorAll('.socrates-tab').forEach(b=>b.classList.remove('active'));
+  activeTopPanel = null;
+}
+
+// ── DISCUSSION MODE ───────────────────────────────────────
+function selectDiscussionMode(mode, btn){
+  selectedDiscussionMode = mode;
+  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── SCREEN SWITCHING ──────────────────────────────────────
+function showHero(){
+  document.getElementById('hero-screen').style.display = 'flex';
+  document.getElementById('chat-view').classList.remove('active');
+}
+function showChat(){
+  document.getElementById('hero-screen').style.display = 'none';
+  document.getElementById('chat-view').classList.add('active');
+}
+function returnToHero(){ curSession=null; showHero(); }
+
+// ── QUICK START ───────────────────────────────────────────
+function quickStart(passage, book){
+  document.getElementById('hero-passage').value = passage;
+  document.getElementById('hero-book').value    = book||'';
+  startFromHero();
+}
+
+// ── BOOK BRIEF (debounced) ────────────────────────────────
+let briefDebounce;
+function onPassageInput(){
+  clearTimeout(briefDebounce);
+  document.getElementById('book-brief-card').classList.remove('show');
+  const passage = document.getElementById('hero-passage').value.trim();
+  if(passage.length < 12) return;
+  briefDebounce = setTimeout(()=>{
+    const book = document.getElementById('hero-book').value.trim();
+    if(book) loadBookBrief(passage, book);
+  }, 900);
+}
+function onBookBlur(){
+  const passage = document.getElementById('hero-passage').value.trim();
+  const book    = document.getElementById('hero-book').value.trim();
+  if(passage.length >= 12 && book) loadBookBrief(passage, book);
+}
+async function loadBookBrief(passage, book){
+  try{
+    const r = await fetch('/api/socrates/book-brief',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({passage, book_title:book, user_id:UID})
+    });
+    const d = await r.json();
+    if(!d.ok || !d.brief) return;
+    const {summary,keywords,main_question} = d.brief;
+    document.getElementById('bbc-summary').innerHTML =
+      (summary||[]).map(s=>`<li>${escHtml(s)}</li>`).join('');
+    document.getElementById('bbc-keywords').innerHTML =
+      (keywords||[]).map(k=>`<span class="bbc-kw">${escHtml(k)}</span>`).join('');
+    document.getElementById('bbc-question').textContent = main_question||'';
+    document.getElementById('book-brief-card').classList.add('show');
+  }catch(e){}
+}
+
+// ── START FROM HERO ───────────────────────────────────────
+function startFromHero(){
+  const passage = document.getElementById('hero-passage').value.trim();
+  const book    = document.getElementById('hero-book').value.trim();
+  if(!passage){ showToast('구절을 붙여넣어 주세요.','warn'); return; }
+  startSession(passage, book);
+}
+
+// ── START SESSION ─────────────────────────────────────────
+async function startSession(passage, book){
+  showChat();
+  discussionQuestions = null;
+  debateTopic         = null;
+  document.getElementById('sh-title').textContent  = passage.length>44?passage.slice(0,44)+'…':passage;
+  document.getElementById('sh-book').textContent   = book?'📚 '+book:'';
+  document.getElementById('sh-mode-label').textContent = 'AI 소크라테스 · '+(MODE_LABELS[selectedDiscussionMode]||'감상형');
+  document.getElementById('input-area').style.display = '';
+  document.getElementById('chat-area').innerHTML   = '';
+  updateProgress(1,5);
+  addTyping(); setWaiting(true);
+  try{
+    const r = await fetch('/api/socrates/start',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({passage, book_title:book||'', user_id:UID, discussion_mode:selectedDiscussionMode})
+    });
+    const d = await r.json();
+    removeTyping();
+    if(!d.ok){
+      showToast(d.error||'세션 시작 실패','warn');
+    } else {
+      curSession = {session_id:d.session_id, passage, book, stage:d.stage||0, total:d.total_stages||5};
+      sessions.unshift({id:d.session_id, passage:passage.slice(0,30)+'…', book, stage:1, total:5, date:dateStr()});
+      renderSessions();
+      updateProgress(1, curSession.total);
+      addAiMsg(d.question, 1, curSession.total);
+    }
+  }catch(e){ removeTyping(); showToast('서버 연결 오류','warn'); }
+  setWaiting(false);
+}
+
+// ── SEND ANSWER ───────────────────────────────────────────
+async function sendAnswer(){
+  if(!curSession||isWaiting) return;
+  const answer = document.getElementById('answer-input').value.trim();
+  if(!answer) return;
+  document.getElementById('answer-input').value = '';
+  setWaiting(true); addUserMsg(answer); addTyping();
+  try{
+    const r = await fetch('/api/socrates/answer',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({session_id:curSession.session_id, answer})
+    });
+    const d = await r.json();
+    removeTyping();
+    if(d.completed && d.insight){
+      updateProgress(curSession.total, curSession.total);
+      curSession.lastInsight = d.insight;
+      addInsightCard(d.insight, curSession);
+      document.getElementById('input-area').style.display = 'none';
+      const s = sessions.find(x=>x.id===curSession.session_id);
+      if(s){ s.stage=curSession.total; renderSessions(); }
+      autoCreateAction(d.insight, curSession.book);
+    } else if(d.question){
+      curSession.stage = d.stage;
+      const stageNum = (d.stage||0)+1;
+      updateProgress(stageNum, curSession.total);
+      addAiMsg(d.question, stageNum, curSession.total);
+      const s = sessions.find(x=>x.id===curSession.session_id);
+      if(s){ s.stage=stageNum; renderSessions(); }
+    }
+  }catch(e){ removeTyping(); showToast('응답 오류','warn'); }
+  setWaiting(false);
+}
+
+// ── MESSAGE RENDERING ─────────────────────────────────────
+function addAiMsg(text, stage, total){
+  const stageLabel = STAGE_LABELS[(stage-1)]||`${stage}단계`;
+  const el = document.createElement('div');
+  el.className = 'msg-ai';
+  el.innerHTML = `
+    <div class="ai-av">⊙</div>
+    <div class="ai-bubble">
+      <div class="ai-msg-label">AI 소크라테스</div>
+      <div class="ai-msg-text">${escHtml(text)}</div>
+      <div class="ai-msg-stage">${stage}단계 ${stageLabel} · ${stage} / ${total}</div>
+      <div class="ai-actions">
+        <button class="ai-action-btn btn-save-word" onclick="openWordModal(${JSON.stringify(escHtml(text)).replace(/"/g,'&quot;')},'')">단어 저장</button>
+        <button class="ai-action-btn btn-action-plan" onclick="openActionFromMsg(${JSON.stringify(escHtml(text)).replace(/"/g,'&quot;')})">실행 계획</button>
+      </div>
+    </div>`;
+  appendMsg(el);
+}
+function addUserMsg(text){
+  const el = document.createElement('div');
+  el.className = 'msg-user';
+  el.innerHTML = `<div class="user-bubble"><div class="user-text">${escHtml(text)}</div></div>`;
+  appendMsg(el);
+}
+function addInsightCard(insight, session){
+  const tags = (insight.tags||[]).map(t=>`<span class="ins-tag">${escHtml(t)}</span>`).join('');
+  const el = document.createElement('div');
+  el.className = 'insight-card';
+  el.id = 'insight-card-main';
+  el.innerHTML = `
+    <div class="ins-badge">✦ 다섯 번의 물음을 마쳤습니다</div>
+    <div class="ins-title">오늘의 사유가 완성되었습니다</div>
+    <div class="ins-text">${escHtml(insight.refined_thought||'')}</div>
+    ${insight.my_sentence?`<div class="ins-sentence">"${escHtml(insight.my_sentence)}"</div>`:''}
+    ${insight.personal_meaning?`<div class="ins-meaning">${escHtml(insight.personal_meaning)}</div>`:''}
+    <div class="ins-tags">${tags}</div>
+    <div class="ins-actions">
+      <button class="btn-gold" onclick="openWordModal(${JSON.stringify(escHtml(insight.my_sentence||insight.refined_thought||'')).replace(/"/g,'&quot;')},${JSON.stringify(escHtml(session.book||'')).replace(/"/g,'&quot;')})">내 사전에 저장</button>
+      ${insight.next_action?`<button class="btn-green" onclick="createActionPlan(${JSON.stringify(escHtml(insight.next_action)).replace(/"/g,'&quot;')},${JSON.stringify(escHtml(session.book||'')).replace(/"/g,'&quot;')})">실행 계획 만들기</button>`:''}
+      <button class="btn-green" id="btn-gen-discussion" onclick="generateDiscussionQuestions()">토론 질문 만들기</button>
+      <button class="btn-gold" id="btn-gen-debate" onclick="generateDebateTopic()">찬반 주제 만들기</button>
+      <button class="btn-green" id="btn-gen-lounge" onclick="generateLoungeCard()" style="display:none">Lounge 카드 만들기</button>
+    </div>
+    <div id="discussion-card-area"></div>
+    <div id="debate-card-area"></div>
+    <div id="lounge-card-area"></div>`;
+  appendMsg(el);
+}
+function addTyping(){
+  const el = document.createElement('div');
+  el.className='msg-ai'; el.id='typing-msg';
+  el.innerHTML=`<div class="ai-av">⊙</div><div class="ai-bubble"><div class="typing-wrap"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+  appendMsg(el);
+}
+function removeTyping(){ const e=document.getElementById('typing-msg'); if(e) e.remove(); }
+function appendMsg(el){ const a=document.getElementById('chat-area'); a.appendChild(el); a.scrollTop=a.scrollHeight; }
+
+// ── PROGRESS ──────────────────────────────────────────────
+function updateProgress(stage, total){
+  const pct = Math.round((stage/total)*100);
+  const label = STAGE_LABELS[(stage-1)]||`${stage}단계`;
+  document.getElementById('pb-stage').innerHTML = `<span class="pb-stage-name">${stage}단계 ${label}</span>`;
+  document.getElementById('pb-pct').textContent = pct+'%';
+  document.getElementById('pb-fill').style.width = pct+'%';
+  document.getElementById('q-badge').textContent = stage+' / '+total+' 질문';
+}
+
+// ── DISCUSSION QUESTIONS ──────────────────────────────────
+async function generateDiscussionQuestions(){
+  const btn = document.getElementById('btn-gen-discussion');
+  if(!curSession||!btn) return;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="mini-spinner"></span>생성 중...';
+  try{
+    const r = await fetch('/api/socrates/discussion-questions',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({
+        session_id:curSession.session_id,
+        passage:curSession.passage,
+        book_title:curSession.book||'',
+        insight:curSession.lastInsight?.refined_thought||'',
+        discussion_mode:selectedDiscussionMode,
+        user_id:UID
+      })
+    });
+    const d = await r.json();
+    if(d.ok && d.questions){
+      discussionQuestions = d.questions;
+      renderDiscussionQuestions(d.questions);
+      renderDiscussionPanelContent(d.questions);
+      document.getElementById('btn-gen-lounge').style.display = '';
+      showToast('토론 질문이 생성됐습니다 ✦','gold');
+    }
+  }catch(e){ showToast('토론 질문 생성 오류','warn'); }
+  btn.disabled=false; btn.textContent='토론 질문 만들기';
+}
+function renderDiscussionQuestions(questions){
+  const area = document.getElementById('discussion-card-area');
+  if(!area) return;
+  const items = questions.map(q=>`
+    <div class="dq-item">
+      <span class="dq-type">${escHtml(q.label||q.type)}</span>
+      <span class="dq-text">${escHtml(q.question)}</span>
+      <button class="copy-btn" onclick="copyQuestion(${JSON.stringify(escHtml(q.question)).replace(/"/g,'&quot;')})">복사</button>
+    </div>`).join('');
+  area.innerHTML = `<div class="discussion-question-card"><span class="dqc-label">✦ 독서모임에서 나눌 질문</span>${items}</div>`;
+}
+function renderDiscussionPanelContent(questions){
+  const el = document.getElementById('discussion-panel-content');
+  if(!el) return;
+  el.innerHTML = questions.map(q=>`
+    <div class="dq-panel-item">
+      <span class="dq-type-chip">${escHtml(q.label||q.type)}</span>
+      <span class="dq-panel-text">${escHtml(q.question)}</span>
+      <button class="copy-btn" onclick="copyQuestion(${JSON.stringify(escHtml(q.question)).replace(/"/g,'&quot;')})">복사</button>
+    </div>`).join('');
+}
+
+// ── DEBATE TOPIC ──────────────────────────────────────────
+async function generateDebateTopic(){
+  const btn = document.getElementById('btn-gen-debate');
+  if(!curSession||!btn) return;
+  btn.disabled=true;
+  btn.innerHTML='<span class="mini-spinner"></span>생성 중...';
+  try{
+    const r = await fetch('/api/socrates/debate-topic',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({
+        passage:curSession.passage,
+        book_title:curSession.book||'',
+        insight:curSession.lastInsight?.refined_thought||'',
+        user_id:UID
+      })
+    });
+    const d = await r.json();
+    if(d.ok && d.debate){
+      debateTopic = d.debate;
+      renderDebateTopic(d.debate);
+      renderDebatePanelContent(d.debate);
+      document.getElementById('btn-gen-lounge').style.display = '';
+      showToast('찬반 주제가 생성됐습니다 ✦','gold');
+    }
+  }catch(e){ showToast('찬반 주제 생성 오류','warn'); }
+  btn.disabled=false; btn.textContent='찬반 주제 만들기';
+}
+function renderDebateTopic(debate){
+  const area = document.getElementById('debate-card-area');
+  if(!area) return;
+  const pros = (debate.pros||[]).map(p=>`<li>${escHtml(p)}</li>`).join('');
+  const cons = (debate.cons||[]).map(c=>`<li>${escHtml(c)}</li>`).join('');
+  area.innerHTML = `
+    <div class="debate-card">
+      <span class="dqc-label">⚖️ 찬반으로 나눠볼 수 있는 주제</span>
+      <div class="debate-topic">${escHtml(debate.topic)}</div>
+      <div class="debate-cols">
+        <div class="debate-col pro">
+          <div class="debate-col-label pro">찬성</div>
+          <ul>${pros}</ul>
+        </div>
+        <div class="debate-col con">
+          <div class="debate-col-label con">반대</div>
+          <ul>${cons}</ul>
+        </div>
+      </div>
+      ${debate.neutral_question?`<div class="debate-neutral">❓ ${escHtml(debate.neutral_question)}</div>`:''}
+    </div>`;
+}
+function renderDebatePanelContent(debate){
+  const el = document.getElementById('debate-panel-content');
+  if(!el) return;
+  const pros = (debate.pros||[]).map(p=>`<div style="font-size:.74rem;color:var(--sub);padding-left:12px;position:relative;margin-bottom:3px"><span style="position:absolute;left:0;color:var(--mint)">+</span>${escHtml(p)}</div>`).join('');
+  const cons = (debate.cons||[]).map(c=>`<div style="font-size:.74rem;color:var(--sub);padding-left:12px;position:relative;margin-bottom:3px"><span style="position:absolute;left:0;color:#f87171">−</span>${escHtml(c)}</div>`).join('');
+  el.innerHTML = `
+    <div>
+      <div style="font-family:'DM Serif Display',serif;font-size:.9rem;color:var(--text);margin-bottom:10px">${escHtml(debate.topic)}</div>
+      ${pros}${cons}
+      ${debate.neutral_question?`<div style="font-size:.76rem;color:var(--gold);margin-top:8px;font-style:italic">❓ ${escHtml(debate.neutral_question)}</div>`:''}
+    </div>`;
+}
+
+// ── LOUNGE CARD ───────────────────────────────────────────
+async function generateLoungeCard(){
+  const btn = document.getElementById('btn-gen-lounge');
+  if(!curSession||!btn) return;
+  btn.disabled=true;
+  btn.innerHTML='<span class="mini-spinner"></span>생성 중...';
+  try{
+    const r = await fetch('/api/socrates/lounge-card',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({
+        passage:curSession.passage,
+        book_title:curSession.book||'',
+        insight:{
+          refined_thought:curSession.lastInsight?.refined_thought||'',
+          tags:curSession.lastInsight?.tags||[]
+        },
+        discussion_questions:discussionQuestions||[],
+        debate:debateTopic||{},
+        user_id:UID
+      })
+    });
+    const d = await r.json();
+    if(d.ok && d.card){
+      renderLoungeCard(d.card);
+      showToast('Lounge 카드가 생성됐습니다 ✦','gold');
+    }
+  }catch(e){ showToast('Lounge 카드 생성 오류','warn'); }
+  btn.disabled=false; btn.textContent='Lounge 카드 만들기';
+}
+function renderLoungeCard(card){
+  const area = document.getElementById('lounge-card-area');
+  if(!area) return;
+  const tags = (card.tags||[]).map(t=>`<span class="lsc-tag">${escHtml(t)}</span>`).join('');
+  const dqs  = (card.discussion_questions||[]).map(q=>`<div style="font-size:.75rem;color:var(--sub);padding:4px 0;border-top:1px solid var(--border)">· ${escHtml(q)}</div>`).join('');
+  area.innerHTML = `
+    <div class="lounge-share-card">
+      <span class="dqc-label">🌿 Lounge로 보낼 토론 카드</span>
+      <div class="lsc-title">${escHtml(card.title||'')}</div>
+      <div class="lsc-book">📚 ${escHtml(card.book_title||'')}</div>
+      <div class="lsc-passage">${escHtml(card.passage_preview||'')}</div>
+      <div class="lsc-question">${escHtml(card.main_question||'')}</div>
+      <div class="lsc-tags">${tags}</div>
+      ${dqs?`<div style="margin-bottom:10px">${dqs}</div>`:''}
+      <div class="lsc-footer">
+        <button class="btn-green" onclick="copyQuestion(${JSON.stringify(escHtml(card.main_question||'')).replace(/"/g,'&quot;')})">질문 복사</button>
+        <button class="btn-gold">Lounge에 공유</button>
+      </div>
+    </div>`;
+}
+
+// ── COPY ──────────────────────────────────────────────────
+function copyQuestion(text){
+  const clean = unescHtml(text);
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(clean).then(()=>showToast('복사됐습니다 ✦','gold'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value=clean; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('복사됐습니다 ✦','gold');
+  }
+}
+
+// ── WORD SAVE ────────────────────────────────────────────
+function openWordModal(text, book){
+  pendingWord = {text,book};
+  document.getElementById('modal-concept').value = '';
+  document.getElementById('modal-def').value     = unescHtml(text);
+  document.getElementById('modal-book').value    = unescHtml(book)||'';
+  document.getElementById('word-modal').classList.add('open');
+}
+function openActionFromMsg(text){ createActionPlan(text, curSession?.book||''); }
+function closeWordModal(){
+  document.getElementById('word-modal').classList.remove('open');
+  pendingWord = null;
+}
+async function saveWordEntry(){
+  const concept = document.getElementById('modal-concept').value.trim();
+  const def     = document.getElementById('modal-def').value.trim();
+  const book    = document.getElementById('modal-book').value.trim();
+  if(!concept){ showToast('개념 이름을 입력하세요.','warn'); return; }
+  try{
+    const r = await fetch('/api/socrates/dictionary',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({concept, user_thought:def, user_id:UID, book_title:book, sources:[]})
+    });
+    const d = await r.json();
+    if(d.ok){
+      dictEntries.unshift(d.entry||{concept, my_definition:def, book_title:book});
+      renderDict();
+      showToast(`"${concept}" 사전에 저장됐습니다 ✦`,'gold');
+      closeWordModal();
+    }
+  }catch(e){ showToast('저장 오류','warn'); }
+}
+
+// ── ACTION PLANS ──────────────────────────────────────────
+async function createActionPlan(insight, book){
+  try{
+    const r = await fetch('/api/socrates/action',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({insight, book_title:book||'', user_id:UID})
+    });
+    const d = await r.json();
+    if(d.ok){
+      actionPlans.unshift(d.plan||{insight:insight.slice(0,60), today:'오늘 한 번 실천해보세요.', plan_id:'local_'+Date.now()});
+      renderActions();
+      showToast('실행 계획이 만들어졌습니다! ✦','gold');
+    }
+  }catch(e){ showToast('실행 계획 오류','warn'); }
+}
+async function autoCreateAction(insight, book){
+  if(!insight?.next_action) return;
+  try{
+    const r = await fetch('/api/socrates/action',{
+      method:'POST', headers:authHeaders(),
+      body:JSON.stringify({insight:insight.next_action, book_title:book||'', user_id:UID})
+    });
+    const d = await r.json();
+    if(d.ok){ actionPlans.unshift(d.plan||{insight:insight.next_action, today:'오늘 실천해보세요.', plan_id:'local_'+Date.now()}); renderActions(); }
+  }catch(e){}
+}
+
+// ── RENDER HELPERS ────────────────────────────────────────
+function renderSessions(){
+  const el = document.getElementById('sess-list');
+  if(!sessions.length){ el.innerHTML=`<div class="drawer-empty">세션이 없습니다.</div>`; return; }
+  el.innerHTML = sessions.map((s,i)=>`
+    <div class="sess-card ${curSession&&curSession.session_id===s.id?'active-sess':''}" onclick="resumeSessionClick('${encodeURIComponent(s.id||'')}')">
+      <div class="sc-num"># ${sessions.length-i}</div>
+      <div class="sc-title">${escHtml(s.passage||s.passage_preview||'세션')}</div>
+      <div class="sc-meta">${escHtml(s.book||s.book_title||'책 미정')} · ${s.date||''}</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${((s.stage||0)/(s.total||5))*100}%"></div></div>
+    </div>`).join('');
+}
+function renderDict(){
+  const el = document.getElementById('dict-list');
+  if(!dictEntries.length){ el.innerHTML=`<div class="drawer-empty">저장된 단어가 없습니다.</div>`; return; }
+  el.innerHTML = dictEntries.map(e=>`
+    <div class="dict-item">
+      <div class="di-concept">${escHtml(e.concept||'')}</div>
+      <div class="di-def">${escHtml((e.my_definition||e.user_thought||'').slice(0,100))}${(e.my_definition||'').length>100?'…':''}</div>
+      ${e.book_title?`<div class="di-book">📚 ${escHtml(e.book_title)}</div>`:''}
+    </div>`).join('');
+}
+function renderActions(){
+  const el = document.getElementById('action-list');
+  if(!actionPlans.length){ el.innerHTML=`<div class="drawer-empty">실행 계획이 없습니다.</div>`; return; }
+  el.innerHTML = actionPlans.map(p=>`
+    <div class="action-item">
+      <div class="ai-label">실행 계획</div>
+      <div class="ai-text">${escHtml((p.insight||'').slice(0,70))}${(p.insight||'').length>70?'…':''}</div>
+      ${p.today?`<div class="ai-when">오늘: ${escHtml(p.today)}</div>`:''}
+      ${p.this_week?`<div class="ai-when">이번 주: ${escHtml(p.this_week)}</div>`:''}
+      <button class="ai-checkin ${p.checked_in?'done':''}" onclick="checkinAction('${p.plan_id||''}',this)">
+        ${p.checked_in?'✅ 실천 완료':'🎯 실천 체크인'}
+      </button>
+    </div>`).join('');
+}
+async function checkinAction(planId, btn){
+  if(btn.classList.contains('done')) return;
+  try{
+    const r = await fetch(`/api/socrates/action/${encodeURIComponent(planId)}/checkin`,{
+      method:'POST', headers:authHeaders(), body:JSON.stringify({note:''})
+    });
+    const d = await r.json();
+    if(d.ok){ const p=actionPlans.find(x=>x.plan_id===planId); if(p) p.checked_in=true; renderActions(); showToast('실천 완료! 🎉'); }
+  }catch(e){ const p=actionPlans.find(x=>x.plan_id===planId); if(p){ p.checked_in=true; renderActions(); } }
+}
+
+// ── LOAD FROM SERVER ──────────────────────────────────────
+async function loadSessions(){
+  try{
+    const r = await fetch(`/api/socrates/sessions?user_id=${UID}`,{headers:authHeaders()});
+    const d = await r.json();
+    if(d.ok && d.sessions?.length){
+      sessions = d.sessions.map(s=>({
+        id:s.session_id, passage:s.passage_preview||'', book:s.book_title||'',
+        stage:s.stage||0, total:s.total_stages||5, date:s.date||dateStr()
+      }));
+      renderSessions();
+    }
+  }catch(e){}
+}
+async function loadDict(){
+  try{
+    const r = await fetch(`/api/socrates/dictionary?user_id=${UID}`,{headers:authHeaders()});
+    const d = await r.json();
+    if(d.ok && d.entries?.length){ dictEntries=d.entries; renderDict(); }
+  }catch(e){}
+}
+async function loadActions(){
+  try{
+    const r = await fetch(`/api/socrates/actions?user_id=${UID}`,{headers:authHeaders()});
+    const d = await r.json();
+    if(d.ok && d.plans?.length){ actionPlans=d.plans; renderActions(); }
+  }catch(e){}
+}
+
+// ── RESUME SESSION ────────────────────────────────────────
+async function resumeSessionClick(sessionId){
+  sessionId = decodeURIComponent(sessionId);
+  const local = sessions.find(x=>x.id===sessionId);
+  showChat(); closeTopPanel();
+  document.getElementById('sh-title').textContent = local?.passage||'세션 로딩 중...';
+  document.getElementById('sh-book').textContent  = local?.book?'📚 '+local.book:'';
+  document.getElementById('chat-area').innerHTML  = '';
+  addTyping();
+  try{
+    const r = await fetch(`/api/socrates/sessions/${encodeURIComponent(sessionId)}/resume`,{headers:authHeaders()});
+    const d = await r.json();
+    removeTyping();
+    if(!d.ok){ showToast(d.error||'세션을 불러올 수 없습니다.','warn'); return; }
+    const s = d.session||{};
+    curSession = {session_id:sessionId, passage:s.passage_preview||'', book:s.book_title||'', stage:d.stage||0, total:d.total_stages||5};
+    document.getElementById('sh-title').textContent = s.passage_preview||'이전 세션';
+    document.getElementById('sh-book').textContent  = s.book_title?'📚 '+s.book_title:'';
+    document.getElementById('input-area').style.display = d.completed?'none':'';
+    if(d.completed && d.insight){ curSession.lastInsight=d.insight; addInsightCard(d.insight,curSession); }
+    else if(d.question){ addAiMsg(d.question,(d.stage||0)+1,curSession.total); updateProgress((d.stage||0)+1,curSession.total); }
+    renderSessions();
+  }catch(e){ removeTyping(); showToast('세션 로딩 오류','warn'); }
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function setWaiting(v){
+  isWaiting=v;
+  const btn = document.getElementById('send-btn');
+  if(btn) btn.disabled=v;
+}
+function dateStr(){ return new Date().toLocaleDateString('ko',{month:'2-digit',day:'2-digit'}); }
+function escHtml(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function unescHtml(s){ return String(s??'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"'); }
+
+// ── TOAST ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type=''){
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.className=`toast show${type?' '+type:''}`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+initNav();
+loadSessions();
+
+// Rotating tagline
+(function(){
+  const phrases=[
+    {t:'생각은 빛이 된다',ko:true},
+    {t:'읽을수록 더 깊은 곳으로',ko:true},
+    {t:'한 문장이 하나의 사유가 되듯',ko:true},
+    {t:'철학적 독서의 탐사 장치',ko:true},
+    {t:'Where Thoughts Become Wisdom',ko:false},
+    {t:'Read. Question. Expand.',ko:false},
+  ];
+  const el=document.getElementById('luma-tagline');
+  if(!el) return;
+  let i=0;
+  function show(idx){
+    const p=phrases[idx];
+    el.style.opacity='0'; el.style.transform='translateY(-5px)';
+    setTimeout(()=>{
+      el.textContent=p.t;
+      el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"'DM Serif Display',serif";
+      el.style.letterSpacing=p.ko?'.05em':'.12em';
+      el.style.opacity='1'; el.style.transform='translateY(0)';
+    },500);
+  }
+  show(0);
+  setInterval(()=>{ i=(i+1)%phrases.length; show(i); },10000);
+})();
+</script>
+</body>
+</html>

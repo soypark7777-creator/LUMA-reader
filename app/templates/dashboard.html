@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMA — 나의 독서 우주</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display&family=Cinzel:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --bg:#0B1612; --panel:#0F1E18; --panel2:#111F18;
+  --text:#E8DCC8; --sub:#8FA89A;
+  --amber:#C17F3B; --amber-lt:#E8A85A; --star:#F4CD89;
+  --line:rgba(255,255,255,.07); --card:rgba(255,255,255,.045);
+  --glow-sm:0 0 12px rgba(244,205,137,.22); --glow-md:0 0 28px rgba(244,205,137,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  height:100vh;overflow:hidden;
+  background:var(--bg);color:var(--text);font-family:'Pretendard',sans-serif;
+  display:grid;grid-template-columns:220px 1fr 280px;grid-template-rows:64px 1fr;
+}
+
+/* HEADER */
+header{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;background:rgba(11,22,18,.97);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(16px);z-index:10;
+}
+.header-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.header-logo img{height:36px;filter:drop-shadow(0 0 8px rgba(193,127,59,.4));}
+.header-logo-text{display:flex;flex-direction:column;gap:1px;}
+.header-brand{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--amber);line-height:1;}
+#luma-tagline{
+  font-size:.6rem;color:var(--sub);letter-spacing:.1em;font-style:italic;
+  transition:opacity .5s ease,transform .5s ease;opacity:1;
+  max-width:260px;white-space:nowrap;overflow:hidden;
+}
+.header-right{display:flex;align-items:center;gap:12px;}
+.streak-pill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(193,127,59,.1);border:1px solid rgba(193,127,59,.22);
+  border-radius:999px;padding:6px 13px;font-size:.74rem;color:var(--amber);
+}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--sub);}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#2D4A3E,var(--amber));color:#08130f;font-weight:700;font-size:.84rem;}
+.btn-login,.btn-logout{border:1px solid rgba(193,127,59,.3);background:rgba(193,127,59,.1);color:var(--amber);border-radius:14px;padding:5px 12px;font-size:.72rem;cursor:pointer;text-decoration:none;font-family:inherit;}
+
+/* LEFT/RIGHT PANEL */
+.side{background:var(--panel);overflow-y:auto;overflow-x:hidden;padding:20px 14px;}
+.side::-webkit-scrollbar{width:3px;}
+.side::-webkit-scrollbar-thumb{background:rgba(193,127,59,.2);border-radius:4px;}
+.left{border-right:1px solid var(--line);}
+.right{border-left:1px solid var(--line);}
+
+.section-label{
+  font-size:.58rem;color:var(--sub);letter-spacing:.22em;text-transform:uppercase;
+  margin:20px 0 10px;padding:0 2px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-label::before{content:'';width:14px;height:1px;background:linear-gradient(90deg,transparent,rgba(193,127,59,.5));flex-shrink:0;}
+.section-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.05);}
+.section-label:first-child{margin-top:4px;}
+
+/* NAV */
+.nav{display:flex;flex-direction:column;gap:1px;position:relative;}
+.nav::before{
+  content:'';position:absolute;left:23px;top:20px;bottom:20px;width:1px;
+  background:linear-gradient(180deg,transparent 0%,rgba(193,127,59,.16) 12%,rgba(193,127,59,.16) 88%,transparent 100%);
+  pointer-events:none;
+}
+.nav-item{
+  border:0;background:transparent;color:var(--sub);font-family:inherit;
+  text-align:left;padding:5px 8px;border-radius:11px;cursor:pointer;width:100%;
+  transition:background .2s,color .2s;display:flex;align-items:flex-start;gap:10px;position:relative;
+}
+.nav-item:hover{background:rgba(193,127,59,.07);color:var(--text);}
+.nav-item.active{background:rgba(193,127,59,.11);color:var(--amber);}
+.nav-glyph{
+  width:30px;height:30px;border-radius:9px;
+  border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;flex-shrink:0;margin-top:1px;
+  transition:border-color .2s,background .2s,box-shadow .2s,color .2s;
+  color:rgba(140,168,154,.45);position:relative;z-index:1;
+}
+.nav-item:hover .nav-glyph{border-color:rgba(193,127,59,.4);background:rgba(193,127,59,.09);color:var(--amber-lt);box-shadow:0 0 10px rgba(193,127,59,.18);}
+.nav-item.active .nav-glyph{border-color:rgba(193,127,59,.65);background:rgba(193,127,59,.16);color:var(--star);box-shadow:0 0 16px rgba(193,127,59,.3),inset 0 0 7px rgba(193,127,59,.1);}
+.nav-text{display:flex;flex-direction:column;flex:1;min-width:0;padding-top:3px;}
+.nav-label{font-size:.79rem;font-weight:500;line-height:1.2;}
+.nav-sub{font-size:.6rem;color:var(--sub);margin-top:2px;line-height:1.3;opacity:0;max-height:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;transition:opacity .22s,max-height .25s;}
+.nav-item.active .nav-sub,.nav-item:hover .nav-sub{opacity:.55;max-height:16px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 10px;text-align:center;transition:.2s;}
+.stat-card:hover{border-color:rgba(193,127,59,.25);background:rgba(193,127,59,.05);}
+.stat-num{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--star);line-height:1;}
+.stat-lbl{font-size:.62rem;color:var(--sub);margin-top:3px;}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;}
+.muted{color:var(--sub);font-size:.74rem;}
+.progress{height:4px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin:8px 0;}
+.bar{height:100%;background:linear-gradient(90deg,#2D4A3E,var(--amber));border-radius:4px;}
+
+/* CENTER */
+.center{
+  position:relative;overflow:hidden;
+  background:radial-gradient(circle at 50% 42%,rgba(244,205,137,.13),transparent 30%),
+    linear-gradient(180deg,rgba(5,11,23,.2),rgba(7,15,15,.78)),
+    url('/asset/images/dashboard/background/galaxy_21.png') center/cover no-repeat;
+}
+#stars-canvas{position:absolute;inset:0;opacity:.52;mix-blend-mode:screen;width:100%;height:100%;}
+.center-title{
+  position:absolute;top:20px;left:50%;transform:translateX(-50%);
+  z-index:2;color:var(--sub);font-family:'Noto Serif KR',serif;
+  letter-spacing:.12em;font-size:.78rem;text-shadow:0 0 20px rgba(0,0,0,.8);
+}
+#constellation-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;}
+.tip{position:absolute;z-index:8;opacity:0;pointer-events:none;background:rgba(11,22,18,.95);border:1px solid rgba(193,127,59,.25);border-radius:12px;padding:12px 14px;max-width:240px;transition:opacity .15s;}
+.tip.show{opacity:1;}
+.tip-title{font-family:'Noto Serif KR',serif;color:var(--amber);font-size:.86rem;margin-bottom:4px;}
+.tip-meta{font-size:.72rem;color:var(--sub);}
+.link-pop{position:absolute;z-index:8;opacity:0;pointer-events:none;background:rgba(11,22,18,.95);border:1px solid rgba(193,127,59,.2);border-radius:11px;padding:12px;max-width:200px;transition:opacity .15s;}
+.link-pop.show{opacity:1;}
+
+/* FAB */
+.fab-group{position:absolute;bottom:28px;right:28px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:5;}
+.fab-item{display:flex;align-items:center;gap:8px;}
+.fab-tooltip{font-size:.68rem;color:var(--sub);opacity:0;transition:opacity .15s;white-space:nowrap;}
+.fab-item:hover .fab-tooltip{opacity:1;}
+.fab-main{width:52px;height:52px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--amber),var(--amber-lt));color:#07110f;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 20px rgba(193,127,59,.4);transition:transform .2s,box-shadow .2s;}
+.fab-main:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(193,127,59,.55);}
+.fab-sub{width:40px;height:40px;border-radius:50%;border:1px solid rgba(193,127,59,.35);background:rgba(193,127,59,.12);color:var(--amber);font-size:1rem;cursor:pointer;transition:.2s;}
+.fab-sub:hover{background:rgba(193,127,59,.22);border-color:rgba(193,127,59,.55);}
+
+/* RIGHT PANEL */
+.today-book-card{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;cursor:pointer;transition:.18s;}
+.today-book-card:hover{border-color:rgba(193,127,59,.25);}
+.today-cover{width:48px;height:72px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,#2D4A3E,var(--amber));display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden;}
+.today-cover img{width:100%;height:100%;object-fit:cover;}
+.today-book-title{font-family:'Noto Serif KR',serif;font-size:.86rem;color:var(--text);line-height:1.35;}
+.today-book-reason{font-size:.7rem;color:var(--sub);margin-top:4px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.cta-link{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;color:var(--amber);margin-top:6px;text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;padding:0;}
+.cta-link:hover{text-decoration:underline;}
+.recent-memo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:7px;}
+.recent-memo-book{font-size:.68rem;color:var(--amber);margin-bottom:4px;}
+.recent-memo-text{font-size:.78rem;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.insight-card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:7px;cursor:pointer;transition:.15s;font-size:.8rem;line-height:1.5;}
+.insight-card:hover{border-color:rgba(193,127,59,.25);}
+.insight-books{font-size:.68rem;color:var(--amber);margin-bottom:4px;}
+
+/* MODALS */
+.modal{display:none;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.72);backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:24px;}
+.modal.open{display:flex;}
+.modal-box{width:min(540px,95vw);max-height:90vh;overflow:auto;background:var(--panel2);border:1px solid rgba(193,127,59,.28);border-radius:18px;padding:24px;}
+#memo-modal .modal-box{width:min(580px,94vw);padding:0;overflow:hidden;}
+#memo-modal form{padding:20px 22px 22px;display:flex;flex-direction:column;gap:14px;}
+#memo-modal .field{margin-bottom:0;}
+#memo-modal .field label{align-items:center;gap:10px;line-height:1.35;}
+#memo-modal select,#memo-modal input,#memo-modal textarea{display:block;line-height:1.45;}
+#memo-modal textarea{min-height:150px;}
+#memo-modal .row{align-items:flex-start;gap:14px;}
+#memo-modal .row .field{min-width:0;}
+#memo-modal .public-row{display:flex;align-items:center;gap:10px;font-size:.76rem;color:var(--sub);line-height:1.45;margin:0;}
+#memo-modal .public-row input{width:auto;accent-color:var(--amber);}
+#memo-modal .btn-save{margin-top:2px;}
+.detail-box{width:min(820px,96vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;background:var(--panel2);border:1px solid rgba(193,127,59,.28);border-radius:18px;}
+.modal-head,.panel-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:16px 22px;color:var(--amber);font-family:'Noto Serif KR',serif;}
+.btn-close{background:0;border:0;color:var(--sub);font-size:1.1rem;cursor:pointer;padding:0;}
+.field{margin-bottom:15px;}
+.field label{display:flex;justify-content:space-between;color:var(--sub);font-size:.74rem;margin-bottom:7px;}
+select,input,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 12px;font-family:inherit;font-size:.86rem;}
+textarea{min-height:110px;resize:vertical;}
+.row{display:flex;gap:12px;}
+.moods{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.mood{border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:20px;padding:6px 12px;cursor:pointer;font-family:inherit;font-size:.8rem;transition:.15s;}
+.mood.active{border-color:rgba(193,127,59,.5);color:var(--amber);background:rgba(193,127,59,.15);}
+.btn-save,.btn-add{border:1px solid rgba(193,127,59,.32);background:rgba(193,127,59,.1);color:var(--amber);border-radius:12px;padding:12px;cursor:pointer;font-family:inherit;font-size:.88rem;transition:.18s;}
+.btn-save{width:100%;}
+.btn-save:hover,.btn-add:hover{background:rgba(193,127,59,.2);}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.chip{color:var(--amber);border:1px solid rgba(193,127,59,.22);border-radius:14px;padding:3px 8px;font-size:.68rem;}
+
+/* DETAIL MODAL TABS */
+.detail-hero{display:grid;grid-template-columns:180px 1fr;gap:22px;align-items:center;padding:22px 24px;border-bottom:1px solid var(--line);}
+.detail-cover{aspect-ratio:1;display:grid;place-items:center;}
+.detail-cover img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 0 28px rgba(244,205,137,.32));}
+.detail-kicker{font-size:.68rem;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;}
+.detail-title{font-family:'Noto Serif KR',serif;font-size:1.3rem;margin:.3rem 0;}
+.detail-author{font-size:.8rem;color:var(--sub);}
+.detail-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0;}
+.detail-meta span{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.72rem;color:var(--sub);}
+.detail-meta strong{display:block;color:var(--text);margin-top:2px;}
+.book-info-grid{display:grid;gap:9px;font-family:'Pretendard','Noto Sans KR',sans-serif;}
+.book-info-row{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+.book-info-label{color:var(--sub);font-size:.74rem;font-family:'Pretendard','Noto Sans KR',sans-serif;}
+.book-info-value{color:var(--text);font-size:.84rem;font-family:'Pretendard','Noto Sans KR',sans-serif;}
+.read-progress{height:7px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px;}
+.read-progress-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,#C17F3B,#F4CD89);}
+.modal-tabs{display:flex;border-bottom:1px solid var(--line);padding:0 22px;}
+.mtab{padding:11px 15px;font-size:.78rem;color:var(--sub);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:.15s;font-family:inherit;}
+.mtab.active{color:var(--amber);border-bottom-color:var(--amber);}
+.modal-tab-body{padding:18px 22px;max-height:320px;overflow-y:auto;flex:1;}
+.modal-tab-body::-webkit-scrollbar{width:3px;}
+.modal-tab-body::-webkit-scrollbar-thumb{background:rgba(193,127,59,.2);}
+.memo-card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:9px;}
+.memo-mood-line{font-size:.66rem;color:var(--sub);margin-bottom:5px;}
+.memo-body{font-family:'Noto Serif KR',serif;font-size:.86rem;line-height:1.7;}
+.memo-tags-row{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;}
+.link-book-card{display:flex;align-items:center;gap:13px;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--card);margin-bottom:9px;}
+.link-planet{width:48px;height:48px;border-radius:50%;object-fit:contain;animation:spin 20s linear infinite;filter:drop-shadow(var(--glow-sm));flex-shrink:0;}
+.link-title{font-size:.84rem;color:var(--text);}
+.link-theme{font-size:.7rem;color:var(--sub);font-style:italic;margin-top:3px;}
+
+/* MEMO PANEL */
+.panel{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);z-index:15;width:min(600px,95vw);background:var(--panel2);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;transition:.3s;}
+.panel.open{transform:translateX(-50%) translateY(0);}
+.memo-list{max-height:340px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:9px;}
+.memo-item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px;}
+.memo-item b{color:var(--amber);display:block;margin-bottom:4px;font-size:.76rem;}
+.memo-item p{font-family:'Noto Serif KR',serif;font-size:.84rem;line-height:1.6;}
+.memo-actions{display:flex;gap:6px;margin-top:9px;}
+.memo-action{border:1px solid rgba(193,127,59,.24);background:rgba(193,127,59,.08);color:var(--amber);border-radius:8px;padding:4px 8px;font-size:.68rem;cursor:pointer;font-family:inherit;}
+.memo-action.danger{border-color:rgba(235,87,87,.28);background:rgba(235,87,87,.08);color:#ff9b9b;}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){
+  body{grid-template-columns:1fr;}
+  .left,.right{display:none;}
+  .detail-hero{grid-template-columns:1fr;justify-items:center;text-align:center;}
+  .detail-meta{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="header-logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA"
+         onerror="this.outerHTML='<span style=&quot;font-family:DM Serif Display,serif;font-size:1.4rem;color:var(--amber)&quot;>LUMA</span>'">
+    <div class="header-logo-text">
+      <span class="header-brand">LUMA</span>
+      <span id="luma-tagline">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <div class="header-right">
+    <div class="streak-pill" id="streak-badge">🔥 {{ stats.reading_streak|default(0) }}일 연속 독서</div>
+    <div class="nav-user" id="nav-user"><span class="avatar">나</span></div>
+  </div>
+</header>
+
+<aside class="side left">
+  <p class="section-label">탐사 장치</p>
+  <nav class="nav">
+    <button class="nav-item active" onclick="location.href='/'">
+      <span class="nav-glyph">✦</span>
+      <div class="nav-text"><span class="nav-label">별자리 지도</span><span class="nav-sub">내 책들의 우주 지도</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/heart'">
+      <span class="nav-glyph">◎</span>
+      <div class="nav-text"><span class="nav-label">마음 행성계</span><span class="nav-sub">감정별 책과 메모 아카이브</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/lounge'">
+      <span class="nav-glyph">✧</span>
+      <div class="nav-text"><span class="nav-label">탐사 성운</span><span class="nav-sub">새로운 책을 발견하는 망원경</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/community/'">
+      <span class="nav-glyph">⬡</span>
+      <div class="nav-text"><span class="nav-label">은하 공동체</span><span class="nav-sub">오프라인 독서 모임 지도</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/live'">
+      <span class="nav-glyph">⊕</span>
+      <div class="nav-text"><span class="nav-label">궤도 정거장</span><span class="nav-sub">같은 시간 함께 읽기</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/socrates'">
+      <span class="nav-glyph">◦</span>
+      <div class="nav-text"><span class="nav-label">지성의 위성</span><span class="nav-sub">질문으로 깊어지는 독서</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/social'">
+      <span class="nav-glyph">≡</span>
+      <div class="nav-text"><span class="nav-label">독자 피드</span><span class="nav-sub">다른 독자들의 은하</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/deepdive'">
+      <span class="nav-glyph">⊗</span>
+      <div class="nav-text"><span class="nav-label">심층 관측소</span><span class="nav-sub">한 권을 깊이 파고들기</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/ocr'">
+      <span class="nav-glyph">⊟</span>
+      <div class="nav-text"><span class="nav-label">광학 스캐너</span><span class="nav-sub">책 페이지 OCR 캡처</span></div>
+    </button>
+    <button class="nav-item" onclick="location.href='/profile'">
+      <span class="nav-glyph">◈</span>
+      <div class="nav-text"><span class="nav-label">나의 조종석</span><span class="nav-sub">독서 기록과 정체성</span></div>
+    </button>
+    <button class="nav-item" onclick="toggleMemoPanel()">
+      <span class="nav-glyph">⋮</span>
+      <div class="nav-text"><span class="nav-label">메모 전체</span><span class="nav-sub">지금까지 기록한 모든 별빛</span></div>
+    </button>
+  </nav>
+
+  <p class="section-label">나의 독서 별자리</p>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="stat-total-books">{{ stats.total_books|default(0) }}</div><div class="stat-lbl">읽은 책</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-total-memos">{{ stats.total_memos|default(0) }}</div><div class="stat-lbl">메모</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-connections">{{ stats.connections|default(0) }}</div><div class="stat-lbl">연결 수</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-this-month">{{ stats.this_month|default(0) }}</div><div class="stat-lbl">이번 달</div></div>
+  </div>
+
+  <p class="section-label">현재 읽는 책</p>
+  <div class="box" id="current-book-area"><div class="muted">읽는 책을 불러오는 중</div></div>
+</aside>
+
+<main class="center">
+  <canvas id="stars-canvas"></canvas>
+  <div class="center-title">생각의 별자리 — 메모 연결 지도</div>
+  <svg id="constellation-svg"></svg>
+  <div class="tip" id="tooltip">
+    <div class="tip-title" id="tt-title"></div>
+    <div class="tip-meta" id="tt-author"></div>
+    <div class="tip-meta" id="tt-memos"></div>
+  </div>
+  <div class="link-pop" id="link-popup"></div>
+  <div class="fab-group">
+    <div class="fab-item">
+      <span class="fab-tooltip">탐사 성운으로</span>
+      <button class="fab-sub" onclick="location.href='/lounge'">🔭</button>
+    </div>
+    <div class="fab-item">
+      <span class="fab-tooltip">메모 전체 보기</span>
+      <button class="fab-sub" onclick="toggleMemoPanel()">✎</button>
+    </div>
+    <div class="fab-item">
+      <span class="fab-tooltip">새 별빛 심기</span>
+      <button class="fab-main" onclick="openMemoModal()">＋</button>
+    </div>
+  </div>
+</main>
+
+<aside class="side right">
+  <p class="section-label">오늘의 관측 리포트</p>
+  <div id="today-book-wrap"><div class="box"><div class="muted">관측 중...</div></div></div>
+  <p class="section-label">최근 남긴 별빛</p>
+  <div id="recent-memos-wrap"><div class="box"><div class="muted">불러오는 중...</div></div></div>
+  <p class="section-label">연결된 생각</p>
+  {% for insight in insights %}
+  <div class="insight-card" onclick="highlightConnection({{ loop.index0 }})">
+    <div class="insight-books">{{ insight.book1 }} → {{ insight.book2 }}</div>
+    <div>{{ insight.text }}</div>
+  </div>
+  {% endfor %}
+</aside>
+
+<div id="memo-modal" class="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span>생각을 별자리에 남기기</span>
+      <button class="btn-close" onclick="closeMemoModal()">×</button>
+    </div>
+    <form id="memo-form">
+      <input type="hidden" id="modal-book-id">
+      <div class="field">
+        <label>어떤 책에서 온 생각인가요?</label>
+        <select id="modal-book-title">
+          <option value="소피의 세계">소피의 세계</option>
+          <option value="코스모스">코스모스</option>
+          <option value="어린 왕자">어린 왕자</option>
+          <option value="1984">1984</option>
+          <option value="직접 입력">직접 입력</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>메모 내용 <span><span id="char-count">0</span>/2000</span></label>
+        <textarea id="memo-content" maxlength="2000" placeholder="읽으며 떠오른 생각, 문장, 연결된 기억..."></textarea>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:1"><label>페이지</label><input id="page-number" type="number" min="1"></div>
+        <div class="field" style="flex:2"><label>기분</label>
+          <div class="moods">
+            <button type="button" class="mood active" data-mood="inspired">영감</button>
+            <button type="button" class="mood" data-mood="emotional">감동</button>
+            <button type="button" class="mood" data-mood="curious">궁금</button>
+            <button type="button" class="mood" data-mood="neutral">기록</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>태그 (Enter로 추가)</label>
+        <input id="tag-input" placeholder="철학, 문장, 위로...">
+        <div class="tags" id="tag-preview"></div>
+      </div>
+      <label class="public-row">
+        <input id="is-public" type="checkbox"> 공동체에 공개하기
+      </label>
+      <p id="save-result" class="muted" style="margin-bottom:10px"></p>
+      <button class="btn-save" type="submit">✦ 별자리에 남기기</button>
+    </form>
+  </div>
+</div>
+
+<div id="book-detail-modal" class="modal">
+  <div class="detail-box">
+    <div class="panel-head">
+      <span>책의 별 기록</span>
+      <button class="btn-close" onclick="closeBookDetailModal()">×</button>
+    </div>
+    <div class="detail-hero" id="detail-hero-area"></div>
+    <div class="modal-tabs">
+      <button class="mtab active" onclick="switchDetailTab('memos',this)">내 메모</button>
+      <button class="mtab" onclick="switchDetailTab('links',this)">연결된 책</button>
+      <button class="mtab" onclick="switchDetailTab('info',this)">책 정보</button>
+    </div>
+    <div class="modal-tab-body" id="detail-tab-body"></div>
+  </div>
+</div>
+
+<div class="panel" id="memo-panel">
+  <div class="panel-head">
+    <span id="memo-panel-title">나의 메모 목록</span>
+    <button class="btn-close" onclick="closeMemoPanel()">×</button>
+  </div>
+  <div class="memo-list" id="memo-list-container"></div>
+  <div style="padding:0 14px 14px">
+    <button class="btn-save" onclick="closeMemoPanel();openMemoModal(window.currentMemoBookTitle||'')">＋ 새 메모 추가</button>
+  </div>
+</div>
+
+<script>
+let CONSTELLATION_DATA = {{ constellation|safe }};
+const _cu = JSON.parse(localStorage.getItem('luma_user')||'{}');
+const UID = _cu.user_id||'user_demo';
+const TOKEN = localStorage.getItem('luma_token')||'';
+const ORBIT_IMGS = [
+  '/asset/images/dashboard/orbit/thoght_orb_1.png',
+  '/asset/images/dashboard/orbit/thoght_orb_2.png',
+  '/asset/images/dashboard/orbit/thoght_orb_3.png',
+  '/asset/images/dashboard/orbit/thoght_orb_5.png',
+  '/asset/images/dashboard/orbit/thoght_orb_7.png',
+  '/asset/images/dashboard/orbit/thoght_orb_8.png',
+  '/asset/images/dashboard/orbit/thoght_orb_9.png',
+  '/asset/images/dashboard/orbit/thoght_orb_11.png',
+  '/asset/images/dashboard/orbit/thoght_orb_12.png',
+  '/asset/images/dashboard/orbit/thoght_orb_13.png',
+  '/asset/images/dashboard/orbit/thoght_orb_14.png',
+  '/asset/images/dashboard/orbit/thoght_orb_15.png',
+  '/asset/images/dashboard/orbit/thoght_orb_17.png',
+  '/asset/images/dashboard/orbit/thoght_orb_19.png',
+  '/asset/images/dashboard/orbit/thoght_orb_20.png',
+  '/asset/images/dashboard/orbit/thoght_orb_21.png',
+  '/asset/images/dashboard/orbit/thoght_orb_22.png',
+];
+const MOODS = {inspired:'영감',emotional:'감동',curious:'궁금',neutral:'기록'};
+let selectedMood='inspired', currentTags=[], _detailBook=null, constellationSparkleTimer=null;
+
+function hdr(x={}){ return TOKEN?{...x,'Content-Type':'application/json',Authorization:`Bearer ${TOKEN}`}:{...x,'Content-Type':'application/json'}; }
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+/* ① 태그라인 회전 */
+(function(){
+  const phrases=[
+    {t:'생각은 빛이 된다',ko:true},
+    {t:'읽을수록 더 깊은 우주로',ko:true},
+    {t:'당신의 생각은 하나의 우주가 됩니다',ko:true},
+    {t:'한 문장이 하나의 별이 되듯',ko:true},
+    {t:'책으로 시작된 생각의 우주',ko:true},
+    {t:'Where Thoughts Become Constellations',ko:false},
+    {t:'Read. Think. Expand.',ko:false},
+    {t:'Illuminate Your Thoughts',ko:false},
+  ];
+  const el=document.getElementById('luma-tagline');
+  if(!el)return;
+  let i=0;
+  function show(idx){
+    const p=phrases[idx];
+    el.style.opacity='0';el.style.transform='translateY(-5px)';
+    setTimeout(()=>{
+      el.textContent=p.t;
+      el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"'Cinzel','DM Serif Display',serif";
+      el.style.letterSpacing=p.ko?'.05em':'.14em';
+      el.style.opacity='1';el.style.transform='translateY(0)';
+    },500);
+  }
+  show(0);
+  setInterval(()=>{i=(i+1)%phrases.length;show(i);},10000);
+})();
+
+/* ② 별 캔버스 */
+(function(){
+  const c=document.getElementById('stars-canvas'),ctx=c.getContext('2d');let stars=[];
+  function resize(){c.width=c.offsetWidth;c.height=c.offsetHeight;stars=Array.from({length:120},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.2+.2,o:Math.random()*.5+.1,p:Math.random()*Math.PI*2}));}
+  function draw(t){ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fillStyle=`rgba(245,230,200,${s.o+Math.sin(t*.0018+s.p)*.13})`;ctx.fill()});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
+})();
+
+/* ③ D3 별자리 */
+function renderConstellation(){
+  const svg=d3.select('#constellation-svg');
+  const box=document.querySelector('.center');
+  if(!box)return;
+  const w=box.clientWidth,h=box.clientHeight;
+  svg.selectAll('*').remove();
+  svg.attr('viewBox',`0 0 ${w} ${h}`);
+
+  const defs=svg.append('defs');
+  const filt=defs.append('filter').attr('id','link-glow').attr('x','-30%').attr('y','-30%').attr('width','160%').attr('height','160%');
+  filt.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','blur');
+  const mg=filt.append('feMerge');mg.append('feMergeNode').attr('in','blur');mg.append('feMergeNode').attr('in','SourceGraphic');
+
+  const nodes=(CONSTELLATION_DATA.nodes||[]).map((d,i)=>({...d,title:d.title||d.label||'제목 없음',memos:d.memos||0,size:Number(d.size||22),bookCover:d.cover_url||'',orbitImage:ORBIT_IMGS[i%ORBIT_IMGS.length]}));
+  const links=(CONSTELLATION_DATA.links||[]).map(d=>({...d,insight:d.insight||d.theme||'서로 이어지는 생각입니다.',strength:Number(d.strength||.5)}));
+
+  const connCount={};
+  links.forEach(l=>{const s=typeof l.source==='object'?l.source.id:l.source;const t=typeof l.target==='object'?l.target.id:l.target;connCount[s]=(connCount[s]||0)+1;connCount[t]=(connCount[t]||0)+1;});
+  nodes.forEach(n=>{n.connCount=connCount[n.id]||0;});
+
+  function pR(d){return 22+Math.min(d.memos*2.4,20);}
+  function pG(d){return .12+Math.min(d.memos*.028,.26);}
+
+  const sim=d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(links).id(d=>d.id).distance(d=>120+(1-d.strength)*80))
+    .force('charge',d3.forceManyBody().strength(-240))
+    .force('center',d3.forceCenter(w/2,h/2))
+    .force('collision',d3.forceCollide().radius(d=>pR(d)+22));
+
+  const le=svg.append('g').selectAll('line').data(links).enter().append('line')
+    .attr('stroke',d=>`rgba(244,205,137,${.18+d.strength*.44})`)
+    .attr('stroke-width',d=>.8+d.strength*2.2)
+    .attr('stroke-dasharray','4,4')
+    .attr('filter','url(#link-glow)')
+    .style('cursor','pointer')
+    .on('mouseover',function(e,d){
+      d3.select(this).attr('stroke','rgba(244,205,137,.95)').attr('stroke-dasharray','0').attr('stroke-width',d.strength*3.5);
+      const pop=document.getElementById('link-popup');
+      pop.innerHTML=`<div style="font-size:.68rem;color:var(--sub);margin-bottom:4px">${esc(d.source.title||'')} → ${esc(d.target.title||'')}</div><div style="font-size:.82rem;line-height:1.5">${esc(d.insight)}</div>`;
+      pop.style.left=(e.offsetX+14)+'px';pop.style.top=(e.offsetY+14)+'px';pop.classList.add('show');
+    })
+    .on('mouseout',function(e,d){
+      d3.select(this).attr('stroke',`rgba(244,205,137,${.18+d.strength*.44})`).attr('stroke-dasharray','4,4').attr('stroke-width',.8+d.strength*2.2);
+      document.getElementById('link-popup').classList.remove('show');
+    });
+
+  const ne=svg.append('g').selectAll('g').data(nodes).enter().append('g')
+    .attr('class','planet-node').style('cursor','pointer')
+    .call(d3.drag()
+      .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+      .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;})
+    );
+
+  ne.append('circle').attr('class','planet-glow')
+    .attr('r',d=>pR(d)+14).attr('fill',d=>d.color||'#C17F3B').attr('opacity',d=>pG(d));
+
+  ne.append('image').attr('class','planet-img')
+    .attr('href',d=>d.orbitImage)
+    .attr('x',d=>-pR(d)*1.35).attr('y',d=>-pR(d)*1.35)
+    .attr('width',d=>pR(d)*2.7).attr('height',d=>pR(d)*2.7)
+    .attr('preserveAspectRatio','xMidYMid meet')
+    .style('animation',(d,i)=>`spin ${36+i*4}s linear ${i%2?'reverse':'normal'} infinite`)
+    .style('filter','drop-shadow(0 0 18px rgba(244,205,137,.28))');
+
+  ne.append('circle').attr('r',d=>pR(d)).attr('fill','none')
+    .attr('stroke','rgba(244,205,137,.55)').attr('stroke-width',1.3);
+
+  ne.filter(d=>d.connCount>=2).append('ellipse')
+    .attr('rx',d=>pR(d)*1.8).attr('ry',d=>pR(d)*.4)
+    .attr('fill','none').attr('stroke','rgba(244,205,137,.28)').attr('stroke-width',1).attr('stroke-dasharray','3,5');
+
+  ne.append('text').text(d=>d.title)
+    .attr('text-anchor','middle').attr('dy',d=>pR(d)+19)
+    .attr('fill','#E8DCC8').attr('font-size','11px').attr('font-family','Noto Serif KR,serif');
+
+  ne.filter(d=>d.memos>0).append('text').text(d=>d.memos)
+    .attr('text-anchor','middle').attr('dx',d=>pR(d)*.65).attr('dy',d=>-pR(d)*.58)
+    .attr('fill','#F4CD89').attr('font-size','9px')
+    .style('paint-order','stroke').style('-webkit-text-stroke','3px #07110f');
+
+  const tip=document.getElementById('tooltip');
+  ne.on('mouseover',function(e,d){
+    d3.select(this).select('.planet-glow').transition().duration(200).attr('r',pR(d)+24).attr('opacity',Math.min(pG(d)+.18,.45));
+    d3.select(this).select('image').transition().duration(200).attr('filter','drop-shadow(0 0 22px rgba(244,205,137,.6)) brightness(1.18)');
+    document.getElementById('tt-title').textContent=d.title;
+    document.getElementById('tt-author').textContent=(d.author||'저자 미상')+' · '+(d.genre||'');
+    document.getElementById('tt-memos').textContent=`메모 ${d.memos}개 · 연결 ${d.connCount}개`;
+    tip.style.left=(e.offsetX+14)+'px';tip.style.top=(e.offsetY+14)+'px';tip.classList.add('show');
+  }).on('mouseout',function(e,d){
+    d3.select(this).select('.planet-glow').transition().duration(300).attr('r',pR(d)+14).attr('opacity',pG(d));
+    d3.select(this).select('image').transition().duration(300).attr('filter',null);
+    tip.classList.remove('show');
+  }).on('click',(e,d)=>{e.stopPropagation();openBookDetailModal(d,links);});
+
+  sim.on('tick',()=>{
+    le.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    ne.attr('transform',d=>`translate(${d.x},${d.y})`);
+  });
+
+  /* 행성 반짝이기 — 2.8초마다 무작위 */
+  function sparkle(){
+    if(!nodes.length)return;
+    const idx=Math.floor(Math.random()*nodes.length);
+    const nd=nodes[idx];
+    ne.filter((d,i)=>i===idx).select('.planet-glow')
+      .transition().duration(700).attr('opacity',Math.min(pG(nd)+.3,.55)).attr('r',pR(nd)+28)
+      .transition().duration(900).attr('opacity',pG(nd)).attr('r',pR(nd)+14);
+    if(links.length){
+      const li=Math.floor(Math.random()*links.length);
+      le.filter((d,j)=>j===li).transition().duration(600).attr('stroke','rgba(244,205,137,.95)').attr('stroke-dasharray','0')
+        .transition().duration(1100).attr('stroke',d=>`rgba(244,205,137,${.18+d.strength*.44})`).attr('stroke-dasharray','4,4');
+    }
+  }
+  if(constellationSparkleTimer)clearInterval(constellationSparkleTimer);
+  constellationSparkleTimer=setInterval(sparkle,2800);
+
+  window.triggerRandomLink=sparkle;
+  window.highlightConnection=sparkle;
+  window.burstStarEffect=()=>ne.selectAll('.planet-glow').transition().attr('opacity',.44).transition().attr('opacity',d=>pG(d));
+  window.openMemoModal=(title='',id='')=>{
+    const s=document.getElementById('modal-book-title');
+    if(title&&![...s.options].some(o=>o.value===title))s.add(new Option(title,title));
+    s.value=title||s.value;
+    document.getElementById('modal-book-id').value=id;
+    document.getElementById('memo-modal').classList.add('open');
+    document.getElementById('memo-content').focus();
+  };
+}
+
+/* ④ 메모 폼 */
+function initForm(){
+  document.querySelectorAll('.mood').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.mood').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedMood=b.dataset.mood;};});
+  document.getElementById('memo-content').oninput=e=>document.getElementById('char-count').textContent=e.target.value.length;
+  document.getElementById('tag-input').onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const t=e.target.value.trim().replace(/^#/,'');if(t&&!currentTags.includes(t)&&currentTags.length<5){currentTags.push(t);renderTags();}e.target.value='';}};
+  document.getElementById('memo-form').onsubmit=saveMemo;
+}
+function renderTags(){document.getElementById('tag-preview').innerHTML=currentTags.map(t=>`<span class="chip">#${esc(t)}</span>`).join('');}
+async function saveMemo(e){
+  e.preventDefault();
+  const content=document.getElementById('memo-content').value.trim();
+  const resEl=document.getElementById('save-result');
+  if(!content){resEl.textContent='메모 내용을 입력해주세요.';return;}
+  try{
+    const r=await fetch('/api/v2/memos',{method:'POST',headers:hdr(),body:JSON.stringify({user_id:UID,book_id:document.getElementById('modal-book-id').value,book_title:document.getElementById('modal-book-title').value,content,page_number:document.getElementById('page-number').value||null,tags:currentTags,mood:selectedMood,is_public:document.getElementById('is-public').checked})});
+    const d=await r.json();
+    resEl.textContent=d.ok?(d.public_card?'별자리에 저장하고 공동체에도 공개했어요.':'별자리에 새 메모를 심었어요.'):(d.error||'저장 실패');
+    if(d.ok){
+      window.burstStarEffect?.();
+      setTimeout(()=>{closeMemoModal();initConstellation();loadMemoList();initReport();resetMemoForm();},650);
+    }
+  }catch(err){resEl.textContent='연결 오류';}
+}
+function closeMemoModal(){document.getElementById('memo-modal').classList.remove('open');}
+function resetMemoForm(){
+  document.getElementById('memo-form')?.reset();
+  document.getElementById('modal-book-id').value='';
+  document.getElementById('char-count').textContent='0';
+  document.getElementById('save-result').textContent='';
+  currentTags=[];
+  selectedMood='inspired';
+  renderTags();
+  document.querySelectorAll('.mood').forEach(b=>b.classList.toggle('active',b.dataset.mood==='inspired'));
+}
+
+/* ⑤ 메모 패널 */
+async function loadMemoList(){
+  const c=document.getElementById('memo-list-container');
+  c.innerHTML='<div class="muted" style="padding:12px">불러오는 중...</div>';
+  try{
+    const f=window.currentMemoBookTitle||'';
+    const d=await fetch(`/api/v2/memos?user_id=${encodeURIComponent(UID)}&limit=80`,{headers:hdr()}).then(r=>r.json());
+    const memos=(d.memos||[]).filter(x=>!f||x.book_title===f);
+    c.innerHTML=memos.length?memos.map(x=>memoHtml(x,'item')).join(''):'<div class="memo-item muted">아직 메모가 없습니다.</div>';
+  }catch(e){c.innerHTML='<div class="memo-item muted">불러오기 실패</div>';}
+}
+function toggleMemoPanel(){window.currentMemoBookTitle='';document.getElementById('memo-panel-title').textContent='나의 메모 목록';const p=document.getElementById('memo-panel');p.classList.toggle('open');if(p.classList.contains('open'))loadMemoList();}
+function closeMemoPanel(){document.getElementById('memo-panel').classList.remove('open');}
+
+function memoHtml(m,type='item'){
+  const tags=Array.isArray(m.tags)?m.tags:[];
+  const page=m.page_number||m.page_num;
+  const id=esc(m.memo_id||'');
+  if(type==='card'){
+    return `<div class="memo-card" data-memo-id="${id}">
+      <div class="memo-mood-line">${esc(MOODS[m.mood]||'메모')} ${page?'· p.'+esc(page):''}</div>
+      <p class="memo-body">${esc(m.content||'')}</p>
+      <div class="memo-tags-row">${tags.map(t=>`<span class="chip">#${esc(t)}</span>`).join('')}</div>
+      <div class="memo-actions"><button class="memo-action" onclick="editMemo('${id}')">수정</button><button class="memo-action danger" onclick="deleteMemo('${id}')">삭제</button></div>
+    </div>`;
+  }
+  return `<div class="memo-item" data-memo-id="${id}">
+    <b>${esc(m.book_title||'미분류')}</b>
+    <p>${esc(m.content||'')}</p>
+    <div class="muted">${tags.map(t=>'#'+esc(t)).join(' ')}</div>
+    <div class="memo-actions"><button class="memo-action" onclick="editMemo('${id}')">수정</button><button class="memo-action danger" onclick="deleteMemo('${id}')">삭제</button></div>
+  </div>`;
+}
+
+async function editMemo(memoId){
+  if(!memoId)return;
+  const current=document.querySelector(`[data-memo-id="${CSS.escape(memoId)}"] .memo-body, [data-memo-id="${CSS.escape(memoId)}"] p`)?.textContent||'';
+  const next=prompt('메모를 수정하세요.',current);
+  if(next===null)return;
+  const content=next.trim();
+  if(!content){alert('메모 내용을 입력해주세요.');return;}
+  const r=await fetch(`/api/v2/memos/${encodeURIComponent(memoId)}`,{method:'PUT',headers:hdr(),body:JSON.stringify({user_id:UID,content})});
+  const d=await r.json().catch(()=>({}));
+  if(!d.ok){alert(d.error||'수정 실패');return;}
+  await loadMemoList();
+  if(_detailBook) switchDetailTab('memos',null);
+  initReport();
+}
+
+async function deleteMemo(memoId){
+  if(!memoId||!confirm('이 메모를 삭제할까요?'))return;
+  const r=await fetch(`/api/v2/memos/${encodeURIComponent(memoId)}?user_id=${encodeURIComponent(UID)}`,{method:'DELETE',headers:hdr()});
+  const d=await r.json().catch(()=>({}));
+  if(!d.ok){alert(d.error||'삭제 실패');return;}
+  await loadMemoList();
+  if(_detailBook) switchDetailTab('memos',null);
+  initReport();
+}
+
+/* ⑥ 책 상세 모달 */
+async function openBookDetailModal(b,allLinks){
+  _detailBook={book:b,allLinks:allLinks||[]};
+  document.getElementById('book-detail-modal').classList.add('open');
+  const img=b.bookCover||b.cover_url||b.orbitImage||ORBIT_IMGS[0];
+  document.getElementById('detail-hero-area').innerHTML=`
+    <div class="detail-cover"><img src="${esc(img)}" alt="${esc(b.title)}" onerror="this.style.display='none'"></div>
+    <div>
+      <div class="detail-kicker">생각의 별</div>
+      <h2 class="detail-title">${esc(b.title||'제목 없음')}</h2>
+      <p class="detail-author">${esc(b.author||'저자 미상')}</p>
+      <div class="detail-meta">
+        <span>장르<strong>${esc(b.genre||'분류 없음')}</strong></span>
+        <span>상태<strong>${esc(b.status||'읽는 중')}</strong></span>
+        <span>메모<strong>${b.memos||0}개</strong></span>
+        <span>연결<strong>${b.connCount||0}개</strong></span>
+      </div>
+      <button class="btn-add" onclick="closeBookDetailModal();openMemoModal('${esc(b.title||'')}','${esc(b.id||'')}')">✦ 이 책에 메모 추가</button>
+    </div>`;
+  document.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  switchDetailTab('memos',null);
+}
+function closeBookDetailModal(){document.getElementById('book-detail-modal').classList.remove('open');}
+function switchDetailTab(tab,btn){
+  if(btn){document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
+  const body=document.getElementById('detail-tab-body');
+  const b=_detailBook?.book;if(!b)return;
+  const progress=Math.max(0,Math.min(100,Number(b.progress||0)));
+  const publishedYear=b.pub_year||b.published_year||b.published_date||'';
+  if(tab==='memos'){
+    body.innerHTML='<div class="muted">메모를 불러오는 중...</div>';
+    fetch(`/api/v2/memos?user_id=${encodeURIComponent(UID)}&limit=100`,{headers:hdr()}).then(r=>r.json()).then(d=>{
+      const memos=(d.memos||[]).filter(m=>String(m.book_title||'').toLowerCase()===String(b.title||'').toLowerCase()||String(m.book_id||'')===String(b.id||''));
+      body.innerHTML=memos.length?memos.map(m=>memoHtml(m,'card')).join(''):'<div class="muted" style="padding:12px">아직 이 행성에 별빛이 없습니다.</div>';
+    }).catch(()=>{body.innerHTML='<div class="muted">불러오기 실패</div>';});
+  }else if(tab==='links'){
+    const related=(_detailBook?.allLinks||[]).filter(l=>{const s=typeof l.source==='object'?l.source.id:l.source;const t=typeof l.target==='object'?l.target.id:l.target;return String(s)===String(b.id)||String(t)===String(b.id);});
+    body.innerHTML=related.length?related.map(l=>{const other=(typeof l.source==='object'?l.source.id:l.source)===String(b.id)?l.target:l.source;const ot=typeof other==='object'?(other.title||''):String(other);const oi=typeof other==='object'?(other.orbitImage||other.cover_url||ORBIT_IMGS[0]):ORBIT_IMGS[0];return`<div class="link-book-card"><img class="link-planet" src="${esc(oi)}" alt="" onerror="this.style.display='none'"><div><div class="link-title">${esc(ot)}</div><div class="link-theme">${esc(l.insight||l.theme||'서로 이어지는 생각')}</div></div></div>`;}).join(''):'<div class="muted" style="padding:12px">아직 연결된 별이 없습니다.</div>';
+  }else if(tab==='info'){
+    body.innerHTML=`<div class="book-info-grid">
+      <div class="book-info-row"><div class="book-info-label">상태</div><div class="book-info-value">${esc(b.status||'읽는 중')}<div class="read-progress"><div class="read-progress-bar" style="width:${progress}%"></div></div><div class="muted" style="margin-top:5px">${progress}% 읽음</div></div></div>
+      ${publishedYear?`<div class="book-info-row"><div class="book-info-label">출판년도</div><div class="book-info-value">${esc(String(publishedYear).slice(0,4))}</div></div>`:''}
+      ${b.isbn?`<div class="book-info-row"><div class="book-info-label">ISBN</div><div class="book-info-value">${esc(b.isbn)}</div></div>`:''}
+      ${b.publisher?`<div class="book-info-row"><div class="book-info-label">출판사</div><div class="book-info-value">${esc(b.publisher)}</div></div>`:''}
+      ${b.total_pages?`<div class="book-info-row"><div class="book-info-label">전체 페이지</div><div class="book-info-value">${esc(b.total_pages)}p</div></div>`:''}
+      ${b.description?`<div class="memo-card" style="font-family:'Pretendard','Noto Sans KR',sans-serif;font-size:.86rem;line-height:1.7">${esc(b.description)}</div>`:''}
+      ${!b.isbn&&!b.publisher&&!b.total_pages&&!b.description&&!publishedYear?'<div class="muted">추가 정보가 없습니다.</div>':''}
+    </div>`;
+  }
+}
+
+/* ⑦ 로그인 상태 */
+function initNav(){
+  const u=JSON.parse(localStorage.getItem('luma_user')||'{}');
+  const el=document.getElementById('nav-user');if(!el)return;
+  if(u.display_name||u.email){
+    el.innerHTML=`<span class="avatar">${esc(u.emoji||u.display_name?.[0]||'나')}</span><span style="font-size:.78rem">${esc(u.display_name||u.email)}</span><button class="btn-logout" onclick="logout()">로그아웃</button>`;
+  }else{el.innerHTML='<a class="btn-login" href="/auth/login">로그인</a>';}
+}
+function logout(){localStorage.removeItem('luma_token');localStorage.removeItem('luma_user');location.href='/landing';}
+
+async function initConstellation(){
+  try{
+    const d=await fetch(`/api/v2/constellation?user_id=${encodeURIComponent(UID)}`,{headers:hdr()}).then(r=>r.json());
+    if(d&&d.ok)CONSTELLATION_DATA=d;
+  }catch(e){}
+  renderConstellation();
+}
+
+/* ⑧ 대시보드 */
+async function initDashboard(){
+  try{
+    const d=await fetch(`/api/v2/shelf?user_id=${encodeURIComponent(UID)}`,{headers:hdr()}).then(r=>r.json());
+    const st=d.stats||{};
+    const se=(id,v)=>{const el=document.getElementById(id);if(el&&v!==undefined)el.textContent=v;};
+    se('stat-total-books',st.total??st.done);se('stat-total-memos',st.memos);se('stat-connections',st.connections);se('stat-this-month',st.this_month??st.reading);
+    const book=(d.books||[]).find(b=>b.status==='reading');
+    const area=document.getElementById('current-book-area');
+    if(area&&book){const p=Math.max(0,Math.min(100,Number(book.progress||0)));area.innerHTML=`<b style="font-family:'Noto Serif KR',serif">${esc(book.title)}</b><div class="muted">${esc(book.author||'')}</div><div class="progress"><div class="bar" style="width:${p}%"></div></div><div class="muted">${p}% 읽음</div>`;}
+    const se2=document.getElementById('streak-badge');if(se2&&st.reading_streak!==undefined)se2.textContent=`🔥 ${st.reading_streak}일 연속 독서`;
+  }catch(e){}
+}
+
+/* ⑨ 관측 리포트 */
+async function initReport(){
+  const [dr,mr]=await Promise.all([
+    fetch(`/api/v2/discover/today?user_id=${encodeURIComponent(UID)}`,{headers:hdr()}).then(r=>r.json()).catch(()=>({})),
+    fetch(`/api/v2/memos?user_id=${encodeURIComponent(UID)}&limit=3`,{headers:hdr()}).then(r=>r.json()).catch(()=>({})),
+  ]);
+  const wrap=document.getElementById('today-book-wrap');
+  const hero=dr.hero||null;
+  if(!hero||!hero.title){wrap.innerHTML=`<div class="today-book-card"><div class="today-cover">🌱</div><div><div class="muted" style="font-size:.74rem">Discover에서 오늘의 책을 찾아보세요</div><a class="cta-link" href="/lounge">🔭 탐사 성운으로 →</a></div></div>`;}
+  else{const ch=hero.cover_url?`<img src="${esc(hero.cover_url)}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:`<span>${hero.cover_emoji||'📖'}</span>`;wrap.innerHTML=`<div class="today-book-card"><div class="today-cover">${ch}</div><div style="flex:1;min-width:0"><div class="today-book-title">${esc(hero.title)}</div><div style="font-size:.7rem;color:var(--sub);margin-top:2px">${esc(hero.author||'')}</div><div class="today-book-reason">${esc(hero.reason||'')}</div><a class="cta-link" href="/lounge">탐사 성운에서 보기 →</a></div></div>`;}
+  const memos=mr.memos||[];
+  const mwrap=document.getElementById('recent-memos-wrap');
+  if(!memos.length){mwrap.innerHTML='<div class="box"><div class="muted">최근 메모가 없습니다.</div></div>';}
+  else{mwrap.innerHTML=memos.map(m=>`<div class="recent-memo"><div class="recent-memo-book">${esc(m.book_title||'미분류')}</div><div class="recent-memo-text">${esc(m.content||'')}</div></div>`).join('');}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  initNav();initForm();initConstellation();loadMemoList();initDashboard();initReport();
+  document.getElementById('memo-modal').onclick=e=>{if(e.target.id==='memo-modal')closeMemoModal();};
+  document.getElementById('book-detail-modal').onclick=e=>{if(e.target.id==='book-detail-modal')closeBookDetailModal();};
+});
+</script>
+</body>
+</html>

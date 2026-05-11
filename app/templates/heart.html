@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMA — 마음 행성계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display&family=Cinzel:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --bg:#0B1612; --panel:#0F1E18; --panel2:#111F18;
+  --text:#E8DCC8; --sub:#8FA89A;
+  --amber:#C17F3B; --amber-lt:#E8A85A; --star:#F4CD89;
+  --line:rgba(255,255,255,.07); --card:rgba(255,255,255,.045);
+  --glow-sm:0 0 12px rgba(244,205,137,.22); --glow-md:0 0 28px rgba(244,205,137,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh; height:100vh; overflow:hidden;
+  background:var(--bg); color:var(--text); font-family:'Pretendard',sans-serif;
+  display:grid;
+  grid-template-columns:220px 1fr 240px;
+  grid-template-rows:58px 1fr;
+}
+
+/* ── NAV ── */
+.nav{
+  grid-column:1/-1; display:flex; align-items:center; justify-content:space-between;
+  padding:0 22px; background:rgba(11,22,18,.97);
+  border-bottom:1px solid var(--line); backdrop-filter:blur(16px); z-index:10;
+}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo img{height:32px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(193,127,59,.4));}
+.nav-links{display:flex;align-items:center;gap:4px;}
+.npill{
+  padding:5px 13px;border-radius:999px;font-size:.76rem;text-decoration:none;
+  color:var(--sub);transition:.18s;letter-spacing:.04em;
+}
+.npill:hover{color:var(--text);background:rgba(255,255,255,.06);}
+.npill.active{color:var(--amber);background:rgba(193,127,59,.12);border:1px solid rgba(193,127,59,.25);}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--sub);}
+.nav-logout{border:1px solid rgba(193,127,59,.3);background:rgba(193,127,59,.08);color:var(--amber);border-radius:14px;padding:4px 11px;font-size:.72rem;cursor:pointer;font-family:inherit;}
+.nav-login-btn{text-decoration:none;border:1px solid rgba(193,127,59,.3);background:rgba(193,127,59,.08);color:var(--amber);border-radius:14px;padding:4px 11px;font-size:.72rem;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:var(--panel); border-right:1px solid var(--line);
+  overflow:hidden; display:flex; flex-direction:column;
+}
+.sidebar-tabs{display:flex;border-bottom:1px solid var(--line);flex-shrink:0;}
+.stab{
+  flex:1; padding:11px 3px; font-size:.65rem; color:var(--sub); text-align:center;
+  cursor:pointer; border:none; background:transparent; border-bottom:2px solid transparent;
+  transition:.15s; font-family:inherit; line-height:1.35;
+}
+.stab:hover{color:var(--text);}
+.stab.active{color:var(--amber); border-bottom-color:var(--amber);}
+.sidebar-content{flex:1;padding:14px 12px;overflow-y:auto;overflow-x:hidden;}
+.sidebar-content::-webkit-scrollbar{width:3px;}
+.sidebar-content::-webkit-scrollbar-thumb{background:rgba(193,127,59,.15);}
+
+/* sidebar section label */
+.sec-label{
+  font-size:.56rem;color:var(--sub);letter-spacing:.2em;text-transform:uppercase;
+  margin:16px 0 8px; padding:0 2px;
+  display:flex;align-items:center;gap:6px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.05);}
+.sec-label:first-child{margin-top:4px;}
+
+/* shelf book row */
+.shelf-row{
+  display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:10px;
+  cursor:pointer;transition:.15s;margin-bottom:3px;
+}
+.shelf-row:hover{background:rgba(255,255,255,.04);}
+.shelf-thumb{
+  width:34px;height:50px;border-radius:5px;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,#1e3a30,var(--amber));
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+}
+.shelf-thumb img{width:100%;height:100%;object-fit:cover;}
+.shelf-info{flex:1;min-width:0;}
+.shelf-title{font-size:.78rem;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shelf-author{font-size:.64rem;color:var(--sub);margin-top:2px;}
+.status-chip{
+  font-size:.58rem;padding:2px 7px;border-radius:999px;flex-shrink:0;
+  border:1px solid; letter-spacing:.03em;
+}
+.chip-reading{color:#6FCF97;border-color:rgba(111,207,151,.35);background:rgba(111,207,151,.08);}
+.chip-done{color:var(--amber);border-color:rgba(193,127,59,.3);background:rgba(193,127,59,.07);}
+.chip-want{color:#9B8ECC;border-color:rgba(155,142,204,.35);background:rgba(155,142,204,.08);}
+
+/* emotion timeline row */
+.emo-row{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:10px;margin-bottom:6px;cursor:pointer;transition:.15s;
+}
+.emo-row:hover{border-color:rgba(193,127,59,.2);}
+.emo-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.emo-badge{font-size:.73rem;padding:2px 8px;border-radius:999px;font-weight:500;border:1px solid;flex-shrink:0;}
+.emo-book{font-size:.68rem;color:var(--sub);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.emo-date{font-size:.6rem;color:var(--sub);opacity:.7;flex-shrink:0;}
+.emo-quote{font-size:.74rem;color:var(--sub);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-style:italic;}
+
+/* emotion colors */
+.emo-영감받음{color:#F4CD89;border-color:rgba(244,205,137,.4);background:rgba(244,205,137,.1);}
+.emo-호기심{color:#7EB8F7;border-color:rgba(126,184,247,.4);background:rgba(126,184,247,.1);}
+.emo-슬픔{color:#9B8ECC;border-color:rgba(155,142,204,.4);background:rgba(155,142,204,.1);}
+.emo-놀람{color:#F2994A;border-color:rgba(242,153,74,.4);background:rgba(242,153,74,.1);}
+.emo-평온{color:#6FCF97;border-color:rgba(111,207,151,.4);background:rgba(111,207,151,.1);}
+.emo-흥분{color:#EB5757;border-color:rgba(235,87,87,.4);background:rgba(235,87,87,.1);}
+.emo-inspired,.emo-영감{color:#F4CD89;border-color:rgba(244,205,137,.4);background:rgba(244,205,137,.1);}
+.emo-curious{color:#7EB8F7;border-color:rgba(126,184,247,.4);background:rgba(126,184,247,.1);}
+.emo-sad{color:#9B8ECC;border-color:rgba(155,142,204,.4);background:rgba(155,142,204,.1);}
+.emo-surprised{color:#F2994A;border-color:rgba(242,153,74,.4);background:rgba(242,153,74,.1);}
+.emo-peaceful{color:#6FCF97;border-color:rgba(111,207,151,.4);background:rgba(111,207,151,.1);}
+.emo-excited{color:#EB5757;border-color:rgba(235,87,87,.4);background:rgba(235,87,87,.1);}
+
+/* ── MAIN ── */
+.main{
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse at 50% 30%, rgba(244,205,137,.07) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(5,11,23,.1) 0%, rgba(7,15,15,.6) 100%),
+    var(--bg);
+}
+#stars-canvas{position:absolute;inset:0;opacity:.45;mix-blend-mode:screen;width:100%;height:100%;pointer-events:none;z-index:0;}
+
+/* main header bar */
+.main-header{
+  position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px 12px;border-bottom:1px solid var(--line);
+  background:rgba(11,22,18,.6);backdrop-filter:blur(8px);flex-shrink:0;
+}
+.main-title{font-family:'Noto Serif KR',serif;font-size:1.05rem;color:var(--amber);}
+.main-sub{font-size:.7rem;color:var(--sub);margin-top:2px;letter-spacing:.05em;}
+.main-actions{display:flex;align-items:center;gap:8px;}
+
+/* filter chips row */
+.filter-bar{
+  position:relative;z-index:2;display:flex;align-items:center;gap:6px;
+  padding:9px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+  background:rgba(11,22,18,.4);backdrop-filter:blur(6px);flex-shrink:0;
+}
+.fchip{
+  padding:4px 12px;border-radius:999px;font-size:.72rem;cursor:pointer;
+  border:1px solid var(--line);color:var(--sub);background:transparent;
+  font-family:inherit;transition:.15s;
+}
+.fchip:hover{color:var(--text);border-color:rgba(255,255,255,.15);}
+.fchip.active{color:var(--amber);border-color:rgba(193,127,59,.4);background:rgba(193,127,59,.1);}
+
+/* main scroll area */
+.main-body{flex:1;overflow-y:auto;position:relative;z-index:1;}
+.main-body::-webkit-scrollbar{width:4px;}
+.main-body::-webkit-scrollbar-thumb{background:rgba(193,127,59,.18);border-radius:4px;}
+
+/* panel (tab content) */
+.tab-panel{display:none;padding:20px 22px;}
+.tab-panel.active{display:block;}
+
+/* book grid */
+.book-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.book-card{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:.2s;
+}
+.book-card:hover{border-color:rgba(193,127,59,.3);transform:translateY(-2px);box-shadow:var(--glow-sm);}
+.cover-wrap{
+  width:100%;aspect-ratio:2/3;
+  background:linear-gradient(135deg,#1a3528 0%,#2D4A3E 50%,#1e2f28 100%);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;
+}
+.cover-img{width:100%;height:100%;object-fit:cover;}
+.cover-fallback{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;
+  background:linear-gradient(135deg,#162a22,#2D4A3E,rgba(193,127,59,.2));
+  font-size:1.6rem;color:rgba(244,205,137,.5);
+}
+.cover-fallback span{font-size:.62rem;color:var(--sub);letter-spacing:.06em;text-align:center;padding:0 6px;}
+.book-info{padding:10px;}
+.book-title{font-family:'Noto Serif KR',serif;font-size:.82rem;color:var(--text);line-height:1.35;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.book-author{font-size:.66rem;color:var(--sub);}
+.book-progress{margin-top:8px;}
+.progress-bar{height:3px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2D4A3E,var(--amber));border-radius:3px;transition:width .4s;}
+.progress-text{font-size:.6rem;color:var(--sub);margin-top:3px;text-align:right;}
+.book-actions{display:flex;gap:6px;margin-top:10px;}
+.mini-action{border:1px solid rgba(193,127,59,.24);background:rgba(193,127,59,.08);color:var(--amber);border-radius:8px;padding:5px 8px;font-size:.66rem;cursor:pointer;font-family:inherit;}
+.mini-action.danger{border-color:rgba(235,87,87,.28);background:rgba(235,87,87,.08);color:#ff9b9b;}
+.book-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+
+/* empty state */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 20px;text-align:center;
+}
+.empty-orb{
+  width:96px;height:96px;border-radius:50%;margin:0 auto 20px;
+  background:radial-gradient(circle at 35% 35%,rgba(244,205,137,.4),rgba(193,127,59,.15) 50%,transparent 70%),
+    radial-gradient(circle at 70% 70%,rgba(45,74,62,.8),rgba(11,22,18,.9));
+  box-shadow:0 0 40px rgba(193,127,59,.2),0 0 80px rgba(193,127,59,.07);
+  animation:pulse-orb 4s ease-in-out infinite;
+}
+@keyframes pulse-orb{0%,100%{transform:scale(1);opacity:.9;}50%{transform:scale(1.07);opacity:1;}}
+.empty-title{font-family:'Noto Serif KR',serif;font-size:1rem;color:var(--amber);margin-bottom:8px;}
+.empty-sub{font-size:.78rem;color:var(--sub);line-height:1.6;max-width:280px;}
+
+/* constellation svg area */
+.const-wrap{
+  width:100%;height:400px;border-radius:12px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 50%,rgba(193,127,59,.05),transparent 70%),var(--bg);
+  border:1px solid var(--line);
+}
+
+/* ── RIGHT STAT PANEL ── */
+.right-panel{
+  background:var(--panel);border-left:1px solid var(--line);
+  overflow-y:auto;overflow-x:hidden;padding:16px 14px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.right-panel::-webkit-scrollbar{width:3px;}
+.right-panel::-webkit-scrollbar-thumb{background:rgba(193,127,59,.15);}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.stat-card{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:11px 10px;text-align:center;transition:.18s;
+}
+.stat-card:hover{border-color:rgba(193,127,59,.25);background:rgba(193,127,59,.04);}
+.stat-num{font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--star);line-height:1;}
+.stat-lbl{font-size:.6rem;color:var(--sub);margin-top:3px;}
+
+.persona-card{
+  background:linear-gradient(135deg,rgba(45,74,62,.5),rgba(193,127,59,.1));
+  border:1px solid rgba(193,127,59,.2);border-radius:12px;padding:14px;text-align:center;
+}
+.persona-label{font-size:.56rem;color:var(--sub);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;}
+.persona-title{font-family:'Noto Serif KR',serif;font-size:.9rem;color:var(--amber);margin-bottom:5px;}
+.persona-desc{font-size:.7rem;color:var(--sub);line-height:1.55;}
+.persona-orb{
+  width:52px;height:52px;border-radius:50%;margin:0 auto 10px;
+  background:radial-gradient(circle at 35% 30%,rgba(244,205,137,.5),rgba(193,127,59,.2) 50%,transparent 70%),
+    radial-gradient(circle at 65% 65%,rgba(45,74,62,.8),rgba(11,22,18,.9));
+  box-shadow:0 0 20px rgba(193,127,59,.25);
+  animation:pulse-orb 5s ease-in-out infinite;
+}
+
+.quick-emo-btn{
+  width:100%;border:1px solid rgba(193,127,59,.3);background:rgba(193,127,59,.08);
+  color:var(--amber);border-radius:12px;padding:11px;font-family:inherit;
+  font-size:.82rem;cursor:pointer;transition:.18s;display:flex;align-items:center;
+  justify-content:center;gap:8px;
+}
+.quick-emo-btn:hover{background:rgba(193,127,59,.18);border-color:rgba(193,127,59,.5);}
+
+.add-book-btn{
+  border:1px solid rgba(193,127,59,.3);background:rgba(193,127,59,.09);color:var(--amber);
+  border-radius:10px;padding:7px 14px;font-family:inherit;font-size:.78rem;
+  cursor:pointer;transition:.18s;display:inline-flex;align-items:center;gap:6px;
+}
+.add-book-btn:hover{background:rgba(193,127,59,.2);}
+
+/* right panel section divider */
+.rp-label{font-size:.57rem;color:var(--sub);letter-spacing:.18em;text-transform:uppercase;
+  padding-bottom:6px;border-bottom:1px solid var(--line);}
+
+.recent-emo-pill{
+  display:flex;align-items:center;gap:8px;padding:8px;
+  background:var(--card);border:1px solid var(--line);border-radius:9px;margin-bottom:5px;
+}
+.recent-emo-book-name{font-size:.7rem;color:var(--sub);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.emo-actions{display:flex;gap:6px;margin-top:8px;}
+.emo-action{border:1px solid rgba(193,127,59,.24);background:rgba(193,127,59,.08);color:var(--amber);border-radius:8px;padding:4px 8px;font-size:.68rem;cursor:pointer;font-family:inherit;}
+.emo-action.danger{border-color:rgba(235,87,87,.28);background:rgba(235,87,87,.08);color:#ff9b9b;}
+.memo-pill{padding:9px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:7px;}
+.memo-pill-title{font-size:.68rem;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+.memo-pill-body{font-family:'Noto Serif KR',serif;font-size:.74rem;color:var(--text);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.detail-book{display:grid;grid-template-columns:96px 1fr;gap:15px;align-items:start;margin-bottom:16px;}
+.detail-cover{width:96px;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#1a3528,#2D4A3E);display:grid;place-items:center;color:var(--sub);}
+.detail-cover img{width:100%;height:100%;object-fit:cover;}
+.detail-title{font-family:'Noto Serif KR',serif;font-size:1.02rem;color:var(--text);line-height:1.35;margin-bottom:5px;}
+.detail-meta{font-size:.74rem;color:var(--sub);line-height:1.65;}
+.detail-section{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;}
+.detail-section-title{font-size:.7rem;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.detail-memo{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;}
+.detail-memo-date{font-size:.62rem;color:var(--sub);margin-bottom:5px;}
+.detail-memo-body{font-family:'Noto Serif KR',serif;font-size:.8rem;line-height:1.65;color:var(--text);}
+.detail-memo-actions{display:flex;gap:6px;margin-top:9px;}
+.detail-memo-action{border:1px solid rgba(193,127,59,.24);background:rgba(193,127,59,.08);color:var(--amber);border-radius:8px;padding:4px 8px;font-size:.68rem;cursor:pointer;font-family:inherit;}
+.detail-memo-action.danger{border-color:rgba(235,87,87,.28);background:rgba(235,87,87,.08);color:#ff9b9b;}
+.detail-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+.const-insight-panel{margin-top:14px;display:grid;gap:10px;}
+.insight-card{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:12px;}
+.insight-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:7px;}
+.insight-books{font-family:'Noto Serif KR',serif;font-size:.84rem;color:var(--text);line-height:1.45;}
+.insight-score{font-size:.66rem;color:var(--amber);white-space:nowrap;}
+.insight-snippets{display:grid;gap:6px;font-size:.72rem;color:var(--sub);line-height:1.55;margin:8px 0;}
+.insight-result{font-family:'Noto Serif KR',serif;font-size:.8rem;line-height:1.7;color:var(--text);border-top:1px solid var(--line);padding-top:9px;margin-top:9px;}
+.connection-modal-box{width:min(760px,96vw);}
+.connection-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.connection-section{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:13px;}
+.connection-label{font-size:.66rem;color:var(--amber);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
+.connection-text{font-size:.82rem;line-height:1.7;color:var(--text);}
+.connection-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+@media(max-width:720px){.connection-grid{grid-template-columns:1fr;}}
+
+/* ── MODALS ── */
+.modal{display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;}
+.modal.open{display:flex;}
+.modal-box{width:min(520px,96vw);max-height:88vh;overflow-y:auto;background:var(--panel2);border:1px solid rgba(193,127,59,.28);border-radius:18px;padding:24px;}
+.modal-box::-webkit-scrollbar{width:3px;}
+.modal-box::-webkit-scrollbar-thumb{background:rgba(193,127,59,.2);}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-head-title{font-family:'Noto Serif KR',serif;font-size:1rem;color:var(--amber);}
+.btn-close{background:transparent;border:0;color:var(--sub);font-size:1.1rem;cursor:pointer;line-height:1;padding:2px;}
+.btn-close:hover{color:var(--text);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:.74rem;color:var(--sub);margin-bottom:6px;}
+input[type="text"],input[type="search"],select,textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;
+  color:var(--text);padding:9px 12px;font-family:inherit;font-size:.85rem;outline:none;
+  transition:border-color .15s;
+}
+input[type="text"]:focus,input[type="search"]:focus,select:focus,textarea:focus{border-color:rgba(193,127,59,.4);}
+select option{background:var(--panel2);}
+textarea{min-height:90px;resize:vertical;}
+.book-search-results{max-height:200px;overflow-y:auto;margin-top:8px;}
+.book-search-results::-webkit-scrollbar{width:3px;}
+.book-search-results::-webkit-scrollbar-thumb{background:rgba(193,127,59,.15);}
+.search-result-row{
+  display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;
+  cursor:pointer;transition:.15s;
+}
+.search-result-row:hover{background:rgba(193,127,59,.08);}
+.search-result-row.selected{background:rgba(193,127,59,.12);border:1px solid rgba(193,127,59,.28);}
+.sr-thumb{
+  width:32px;height:46px;border-radius:4px;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,#1a3528,var(--amber));
+  display:flex;align-items:center;justify-content:center;font-size:.8rem;
+}
+.sr-thumb img{width:100%;height:100%;object-fit:cover;}
+.sr-info{flex:1;min-width:0;}
+.sr-title{font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sr-author{font-size:.65rem;color:var(--sub);margin-top:2px;}
+.status-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px;}
+.status-btn{
+  border:1px solid var(--line);background:var(--card);color:var(--sub);
+  border-radius:999px;padding:6px 13px;cursor:pointer;font-family:inherit;
+  font-size:.78rem;transition:.15s;
+}
+.status-btn:hover{color:var(--text);border-color:rgba(255,255,255,.2);}
+.status-btn.active{border-color:rgba(193,127,59,.5);color:var(--amber);background:rgba(193,127,59,.13);}
+.emo-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.emo-chip-btn{
+  border:1px solid var(--line);background:var(--card);color:var(--sub);
+  border-radius:999px;padding:5px 12px;cursor:pointer;font-family:inherit;
+  font-size:.76rem;transition:.15s;
+}
+.emo-chip-btn:hover{color:var(--text);}
+.emo-chip-btn.active{border-color:rgba(193,127,59,.5);color:var(--amber);background:rgba(193,127,59,.12);}
+.btn-primary{
+  width:100%;border:1px solid rgba(193,127,59,.35);background:rgba(193,127,59,.12);
+  color:var(--amber);border-radius:12px;padding:12px;font-family:inherit;
+  font-size:.88rem;cursor:pointer;transition:.18s;margin-top:6px;
+}
+.btn-primary:hover{background:rgba(193,127,59,.22);border-color:rgba(193,127,59,.55);}
+
+/* ── ANIMATIONS ── */
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){
+  body{grid-template-columns:200px 1fr 0;}
+  .right-panel{display:none;}
+}
+@media(max-width:760px){
+  body{grid-template-columns:0 1fr 0;}
+  .sidebar{display:none;}
+  .nav-links{display:none;}
+  .book-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:32px;object-fit:contain" onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--amber);line-height:1">LUMA</span>
+      <span id="luma-tagline" style="font-size:.58rem;color:var(--sub);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="npill">별자리 지도</a>
+    <a href="/heart" class="npill active">마음 행성계</a>
+    <a href="/lounge" class="npill">탐사 성운</a>
+    <a href="/social" class="npill">독자 광장</a>
+    <a href="/live" class="npill">라이브</a>
+    <a href="/socrates" class="npill">소크라테스</a>
+    <a href="/profile" class="npill">프로필</a>
+  </div>
+  <div class="nav-user" id="nav-user"></div>
+</nav>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-tabs">
+    <button class="stab active" onclick="switchSidebar('shelf',this)">📚 내 서재</button>
+    <button class="stab" onclick="switchSidebar('emotions',this)">🌌 감정 우주</button>
+    <button class="stab" onclick="switchSidebar('constellation',this)">✦ 별자리</button>
+  </div>
+
+  <!-- 내 서재 sidebar pane -->
+  <div class="sidebar-content" id="sb-shelf">
+    <div class="sec-label">내 책들</div>
+    <div id="shelf-list">
+      <div style="color:var(--sub);font-size:.74rem;padding:20px 4px;text-align:center;opacity:.6">불러오는 중…</div>
+    </div>
+  </div>
+
+  <!-- 감정 우주 sidebar pane -->
+  <div class="sidebar-content" id="sb-emotions" style="display:none">
+    <div class="sec-label">감정 기록</div>
+    <div id="emo-sidebar-list">
+      <div style="color:var(--sub);font-size:.74rem;padding:20px 4px;text-align:center;opacity:.6">불러오는 중…</div>
+    </div>
+  </div>
+
+  <!-- 별자리 연결 sidebar pane -->
+  <div class="sidebar-content" id="sb-constellation" style="display:none">
+    <div class="sec-label">책 연결망</div>
+    <svg id="mini-const-svg" style="width:100%;height:300px;border-radius:10px;background:var(--bg);border:1px solid var(--line);display:block;"></svg>
+    <div style="font-size:.64rem;color:var(--sub);text-align:center;margin-top:8px;opacity:.65;line-height:1.5">
+      책들이 연결될수록<br>별자리가 만들어집니다
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN AREA ── -->
+<main class="main">
+  <canvas id="stars-canvas"></canvas>
+
+  <div class="main-header">
+    <div>
+      <div class="main-title">마음 행성계</div>
+      <div class="main-sub">읽은 책들이 만들어낸 나만의 감정 우주</div>
+    </div>
+    <div class="main-actions">
+      <button class="add-book-btn" onclick="openAddBook()">＋ 책 추가</button>
+    </div>
+  </div>
+
+  <!-- 내 서재 filter bar -->
+  <div class="filter-bar" id="filter-bar-shelf">
+    <span style="font-size:.68rem;color:var(--sub);margin-right:2px">필터</span>
+    <button class="fchip active" onclick="filterShelf('all',this)">전체</button>
+    <button class="fchip" onclick="filterShelf('reading',this)">읽는 중</button>
+    <button class="fchip" onclick="filterShelf('done',this)">완독</button>
+    <button class="fchip" onclick="filterShelf('want',this)">읽고 싶음</button>
+  </div>
+
+  <!-- 감정 우주 filter bar -->
+  <div class="filter-bar" id="filter-bar-emotions" style="display:none">
+    <span style="font-size:.68rem;color:var(--sub);margin-right:2px">감정</span>
+    <button class="fchip active" onclick="filterEmo('all',this)">전체</button>
+    <button class="fchip" onclick="filterEmo('inspired',this)">영감</button>
+    <button class="fchip" onclick="filterEmo('curious',this)">호기심</button>
+    <button class="fchip" onclick="filterEmo('sad',this)">감동</button>
+    <button class="fchip" onclick="filterEmo('surprised',this)">놀람</button>
+    <button class="fchip" onclick="filterEmo('peaceful',this)">평온</button>
+    <button class="fchip" onclick="filterEmo('excited',this)">흥분</button>
+  </div>
+
+  <!-- scrollable body -->
+  <div class="main-body">
+
+    <!-- 내 서재 panel -->
+    <div class="tab-panel active" id="panel-shelf">
+      <div class="book-grid" id="book-grid"></div>
+      <div class="empty-state" id="shelf-empty" style="display:none">
+        <div class="empty-orb"></div>
+        <div class="empty-title">서재가 비어 있어요</div>
+        <div class="empty-sub">첫 번째 별을 수집해보세요.<br>책을 추가하면 나만의 우주가 시작됩니다.</div>
+        <button class="add-book-btn" style="margin-top:18px" onclick="openAddBook()">＋ 첫 번째 책 추가하기</button>
+      </div>
+    </div>
+
+    <!-- 감정 우주 panel -->
+    <div class="tab-panel" id="panel-emotions">
+      <div id="emo-timeline-list"></div>
+      <div class="empty-state" id="emo-empty" style="display:none">
+        <div class="empty-orb" style="background:radial-gradient(circle at 35% 35%,rgba(155,142,204,.5),rgba(126,184,247,.15) 50%,transparent 70%),radial-gradient(circle at 65% 65%,rgba(45,74,62,.8),rgba(11,22,18,.9))"></div>
+        <div class="empty-title">감정 기록이 없어요</div>
+        <div class="empty-sub">책을 읽으며 느낀 감정을 기록해보세요.<br>감정들이 쌓여 나만의 우주 지도가 됩니다.</div>
+        <button class="add-book-btn" style="margin-top:18px" onclick="openLogEmotion()">✦ 감정 기록하기</button>
+      </div>
+    </div>
+
+    <!-- 별자리 연결 panel -->
+    <div class="tab-panel" id="panel-constellation">
+      <div class="const-wrap" id="const-wrap">
+        <svg id="const-svg" style="width:100%;height:100%;"></svg>
+      </div>
+      <div style="font-size:.72rem;color:var(--sub);text-align:center;margin-top:12px;opacity:.65;font-style:italic">
+        책들 사이의 감정적 연결을 시각화한 별자리입니다
+      </div>
+      <div class="empty-state" id="const-empty" style="display:none">
+        <div class="empty-orb" style="background:radial-gradient(circle at 35% 35%,rgba(126,184,247,.4),rgba(45,74,62,.2) 50%,transparent 70%),radial-gradient(circle at 65% 65%,rgba(22,42,34,.8),rgba(11,22,18,.9))"></div>
+        <div class="empty-title">별자리가 아직 없어요</div>
+        <div class="empty-sub">두 권 이상의 책을 추가하고 감정을 기록하면<br>별자리가 만들어집니다.</div>
+      </div>
+      <div class="const-insight-panel" id="memo-connection-panel"></div>
+    </div>
+
+  </div><!-- /main-body -->
+</main>
+
+<!-- ── RIGHT STAT PANEL ── -->
+<aside class="right-panel">
+  <div class="rp-label">독서 통계</div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num" id="st-books">—</div><div class="stat-lbl">책 권수</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-memos">—</div><div class="stat-lbl">감정 기록</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-streak">—</div><div class="stat-lbl">연속 일</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-done">—</div><div class="stat-lbl">완독</div></div>
+  </div>
+
+  <div class="rp-label" style="margin-top:2px">이달의 독서 페르소나</div>
+  <div class="persona-card">
+    <div class="persona-label">Monthly Persona</div>
+    <div class="persona-orb"></div>
+    <div class="persona-title" id="persona-title">로딩 중…</div>
+    <div class="persona-desc" id="persona-desc">페르소나를 분석하는 중입니다</div>
+  </div>
+
+  <button class="quick-emo-btn" onclick="openLogEmotion()">
+    <span>✦</span><span>감정 기록하기</span>
+  </button>
+
+  <div class="rp-label" style="margin-top:2px">최근 감정 기록</div>
+  <div id="recent-emo-list">
+    <div style="color:var(--sub);font-size:.72rem;opacity:.6;padding:6px 0">불러오는 중…</div>
+  </div>
+
+  <div class="rp-label" style="margin-top:2px">최근 독서 메모</div>
+  <div id="recent-memo-list">
+    <div style="color:var(--sub);font-size:.72rem;opacity:.6;padding:6px 0">불러오는 중…</div>
+  </div>
+</aside>
+
+<!-- ── MODAL: 책 추가 ── -->
+<div class="modal" id="modal-add-book" onclick="if(event.target===this)closeModal('modal-add-book')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-head-title">책 추가하기</span>
+      <button class="btn-close" onclick="closeModal('modal-add-book')">✕</button>
+    </div>
+    <div class="field">
+      <label>제목으로 검색</label>
+      <input type="search" id="book-search-input" placeholder="책 제목을 입력하세요…" oninput="debounceBookSearch(this.value)">
+      <div class="book-search-results" id="book-search-results"></div>
+    </div>
+    <div class="field" id="selected-book-info" style="display:none">
+      <label>선택한 책</label>
+      <div class="search-result-row selected" id="selected-book-display"></div>
+    </div>
+    <div class="field">
+      <label>읽기 상태</label>
+      <div class="status-row">
+        <button class="status-btn active" data-status="reading" onclick="selectStatus(this)">📖 읽는 중</button>
+        <button class="status-btn" data-status="done" onclick="selectStatus(this)">✓ 완독</button>
+        <button class="status-btn" data-status="want" onclick="selectStatus(this)">🌟 읽고 싶음</button>
+      </div>
+    </div>
+    <div class="field" id="progress-field">
+      <label>읽은 진도 <span id="progress-val" style="color:var(--amber)">0%</span></label>
+      <input type="range" id="book-progress" min="0" max="100" value="0"
+        style="width:100%;accent-color:var(--amber);cursor:pointer;margin-top:4px"
+        oninput="document.getElementById('progress-val').textContent=this.value+'%'">
+    </div>
+    <button class="btn-primary" id="btn-submit-book" onclick="submitShelfBook()">✦ 서재에 추가하기</button>
+  </div>
+</div>
+
+<!-- ── MODAL: 감정 기록 ── -->
+<div class="modal" id="modal-log-emotion" onclick="if(event.target===this)closeModal('modal-log-emotion')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-head-title">감정 기록하기</span>
+      <button class="btn-close" onclick="closeModal('modal-log-emotion')">✕</button>
+    </div>
+    <div class="field">
+      <label>책 선택</label>
+      <select id="emo-book-select">
+        <option value="">— 책을 선택하세요 —</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>감정</label>
+      <div class="emo-chips">
+        <button class="emo-chip-btn" data-emo="inspired" onclick="selectEmo(this)">✨ 영감</button>
+        <button class="emo-chip-btn" data-emo="curious" onclick="selectEmo(this)">🔭 호기심</button>
+        <button class="emo-chip-btn" data-emo="sad" onclick="selectEmo(this)">🌊 감동</button>
+        <button class="emo-chip-btn" data-emo="surprised" onclick="selectEmo(this)">⚡ 놀람</button>
+        <button class="emo-chip-btn" data-emo="peaceful" onclick="selectEmo(this)">🌿 평온</button>
+        <button class="emo-chip-btn" data-emo="excited" onclick="selectEmo(this)">🔥 흥분</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>인상 깊은 문장 또는 메모</label>
+      <textarea id="emo-quote" placeholder="책에서 느낀 감정이나 인상 깊은 구절을 적어보세요…"></textarea>
+    </div>
+    <button class="btn-primary" id="btn-submit-emotion" onclick="submitEmotion()">✦ 감정 기록하기</button>
+  </div>
+</div>
+
+<!-- ── MODAL: 책 상세 ── -->
+<div class="modal" id="modal-book-detail" onclick="if(event.target===this)closeModal('modal-book-detail')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-head-title">책 기록 보기</span>
+      <button class="btn-close" onclick="closeModal('modal-book-detail')">✕</button>
+    </div>
+    <div id="book-detail-body"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal-connection-insight" onclick="if(event.target===this)closeModal('modal-connection-insight')">
+  <div class="modal-box connection-modal-box">
+    <div class="modal-head">
+      <span class="modal-head-title">연결된 생각 살펴보기</span>
+      <button class="btn-close" onclick="closeModal('modal-connection-insight')">✕</button>
+    </div>
+    <div id="connection-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let shelfData = [];
+let timelineData = [];
+let memoData = [];
+let constellationData = { nodes: [], links: [] };
+let aiConnectionData = { nodes: [], links: [], connections: [] };
+let selectedBookObj = null;
+let selectedStatus = 'reading';
+let editingBookId = '';
+let selectedEmo = '';
+let editingEmotionId = '';
+let currentShelfFilter = 'all';
+let currentEmoFilter = 'all';
+let bookSearchTimeout = null;
+let currentDetailBookId = '';
+
+const userId = (() => {
+  try {
+    const u = JSON.parse(localStorage.getItem('luma_user') || '{}');
+    return u.user_id || u.id || 'user_demo';
+  } catch(e) { return 'user_demo'; }
+})();
+const token = localStorage.getItem('luma_token') || '';
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+function initNav() {
+  const el = document.getElementById('nav-user');
+  if (!el) return;
+  const user = JSON.parse(localStorage.getItem('luma_user') || '{}');
+  if (user.display_name || user.email) {
+    el.innerHTML = `<span>${user.emoji||'✨'}</span><span>${user.display_name||user.email}</span><button onclick="logout()" class="nav-logout">로그아웃</button>`;
+  } else {
+    el.innerHTML = '<a href="/auth/login" class="nav-login-btn">로그인</a>';
+  }
+}
+function logout() {
+  localStorage.removeItem('luma_token');
+  localStorage.removeItem('luma_user');
+  window.location.href = '/auth/login';
+}
+
+/* ══════════════════════════════════════
+   STARS CANVAS
+══════════════════════════════════════ */
+function initStars() {
+  const canvas = document.getElementById('stars-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = canvas.offsetWidth || 800;
+    canvas.height = canvas.offsetHeight || 600;
+    stars = [];
+    const n = Math.floor((canvas.width * canvas.height) / 3000);
+    for (let i = 0; i < n; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.2,
+        a: Math.random() * 0.7 + 0.1,
+        speed: Math.random() * 0.007 + 0.002,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const a = s.a * (0.4 + 0.6 * Math.sin(t * s.speed + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(244,205,137,${a.toFixed(2)})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  requestAnimationFrame(draw);
+}
+
+/* ══════════════════════════════════════
+   SIDEBAR TAB SWITCH
+══════════════════════════════════════ */
+function switchSidebar(tab, btn) {
+  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['shelf','emotions','constellation'].forEach(t => {
+    const el = document.getElementById('sb-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  switchMainPanel(tab);
+}
+
+/* ══════════════════════════════════════
+   MAIN PANEL SWITCH
+══════════════════════════════════════ */
+function switchMainPanel(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) panel.classList.add('active');
+  document.getElementById('filter-bar-shelf').style.display     = tab === 'shelf'  ? 'flex' : 'none';
+  document.getElementById('filter-bar-emotions').style.display  = tab === 'emotions' ? 'flex' : 'none';
+  if (tab === 'constellation') renderConstellation();
+}
+
+/* ══════════════════════════════════════
+   API HELPERS
+══════════════════════════════════════ */
+async function apiFetch(url, opts) {
+  opts = opts || {};
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(url, Object.assign({}, opts, { headers: Object.assign(headers, opts.headers || {}) }));
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+/* ══════════════════════════════════════
+   LOAD DATA
+══════════════════════════════════════ */
+async function loadShelf() {
+  try {
+    const qs = userId ? '?user_id=' + userId : '';
+    const data = await apiFetch('/api/v2/shelf' + qs);
+    shelfData = (data.books || []).map(normalizeBook);
+  } catch(e) {
+    shelfData = [];
+  }
+  renderShelf();
+  renderShelfSidebar();
+  updateStats();
+}
+
+async function loadTimeline() {
+  try {
+    const qs = userId ? '?user_id=' + userId : '';
+    const data = await apiFetch('/api/v2/emotions' + qs);
+    timelineData = (data.timeline || data.emotions || []).map(normalizeEmotion);
+  } catch(e) {
+    timelineData = [];
+  }
+  renderTimeline();
+  renderEmoSidebar();
+  renderRecentEmo();
+}
+
+async function loadMemos() {
+  try {
+    const qs = userId ? '?user_id=' + userId + '&limit=30' : '?limit=30';
+    const data = await apiFetch('/api/v2/memos' + qs);
+    memoData = data.memos || [];
+  } catch(e) {
+    memoData = [];
+  }
+  renderRecentMemos();
+}
+
+async function loadConstellation() {
+  try {
+    const qs = userId ? '?user_id=' + userId : '';
+    const data = await apiFetch('/api/v2/constellation' + qs);
+    constellationData = data;
+  } catch(e) {
+    constellationData = { nodes: [], links: [] };
+  }
+  renderMiniConst();
+}
+
+async function loadMemoConnections() {
+  try {
+    const qs = userId ? '?user_id=' + encodeURIComponent(userId) : '';
+    aiConnectionData = await apiFetch('/api/ai/connections' + qs);
+  } catch(e) {
+    aiConnectionData = { nodes: [], links: [], connections: [] };
+  }
+  renderMemoConnections();
+}
+
+async function loadPersona() {
+  try {
+    const qs = userId ? '?user_id=' + userId : '';
+    const data = await apiFetch('/api/v2/report/persona' + qs);
+    const persona = data.persona || data;
+    document.getElementById('persona-title').textContent = persona.persona_name || persona.title || '탐구하는 독서가';
+    document.getElementById('persona-desc').textContent  = persona.description || '다양한 감정으로 독서를 탐험하는 당신만의 스타일';
+  } catch(e) {
+    document.getElementById('persona-title').textContent = '탐구하는 독서가';
+    document.getElementById('persona-desc').textContent  = '독서 기록이 쌓이면 페르소나가 분석됩니다';
+  }
+}
+
+function updateStats() {
+  document.getElementById('st-books').textContent  = shelfData.length;
+  document.getElementById('st-memos').textContent  = timelineData.length;
+  document.getElementById('st-done').textContent   = shelfData.filter(b => b.status === 'done').length;
+}
+
+function normalizeBook(b) {
+  return Object.assign({}, b, {
+    id: b.id || b.book_id,
+    book_id: b.book_id || b.id,
+    cover_url: b.cover_url || b.thumbnail || '',
+    progress: Number(b.progress || 0),
+    status: b.status || b.reading_status || 'want'
+  });
+}
+
+function normalizeEmotion(e) {
+  const type = e.emotion || e.emotion_type || 'inspired';
+  return Object.assign({}, e, {
+    emotion: type,
+    emotion_type: type,
+    emotion_label: e.emotion_label || emotionLabel(type),
+    quote: e.quote || e.memo || e.note || '',
+    created_at: e.created_at || e.date || e.recorded_at || ''
+  });
+}
+
+function emotionLabel(type) {
+  const map = {
+    inspired: '영감',
+    curious: '호기심',
+    sad: '감동',
+    surprised: '놀람',
+    peaceful: '평온',
+    excited: '흥분'
+  };
+  return map[type] || type || '감정';
+}
+
+/* ══════════════════════════════════════
+   RENDER: SHELF (main grid)
+══════════════════════════════════════ */
+function statusLabel(s) {
+  if (s === 'reading') return { text: '읽는 중', cls: 'chip-reading' };
+  if (s === 'done')    return { text: '완독',    cls: 'chip-done' };
+  return { text: '읽고 싶음', cls: 'chip-want' };
+}
+
+function renderShelf() {
+  const grid  = document.getElementById('book-grid');
+  const empty = document.getElementById('shelf-empty');
+  let list = shelfData;
+  if (currentShelfFilter !== 'all') list = shelfData.filter(b => b.status === currentShelfFilter);
+
+  if (list.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = list.map(b => {
+    const sl  = statusLabel(b.status);
+    const pct = b.progress || 0;
+    return `
+    <div class="book-card" onclick="openBookDetail('${esc(b.book_id || b.id)}')">
+      <div class="cover-wrap">
+        <img class="cover-img" src="${esc(b.cover_url||'')}" alt="${esc(b.title)}"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="cover-fallback">
+          <span>📚</span>
+          <span>${esc(b.title.slice(0,6))}</span>
+        </div>
+      </div>
+      <div class="book-info">
+        <div class="book-title">${esc(b.title)}</div>
+        <div class="book-author">${esc(b.author||'')}</div>
+        ${b.status==='reading'?`<div class="book-progress">
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div class="progress-text">${pct}% 읽음</div>
+        </div>`:''}
+        <div class="book-footer">
+          <span class="status-chip ${sl.cls}">${sl.text}</span>
+          ${b.emotion?`<span class="emo-badge emo-${b.emotion}" style="font-size:.62rem;padding:2px 7px">${emotionLabel(b.emotion)}</span>`:''}
+        </div>
+        <div class="book-actions">
+          <button class="mini-action" onclick="event.stopPropagation();openEditBook('${esc(b.book_id || b.id)}')">수정</button>
+          <button class="mini-action danger" onclick="event.stopPropagation();deleteShelfBook('${esc(b.book_id || b.id)}')">삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: SHELF SIDEBAR LIST
+══════════════════════════════════════ */
+function renderShelfSidebar() {
+  const el = document.getElementById('shelf-list');
+  if (shelfData.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.72rem;padding:16px 4px;text-align:center;opacity:.65">아직 추가한 책이 없어요</div>';
+    return;
+  }
+  el.innerHTML = shelfData.map(b => {
+    const sl = statusLabel(b.status);
+    return `<div class="shelf-row" onclick="switchMainPanel('shelf')">
+      <div class="shelf-thumb">
+        <img src="${esc(b.cover_url||'')}" alt="" onerror="this.style.display='none'">
+      </div>
+      <div class="shelf-info">
+        <div class="shelf-title">${esc(b.title)}</div>
+        <div class="shelf-author">${esc(b.author||'')}</div>
+      </div>
+      <span class="status-chip ${sl.cls}">${sl.text}</span>
+    </div>`;
+  }).join('');
+}
+
+function filterShelf(status, btn) {
+  currentShelfFilter = status;
+  document.querySelectorAll('#filter-bar-shelf .fchip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderShelf();
+}
+
+/* ══════════════════════════════════════
+   RENDER: EMOTION TIMELINE (main panel)
+══════════════════════════════════════ */
+function renderTimeline() {
+  const list  = document.getElementById('emo-timeline-list');
+  const empty = document.getElementById('emo-empty');
+  let filtered = timelineData;
+  if (currentEmoFilter !== 'all') filtered = timelineData.filter(e => e.emotion === currentEmoFilter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = filtered.map(e => {
+    const d = e.created_at ? new Date(e.created_at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'}) : '';
+    return `<div class="emo-row">
+      <div class="emo-top">
+        <span class="emo-badge emo-${e.emotion}">${esc(e.emotion_label || emotionLabel(e.emotion))}</span>
+        <span class="emo-book">${esc(e.book_title||'')}</span>
+        <span class="emo-date">${d}</span>
+      </div>
+      <div class="emo-quote">${esc(e.quote||e.memo||'기록 없음')}</div>
+      <div class="emo-actions">
+        <button class="emo-action" onclick="editEmotion('${esc(e.emotion_id || '')}')">수정</button>
+        <button class="emo-action danger" onclick="deleteEmotion('${esc(e.emotion_id || '')}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: EMOTION SIDEBAR LIST
+══════════════════════════════════════ */
+function renderEmoSidebar() {
+  const el = document.getElementById('emo-sidebar-list');
+  if (timelineData.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.72rem;padding:16px 4px;text-align:center;opacity:.65">감정 기록이 없어요</div>';
+    return;
+  }
+  el.innerHTML = timelineData.slice(0, 12).map(e => {
+    const d = e.created_at ? new Date(e.created_at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'}) : '';
+    return `<div class="emo-row">
+      <div class="emo-top">
+        <span class="emo-badge emo-${e.emotion}">${esc(e.emotion_label || emotionLabel(e.emotion))}</span>
+        <span class="emo-book">${esc(e.book_title||'')}</span>
+        <span class="emo-date">${d}</span>
+      </div>
+      <div class="emo-quote">${esc(e.quote||e.memo||'')}</div>
+      <div class="emo-actions">
+        <button class="emo-action" onclick="editEmotion('${esc(e.emotion_id || '')}')">수정</button>
+        <button class="emo-action danger" onclick="deleteEmotion('${esc(e.emotion_id || '')}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: RECENT EMOTION (right panel)
+══════════════════════════════════════ */
+function renderRecentEmo() {
+  const el = document.getElementById('recent-emo-list');
+  if (timelineData.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.72rem;opacity:.6;padding:4px 0">기록이 없어요</div>';
+    return;
+  }
+  el.innerHTML = timelineData.slice(0, 5).map(e => `
+    <div class="recent-emo-pill">
+      <span class="emo-badge emo-${e.emotion}" style="font-size:.66rem;padding:2px 7px">${esc(e.emotion_label || emotionLabel(e.emotion))}</span>
+      <span class="recent-emo-book-name">${esc(e.book_title||'')}</span>
+    </div>`).join('');
+}
+
+function renderRecentMemos() {
+  const el = document.getElementById('recent-memo-list');
+  if (!el) return;
+  if (memoData.length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:.72rem;opacity:.6;padding:4px 0">아직 메모가 없어요</div>';
+    return;
+  }
+  el.innerHTML = memoData.slice(0, 5).map(m => `
+    <div class="memo-pill" onclick="openBookDetail('${esc(m.book_id || '')}')">
+      <div class="memo-pill-title">${esc(m.book_title || '책 메모')}</div>
+      <div class="memo-pill-body">${esc(m.content || '')}</div>
+    </div>`).join('');
+}
+
+function filterEmo(emo, btn) {
+  currentEmoFilter = emo;
+  document.querySelectorAll('#filter-bar-emotions .fchip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderTimeline();
+}
+
+/* ══════════════════════════════════════
+   STREAK CALCULATION
+══════════════════════════════════════ */
+function calcStreak() {
+  if (timelineData.length === 0) {
+    document.getElementById('st-streak').textContent = '0';
+    return;
+  }
+  const days = [...new Set(timelineData.map(e => e.created_at ? e.created_at.slice(0,10) : null).filter(Boolean))].sort().reverse();
+  let streak = 1;
+  for (let i = 0; i < days.length - 1; i++) {
+    const diff = (new Date(days[i]) - new Date(days[i+1])) / 86400000;
+    if (diff === 1) streak++;
+    else break;
+  }
+  document.getElementById('st-streak').textContent = streak;
+}
+
+/* ══════════════════════════════════════
+   D3: MAIN CONSTELLATION
+══════════════════════════════════════ */
+function renderConstellation() {
+  const wrap  = document.getElementById('const-wrap');
+  const svgEl = document.getElementById('const-svg');
+  const empty = document.getElementById('const-empty');
+  const nodes = (constellationData.nodes || []).map(d => Object.assign({}, d));
+  const links = (constellationData.links || []).map(d => Object.assign({}, d));
+
+  if (nodes.length < 2) {
+    svgEl.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  svgEl.style.display = 'block';
+  empty.style.display = 'none';
+
+  const W = wrap.clientWidth  || 680;
+  const H = wrap.clientHeight || 400;
+  const svg = d3.select(svgEl).attr('viewBox', '0 0 ' + W + ' ' + H);
+  svg.selectAll('*').remove();
+
+  const defs = svg.append('defs');
+  const filt = defs.append('filter').attr('id','cg-glow');
+  filt.append('feGaussianBlur').attr('stdDeviation','3.5').attr('result','blur');
+  const fm = filt.append('feMerge');
+  fm.append('feMergeNode').attr('in','blur');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link',      d3.forceLink(links).id(d => d.id).distance(95))
+    .force('charge',    d3.forceManyBody().strength(-130))
+    .force('center',    d3.forceCenter(W/2, H/2))
+    .force('collision', d3.forceCollide(30));
+
+  const lSel = svg.append('g').selectAll('line').data(links).enter().append('line')
+    .attr('stroke','rgba(193,127,59,.22)').attr('stroke-width',1.3)
+    .attr('stroke-dasharray','5 4')
+    .attr('cursor','pointer')
+    .on('click', (ev, d) => {
+      const s = d.source && d.source.id !== undefined ? d.source.id : d.source;
+      const t = d.target && d.target.id !== undefined ? d.target.id : d.target;
+      openBookConnectionModal(s, t, d);
+    });
+
+  const nSel = svg.append('g').selectAll('g').data(nodes).enter().append('g')
+    .attr('cursor','pointer')
+    .call(d3.drag()
+      .on('start', (ev, d) => { if (!ev.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',  (ev, d) => { d.fx=ev.x; d.fy=ev.y; })
+      .on('end',   (ev, d) => { if (!ev.active) sim.alphaTarget(0); d.fx=null; d.fy=null; })
+    );
+
+  nSel.append('circle').attr('r', 15)
+    .attr('fill','rgba(45,74,62,.85)')
+    .attr('stroke','rgba(193,127,59,.55)').attr('stroke-width',1.6)
+    .attr('filter','url(#cg-glow)');
+
+  nSel.append('text')
+    .text(d => (d.label||d.title||'').slice(0,5))
+    .attr('text-anchor','middle').attr('dominant-baseline','middle')
+    .attr('font-size','7').attr('fill','#E8DCC8').attr('pointer-events','none');
+
+  nSel.append('text')
+    .text(d => (d.label||d.title||'').slice(0,9))
+    .attr('text-anchor','middle').attr('y', 24)
+    .attr('font-size','8').attr('fill','rgba(143,168,154,.75)').attr('pointer-events','none');
+
+  sim.on('tick', () => {
+    lSel.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    nSel.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
+  });
+  renderMemoConnections();
+}
+
+function memoNodeMap() {
+  const map = {};
+  (aiConnectionData.nodes || []).forEach(n => { map[n.id] = n; });
+  return map;
+}
+
+function renderMemoConnections() {
+  const panel = document.getElementById('memo-connection-panel');
+  if (!panel) return;
+  const nodeMap = memoNodeMap();
+  const links = (aiConnectionData.links || aiConnectionData.connections || []).slice(0, 5);
+  if (!links.length) {
+    panel.innerHTML = '<div class="insight-card"><div class="insight-books">메모 연결을 찾는 중입니다</div><div class="insight-snippets">서로 다른 책에 남긴 메모가 쌓이면, 딥다이브 방식의 크로스 인사이트가 이곳에 나타납니다.</div></div>';
+    return;
+  }
+  panel.innerHTML = links.map((l, idx) => {
+    const aId = l.source || l.memo_a_id;
+    const bId = l.target || l.memo_b_id;
+    const a = nodeMap[aId] || {};
+    const b = nodeMap[bId] || {};
+    const score = Math.round(Number(l.similarity || l.strength || 0) * 100);
+    return `<div class="insight-card" id="insight-card-${idx}">
+      <div class="insight-top">
+        <div class="insight-books">${esc(a.title||a.label||'메모')} ↔ ${esc(b.title||b.label||'메모')}</div>
+        <div class="insight-score">${score || 0}% 연결</div>
+      </div>
+      <div class="insight-snippets">
+        <div>${esc(a.snippet||'')}</div>
+        <div>${esc(b.snippet||'')}</div>
+      </div>
+      <button class="mini-action" onclick="openMemoConnectionModal('${esc(aId||'')}','${esc(bId||'')}',${idx})">통찰 모달 열기</button>
+      <button class="mini-action" onclick="createCrossInsight('${esc(aId||'')}','${esc(bId||'')}',${idx})">빠른 인사이트</button>
+    </div>`;
+  }).join('');
+}
+
+function openBookConnectionModal(aId, bId, link) {
+  const a = (constellationData.nodes || []).find(n => String(n.id) === String(aId)) || {};
+  const b = (constellationData.nodes || []).find(n => String(n.id) === String(bId)) || {};
+  const body = document.getElementById('connection-modal-body');
+  const theme = link?.insight || link?.theme || '두 책 사이에 비슷한 정서와 질문이 이어져 있습니다.';
+  body.innerHTML = `<div class="connection-grid">
+    <div class="connection-section"><div class="connection-label">첫 번째 책</div><div class="connection-text"><b>${esc(a.title||a.label||'책')}</b><br>${esc(a.author||'')}<br>${esc(a.genre||'')}</div></div>
+    <div class="connection-section"><div class="connection-label">두 번째 책</div><div class="connection-text"><b>${esc(b.title||b.label||'책')}</b><br>${esc(b.author||'')}<br>${esc(b.genre||'')}</div></div>
+  </div>
+  <div class="connection-section"><div class="connection-label">감성적 연결</div><div class="connection-text">${esc(theme)}</div></div>
+  <div class="connection-section" style="margin-top:12px"><div class="connection-label">통찰 질문</div><div class="connection-text">두 책을 함께 읽을 때 반복해서 떠오르는 감정, 선택, 관계의 패턴은 무엇인가요?</div></div>
+  <div class="connection-actions">
+    <button class="mini-action" onclick="switchMainPanel('emotions');closeModal('modal-connection-insight')">감정 기록으로 이동</button>
+    <button class="mini-action" onclick="location.href='/deepdive'">딥다이브에서 더 보기</button>
+  </div>`;
+  openModal('modal-connection-insight');
+}
+
+function openMemoConnectionModal(aId, bId, idx) {
+  const nodeMap = memoNodeMap();
+  const a = nodeMap[aId] || {};
+  const b = nodeMap[bId] || {};
+  const body = document.getElementById('connection-modal-body');
+  body.innerHTML = `<div class="connection-grid">
+    <div class="connection-section"><div class="connection-label">메모 A</div><div class="connection-text"><b>${esc(a.title||a.label||'메모')}</b><br>${esc(a.snippet||'')}</div></div>
+    <div class="connection-section"><div class="connection-label">메모 B</div><div class="connection-text"><b>${esc(b.title||b.label||'메모')}</b><br>${esc(b.snippet||'')}</div></div>
+  </div>
+  <div class="connection-section"><div class="connection-label">감정의 접점</div><div class="connection-text">두 메모가 같은 질문을 다른 책의 언어로 되풀이하는지, 혹은 서로 반대 방향에서 같은 감정을 비추는지 살펴볼 수 있습니다.</div></div>
+  <div class="connection-section" id="connection-ai-result" style="margin-top:12px"><div class="connection-label">AI 크로스 인사이트</div><div class="connection-text">아래 버튼을 누르면 딥다이브 방식으로 두 메모의 연결 통찰을 생성합니다.</div></div>
+  <div class="connection-actions">
+    <button class="mini-action" onclick="createCrossInsightInModal('${esc(aId||'')}','${esc(bId||'')}')">통찰 생성</button>
+    <button class="mini-action" onclick="location.href='/deepdive'">딥다이브에서 편집</button>
+  </div>`;
+  openModal('modal-connection-insight');
+}
+
+async function createCrossInsightInModal(aId, bId) {
+  const target = document.getElementById('connection-ai-result');
+  if (!target) return;
+  target.innerHTML = '<div class="connection-label">AI 크로스 인사이트</div><div class="connection-text">통찰을 생성하는 중...</div>';
+  try {
+    const data = await apiFetch('/api/ai/cross-insight', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, memo_id_1: aId, memo_id_2: bId })
+    });
+    const text = data.insight_text || (data.insight && data.insight.insight) || data.result || '통찰을 생성하지 못했습니다.';
+    const question = data.insight && data.insight.question ? `<br><br><span style="color:var(--amber)">${esc(data.insight.question)}</span>` : '';
+    target.innerHTML = `<div class="connection-label">AI 크로스 인사이트</div><div class="connection-text">${esc(text)}${question}</div>`;
+  } catch(e) {
+    target.innerHTML = '<div class="connection-label">AI 크로스 인사이트</div><div class="connection-text">통찰 생성에 실패했습니다.</div>';
+  }
+}
+
+async function createCrossInsight(aId, bId, idx) {
+  if (!aId || !bId) return;
+  const card = document.getElementById('insight-card-' + idx);
+  const old = card ? card.innerHTML : '';
+  if (card) card.insertAdjacentHTML('beforeend', '<div class="insight-result">통찰을 연결하는 중...</div>');
+  try {
+    const data = await apiFetch('/api/ai/cross-insight', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, memo_id_1: aId, memo_id_2: bId })
+    });
+    const text = data.insight_text || (data.insight && data.insight.insight) || data.result || '통찰을 생성하지 못했습니다.';
+    const q = data.insight && data.insight.question ? `<div style="margin-top:7px;color:var(--amber)">${esc(data.insight.question)}</div>` : '';
+    const result = card.querySelector('.insight-result');
+    if (result) result.innerHTML = esc(text) + q;
+  } catch(e) {
+    if (card) card.innerHTML = old + '<div class="insight-result">통찰 생성에 실패했습니다.</div>';
+  }
+}
+
+/* ══════════════════════════════════════
+   D3: MINI CONSTELLATION (sidebar)
+══════════════════════════════════════ */
+function renderMiniConst() {
+  const svgEl = document.getElementById('mini-const-svg');
+  if (!svgEl) return;
+  const nodes = (constellationData.nodes || []).slice(0, 8).map(d => Object.assign({}, d));
+  const allIds = nodes.map(n => n.id);
+  const links = (constellationData.links || []).filter(l => {
+    const s = l.source && l.source.id !== undefined ? l.source.id : l.source;
+    const t = l.target && l.target.id !== undefined ? l.target.id : l.target;
+    return allIds.includes(s) && allIds.includes(t);
+  }).map(d => Object.assign({}, d));
+
+  if (nodes.length < 2) return;
+
+  const W = 192, H = 300;
+  const svg = d3.select(svgEl).attr('viewBox', '0 0 ' + W + ' ' + H);
+  svg.selectAll('*').remove();
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link',      d3.forceLink(links).id(d => d.id).distance(52))
+    .force('charge',    d3.forceManyBody().strength(-65))
+    .force('center',    d3.forceCenter(W/2, H/2))
+    .force('collision', d3.forceCollide(16));
+
+  const lSel = svg.append('g').selectAll('line').data(links).enter().append('line')
+    .attr('stroke','rgba(193,127,59,.2)').attr('stroke-width',1);
+
+  const nSel = svg.append('g').selectAll('circle').data(nodes).enter().append('circle')
+    .attr('r', 8).attr('fill','rgba(45,74,62,.85)')
+    .attr('stroke','rgba(193,127,59,.45)').attr('stroke-width',1.2);
+
+  sim.on('tick', () => {
+    lSel.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    nSel.attr('cx',d=>d.x).attr('cy',d=>d.y);
+  });
+}
+
+/* ══════════════════════════════════════
+   BOOK SEARCH
+══════════════════════════════════════ */
+function debounceBookSearch(q) {
+  clearTimeout(bookSearchTimeout);
+  bookSearchTimeout = setTimeout(() => searchBooks(q), 380);
+}
+
+async function searchBooks(q) {
+  const res = document.getElementById('book-search-results');
+  if (!q || q.trim().length < 1) { res.innerHTML = ''; return; }
+  res.innerHTML = '<div style="color:var(--sub);font-size:.74rem;padding:8px 4px;opacity:.7">검색 중…</div>';
+  try {
+    const data = await apiFetch('/api/v2/books/search?q=' + encodeURIComponent(q));
+    const books = data.books || data.results || data || [];
+    if (books.length === 0) {
+      res.innerHTML = '<div style="color:var(--sub);font-size:.74rem;padding:8px 4px;opacity:.7">검색 결과가 없어요</div>';
+      return;
+    }
+    res.innerHTML = books.slice(0, 8).map((b, i) => `
+      <div class="search-result-row" onclick="selectSearchBook(${i})" data-idx="${i}">
+        <div class="sr-thumb">
+          <img src="${esc(b.cover_url||b.thumbnail||'')}" alt=""
+            onerror="this.style.display='none'">
+        </div>
+        <div class="sr-info">
+          <div class="sr-title">${esc(b.title)}</div>
+          <div class="sr-author">${esc(b.author||b.authors||'저자 미상')}</div>
+        </div>
+      </div>`).join('');
+    // store results for selection
+    window._bookSearchCache = books.slice(0, 8);
+  } catch(e) {
+    res.innerHTML = '<div style="color:var(--sub);font-size:.74rem;padding:8px 4px;opacity:.7">오류가 발생했어요. 다시 시도해주세요.</div>';
+  }
+}
+
+function selectSearchBook(idx) {
+  const books = window._bookSearchCache || [];
+  const b = books[idx];
+  if (!b) return;
+  selectedBookObj = b;
+  document.getElementById('book-search-results').innerHTML = '';
+  document.getElementById('book-search-input').value = b.title;
+  const info = document.getElementById('selected-book-info');
+  const disp = document.getElementById('selected-book-display');
+  info.style.display = 'block';
+  disp.innerHTML = `
+    <div class="sr-thumb">
+      <img src="${esc(b.cover_url||b.thumbnail||'')}" alt="" onerror="this.style.display='none'">
+    </div>
+    <div class="sr-info">
+      <div class="sr-title">${esc(b.title)}</div>
+      <div class="sr-author">${esc(b.author||b.authors||'저자 미상')}</div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════
+   FORM SELECTORS
+══════════════════════════════════════ */
+function selectStatus(btn) {
+  selectedStatus = btn.dataset.status;
+  document.querySelectorAll('#modal-add-book .status-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('progress-field').style.display = selectedStatus === 'want' ? 'none' : 'block';
+  if (selectedStatus === 'done') {
+    document.getElementById('book-progress').value = 100;
+    document.getElementById('progress-val').textContent = '100%';
+  }
+}
+
+function selectEmo(btn) {
+  selectedEmo = btn.dataset.emo;
+  document.querySelectorAll('#modal-log-emotion .emo-chip-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ══════════════════════════════════════
+   MODALS
+══════════════════════════════════════ */
+function openAddBook() {
+  editingBookId = '';
+  selectedBookObj = null;
+  selectedStatus  = 'reading';
+  document.querySelector('#modal-add-book .modal-head-title').textContent = '책 추가하기';
+  document.getElementById('btn-submit-book').textContent = '✦ 서재에 추가하기';
+  document.getElementById('book-search-input').value = '';
+  document.getElementById('book-search-input').disabled = false;
+  document.getElementById('book-search-results').innerHTML = '';
+  document.getElementById('selected-book-info').style.display = 'none';
+  document.getElementById('progress-field').style.display = 'block';
+  document.getElementById('book-progress').value = 0;
+  document.getElementById('progress-val').textContent = '0%';
+  document.querySelectorAll('#modal-add-book .status-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  openModal('modal-add-book');
+}
+
+function openEditBook(id) {
+  const b = shelfData.find(x => String(x.book_id || x.id) === String(id));
+  if (!b) return;
+  editingBookId = String(b.book_id || b.id);
+  selectedBookObj = b;
+  selectedStatus = b.status || 'reading';
+  document.querySelector('#modal-add-book .modal-head-title').textContent = '책 기록 수정하기';
+  document.getElementById('btn-submit-book').textContent = '변경사항 저장';
+  document.getElementById('book-search-input').value = b.title || '';
+  document.getElementById('book-search-input').disabled = true;
+  document.getElementById('book-search-results').innerHTML = '';
+  document.getElementById('selected-book-info').style.display = 'none';
+  document.querySelectorAll('#modal-add-book .status-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === selectedStatus);
+  });
+  document.getElementById('progress-field').style.display = selectedStatus === 'want' ? 'none' : 'block';
+  document.getElementById('book-progress').value = Number(b.progress || 0);
+  document.getElementById('progress-val').textContent = Number(b.progress || 0) + '%';
+  openModal('modal-add-book');
+}
+
+function openLogEmotion() {
+  editingEmotionId = '';
+  const sel = document.getElementById('emo-book-select');
+  sel.innerHTML = '<option value="">— 책을 선택하세요 —</option>' +
+    shelfData.map(b => `<option value="${esc(b.book_id || b.id)}">${esc(b.title)}</option>`).join('');
+  selectedEmo = '';
+  document.getElementById('emo-quote').value = '';
+  document.querySelectorAll('#modal-log-emotion .emo-chip-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#modal-log-emotion .modal-head-title').textContent = '감정 기록하기';
+  document.getElementById('btn-submit-emotion').textContent = '✦ 감정 기록하기';
+  openModal('modal-log-emotion');
+}
+
+function editEmotion(emotionId) {
+  const e = timelineData.find(x => String(x.emotion_id || '') === String(emotionId));
+  if (!e) return;
+  editingEmotionId = emotionId;
+  const sel = document.getElementById('emo-book-select');
+  sel.innerHTML = '<option value="">— 책을 선택하세요 —</option>' +
+    shelfData.map(b => `<option value="${esc(b.book_id || b.id)}">${esc(b.title)}</option>`).join('');
+  sel.value = e.book_id || '';
+  selectedEmo = e.emotion || e.emotion_type || '';
+  document.getElementById('emo-quote').value = e.quote || e.note || e.memo || '';
+  document.querySelectorAll('#modal-log-emotion .emo-chip-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.emo === selectedEmo);
+  });
+  document.querySelector('#modal-log-emotion .modal-head-title').textContent = '감정 기록 수정하기';
+  document.getElementById('btn-submit-emotion').textContent = '수정 저장하기';
+  openModal('modal-log-emotion');
+}
+
+async function deleteEmotion(emotionId) {
+  if (!emotionId || !confirm('이 감정 기록을 삭제할까요?')) return;
+  const qs = userId ? '?user_id=' + encodeURIComponent(userId) : '';
+  const res = await apiFetch('/api/v2/emotions/' + encodeURIComponent(emotionId) + qs, { method:'DELETE' });
+  if (!res.ok) { alert(res.error || '삭제 실패'); return; }
+  await Promise.all([loadTimeline(), loadConstellation()]);
+  calcStreak();
+  updateStats();
+}
+
+async function openBookDetail(id) {
+  const b = shelfData.find(x => String(x.book_id || x.id) === String(id));
+  if (!b) return;
+  currentDetailBookId = String(b.book_id || b.id || '');
+  try {
+    const qs = '?book_id=' + encodeURIComponent(b.book_id || b.id) + '&limit=50' + (userId ? '&user_id=' + encodeURIComponent(userId) : '');
+    const fresh = await apiFetch('/api/v2/memos' + qs);
+    const freshMemos = fresh.memos || [];
+    const others = memoData.filter(m => String(m.book_id || '') !== String(b.book_id || b.id));
+    memoData = freshMemos.concat(others);
+    renderRecentMemos();
+  } catch(e) {}
+  const sl = statusLabel(b.status);
+  const bookMemos = memoData.filter(m => String(m.book_id || '') === String(b.book_id || b.id));
+  const bookEmotions = timelineData.filter(e => String(e.book_id || '') === String(b.book_id || b.id));
+  const body = document.getElementById('book-detail-body');
+  body.innerHTML = `
+    <div class="detail-book">
+      <div class="detail-cover">
+        ${b.cover_url ? `<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" onerror="this.style.display='none'">` : '<span>📚</span>'}
+      </div>
+      <div>
+        <div class="detail-title">${esc(b.title)}</div>
+        <div class="detail-meta">
+          ${b.author ? `저자: ${esc(b.author)}<br>` : ''}
+          ${b.publisher ? `출판사: ${esc(b.publisher)}<br>` : ''}
+          상태: ${sl.text}<br>
+          ${b.status === 'reading' ? `진도: ${Number(b.progress || 0)}%<br>` : ''}
+          ${b.isbn ? `ISBN: ${esc(b.isbn)}<br>` : ''}
+        </div>
+        <div class="detail-actions">
+          <button class="mini-action" onclick="openEditBook('${esc(b.book_id || b.id)}')">책 기록 수정</button>
+          <button class="mini-action danger" onclick="deleteShelfBook('${esc(b.book_id || b.id)}')">서재에서 삭제</button>
+          <button class="mini-action" onclick="openBookExploreById('${esc(b.book_id || b.id)}')">책 설명 더 보기</button>
+          <button class="mini-action" onclick="openBookLectureById('${esc(b.book_id || b.id)}')">강의 연결</button>
+        </div>
+      </div>
+    </div>
+    ${b.description ? `<div class="detail-section"><div class="detail-section-title">Book Note</div><div class="detail-memo-body">${esc(b.description)}</div></div>` : ''}
+    <div class="detail-section">
+      <div class="detail-section-title">읽으며 남긴 메모</div>
+      ${bookMemos.length ? bookMemos.map(m => `
+        <div class="detail-memo" data-memo-id="${esc(m.memo_id || '')}">
+          <div class="detail-memo-date">${esc(formatDate(m.created_at))}</div>
+          <div class="detail-memo-body">${esc(m.content || '')}</div>
+          <div class="detail-memo-actions"><button class="detail-memo-action" onclick="editMemo('${esc(m.memo_id || '')}')">수정</button><button class="detail-memo-action danger" onclick="deleteMemo('${esc(m.memo_id || '')}')">삭제</button></div>
+        </div>`).join('') : '<div class="detail-meta">아직 이 책에 남긴 메모가 없습니다.</div>'}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">감정 기록</div>
+      ${bookEmotions.length ? bookEmotions.map(e => `
+        <div class="detail-memo">
+          <div class="detail-memo-date"><span class="emo-badge emo-${esc(e.emotion)}">${esc(e.emotion_label || emotionLabel(e.emotion))}</span> ${esc(formatDate(e.created_at))}</div>
+          <div class="detail-memo-body">${esc(e.quote || e.note || '')}</div>
+          <div class="emo-actions">
+            <button class="emo-action" onclick="editEmotion('${esc(e.emotion_id || '')}')">수정</button>
+            <button class="emo-action danger" onclick="deleteEmotion('${esc(e.emotion_id || '')}')">삭제</button>
+          </div>
+        </div>`).join('') : '<div class="detail-meta">아직 이 책에 기록한 감정이 없습니다.</div>'}
+    </div>`;
+  openModal('modal-book-detail');
+}
+
+async function editMemo(memoId) {
+  if (!memoId) return;
+  const memo = memoData.find(m => String(m.memo_id || '') === String(memoId));
+  const next = prompt('메모를 수정하세요.', memo ? memo.content || '' : '');
+  if (next === null) return;
+  const content = next.trim();
+  if (!content) { alert('메모 내용을 입력해주세요.'); return; }
+  const res = await apiFetch('/api/v2/memos/' + encodeURIComponent(memoId), {
+    method: 'PUT',
+    body: JSON.stringify({
+      user_id: userId,
+      book_id: memo ? memo.book_id : currentDetailBookId,
+      content,
+      tags: memo ? memo.tags || [] : []
+    })
+  });
+  if (!res.ok) { alert(res.error || '수정 실패'); return; }
+  await loadMemos();
+  if (currentDetailBookId) openBookDetail(currentDetailBookId);
+}
+
+async function deleteMemo(memoId) {
+  if (!memoId || !confirm('이 메모를 삭제할까요?')) return;
+  const qs = userId ? '?user_id=' + encodeURIComponent(userId) : '';
+  const res = await apiFetch('/api/v2/memos/' + encodeURIComponent(memoId) + qs, { method: 'DELETE' });
+  if (!res.ok) { alert(res.error || '삭제 실패'); return; }
+  memoData = memoData.filter(m => String(m.memo_id || '') !== String(memoId));
+  renderRecentMemos();
+  if (currentDetailBookId) openBookDetail(currentDetailBookId);
+}
+
+function bookById(id) {
+  return shelfData.find(x => String(x.book_id || x.id) === String(id)) || {};
+}
+
+function openBookExploreById(id) {
+  const b = bookById(id);
+  openBookExplore(b.title || '', b.author || '');
+}
+
+function openBookLectureById(id) {
+  const b = bookById(id);
+  openBookLecture(b.title || '', b.author || '');
+}
+
+function openBookExplore(title, author) {
+  const q = [title, author, '책 소개 줄거리 해설'].filter(Boolean).join(' ');
+  window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank', 'noopener');
+}
+
+function openBookLecture(title, author) {
+  const q = [title, author, '강의 해설'].filter(Boolean).join(' ');
+  window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(q), '_blank', 'noopener');
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+/* ══════════════════════════════════════
+   SUBMIT: ADD BOOK
+══════════════════════════════════════ */
+async function submitShelfBook() {
+  if (editingBookId) return submitEditBook();
+  return submitAddBook();
+}
+
+async function submitAddBook() {
+  const titleInput = document.getElementById('book-search-input').value.trim();
+  if (!selectedBookObj && !titleInput) {
+    alert('책을 검색하거나 제목을 입력해주세요.');
+    return;
+  }
+  const payload = {
+    user_id:   userId,
+    title:     selectedBookObj ? selectedBookObj.title   : titleInput,
+    author:    selectedBookObj ? (selectedBookObj.author||selectedBookObj.authors||'') : '',
+    cover_url: selectedBookObj ? (selectedBookObj.cover_url||selectedBookObj.thumbnail||'') : '',
+    isbn:      selectedBookObj ? (selectedBookObj.isbn||'') : '',
+    publisher: selectedBookObj ? (selectedBookObj.publisher||'') : '',
+    published_date: selectedBookObj ? (selectedBookObj.published_date||selectedBookObj.publishedDate||'') : '',
+    description: selectedBookObj ? (selectedBookObj.description||'') : '',
+    total_pages: selectedBookObj ? (selectedBookObj.total_pages||0) : 0,
+    status:    selectedStatus,
+    progress:  selectedStatus === 'reading' ? parseInt(document.getElementById('book-progress').value) :
+               selectedStatus === 'done'    ? 100 : 0,
+  };
+  try {
+    await apiFetch('/api/v2/shelf/books', { method:'POST', body: JSON.stringify(payload) });
+    closeModal('modal-add-book');
+    await loadShelf();
+    await loadConstellation();
+    await loadMemoConnections();
+  } catch(e) {
+    alert('책 추가 중 오류가 발생했어요. 다시 시도해주세요.');
+  }
+}
+
+async function submitEditBook() {
+  const progress = selectedStatus === 'done' ? 100 : selectedStatus === 'want' ? 0 : parseInt(document.getElementById('book-progress').value || '0');
+  try {
+    const res = await apiFetch('/api/v2/shelf/books/' + encodeURIComponent(editingBookId), {
+      method: 'PUT',
+      body: JSON.stringify({ user_id: userId, status: selectedStatus, progress })
+    });
+    if (!res.ok) { alert(res.error || '수정 실패'); return; }
+    closeModal('modal-add-book');
+    editingBookId = '';
+    await Promise.all([loadShelf(), loadConstellation(), loadMemoConnections()]);
+  } catch(e) {
+    alert('책 기록 수정 중 오류가 발생했어요.');
+  }
+}
+
+async function deleteShelfBook(id) {
+  if (!id || !confirm('이 책을 내 서재에서 삭제할까요?')) return;
+  try {
+    const qs = userId ? '?user_id=' + encodeURIComponent(userId) : '';
+    const res = await apiFetch('/api/v2/shelf/books/' + encodeURIComponent(id) + qs, { method: 'DELETE' });
+    if (!res.ok) { alert(res.error || '삭제 실패'); return; }
+    if (currentDetailBookId === String(id)) {
+      closeModal('modal-book-detail');
+      currentDetailBookId = '';
+    }
+    await Promise.all([loadShelf(), loadConstellation(), loadMemoConnections()]);
+  } catch(e) {
+    alert('책 삭제 중 오류가 발생했어요.');
+  }
+}
+
+/* ══════════════════════════════════════
+   SUBMIT: EMOTION LOG
+══════════════════════════════════════ */
+async function submitEmotion() {
+  if (!selectedEmo) { alert('감정을 선택해주세요.'); return; }
+  const bookId = document.getElementById('emo-book-select').value;
+  const quote  = document.getElementById('emo-quote').value.trim();
+  const book   = shelfData.find(b => String(b.book_id || b.id) === String(bookId));
+  const payload = {
+    user_id:    userId,
+    book_id:    bookId,
+    emotion:    selectedEmo,
+    intensity:  4,
+    note:       quote,
+  };
+  if (!bookId) { alert('책을 선택해주세요.'); return; }
+  try {
+    if (editingEmotionId) {
+      await apiFetch('/api/v2/emotions/' + encodeURIComponent(editingEmotionId), {
+        method:'PUT',
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await apiFetch('/api/v2/emotions', { method:'POST', body: JSON.stringify(payload) });
+    }
+    if (quote && !editingEmotionId) {
+      await apiFetch('/api/v2/memos', {
+        method:'POST',
+        body: JSON.stringify({
+          user_id: userId,
+          book_id: bookId,
+          content: quote,
+          tags: [selectedEmo],
+          source: 'manual'
+        })
+      });
+    }
+    editingEmotionId = '';
+    closeModal('modal-log-emotion');
+    await Promise.all([loadTimeline(), loadMemos(), loadConstellation(), loadMemoConnections()]);
+    calcStreak();
+    updateStats();
+  } catch(e) {
+    alert('감정 기록 중 오류가 발생했어요. 다시 시도해주세요.');
+  }
+}
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function formatDate(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value).slice(0, 10);
+  return d.toLocaleDateString('ko-KR', { year:'numeric', month:'short', day:'numeric' });
+}
+
+/* ══════════════════════════════════════
+   ROTATING TAGLINE
+══════════════════════════════════════ */
+(function(){
+  const phrases=[
+    {t:'생각은 빛이 된다',ko:true},
+    {t:'읽을수록 더 깊은 우주로',ko:true},
+    {t:'당신의 생각은 하나의 우주가 됩니다',ko:true},
+    {t:'한 문장이 하나의 별이 되듯',ko:true},
+    {t:'책으로 시작된 생각의 우주',ko:true},
+    {t:'Where Thoughts Become Constellations',ko:false},
+    {t:'Read. Think. Expand.',ko:false},
+    {t:'Illuminate Your Thoughts',ko:false},
+  ];
+  const el = document.getElementById('luma-tagline');
+  if (!el) return;
+  let i = 0;
+  function show(idx) {
+    const p = phrases[idx];
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-5px)';
+    setTimeout(() => {
+      el.textContent = p.t;
+      el.style.fontFamily    = p.ko ? "'Pretendard',sans-serif" : "'Cinzel','DM Serif Display',serif";
+      el.style.letterSpacing = p.ko ? '.05em' : '.14em';
+      el.style.opacity       = '1';
+      el.style.transform     = 'translateY(0)';
+    }, 500);
+  }
+  show(0);
+  setInterval(() => { i = (i + 1) % phrases.length; show(i); }, 10000);
+})();
+
+/* ══════════════════════════════════════
+   BOOT
+══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async () => {
+  initNav();
+  initStars();
+  await Promise.all([
+    loadShelf(),
+    loadTimeline(),
+    loadMemos(),
+    loadConstellation(),
+    loadMemoConnections(),
+    loadPersona(),
+  ]);
+  calcStreak();
+  updateStats();
+});
+</script>
+</body>
+</html>

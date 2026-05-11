@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMA OCR 스캔</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Cinzel:wght@400;500&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #071019;
+  --panel: #0e1a24;
+  --panel-2: #132433;
+  --text: #eef6fb;
+  --muted: #9eb3c2;
+  --line: rgba(255,255,255,.12);
+  --cyan: #86d9ff;
+  --gold: #f1c56a;
+  --green: #7ee2a8;
+  --red: #ff8d8d;
+  --gold-lt: #ffe8a1;
+  --card: rgba(255,255,255,.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(134,217,255,.18), transparent 34rem),
+    radial-gradient(circle at 86% 12%, rgba(241,197,106,.12), transparent 28rem),
+    var(--bg);
+  color: var(--text);
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+#stars-cv { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .7; }
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 28px;
+  background: rgba(5,8,21,.96);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+}
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+.nav { display: flex; gap: 3px; }
+.npill {
+  padding: 6px 14px;
+  border-radius: 18px;
+  font-size: .76rem;
+  color: var(--muted);
+  transition: .18s;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.npill:hover { color: var(--text); background: var(--card); }
+.npill.active {
+  color: #07101f;
+  background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+  border-color: transparent;
+}
+.nav-user { display: flex; align-items: center; gap: 8px; font-size: .72rem; color: var(--muted); }
+.nav-login-btn {
+  background: rgba(241,197,106,.1);
+  border: 1px solid rgba(241,197,106,.3);
+  color: var(--gold);
+  padding: 6px 14px;
+  border-radius: 18px;
+  font-size: .76rem;
+}
+.nav-logout {
+  background: rgba(255,141,141,.08);
+  border: 1px solid rgba(255,141,141,.22);
+  color: var(--red);
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: .72rem;
+  cursor: pointer;
+}
+.page { width: min(1120px, calc(100% - 32px)); margin: 34px auto 70px; }
+.hero { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 22px; }
+.hero h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 44px); letter-spacing: 0; }
+.hero p { margin: 0; color: var(--muted); line-height: 1.7; }
+.status { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #657789; }
+.status.online { color: var(--green); border-color: rgba(126,226,168,.35); }
+.status.online .dot { background: var(--green); }
+.status.offline { color: var(--red); border-color: rgba(255,141,141,.35); }
+.status.offline .dot { background: var(--red); }
+.grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 18px; align-items: start; }
+.panel {
+  background: rgba(14,26,36,.82);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(0,0,0,.28);
+}
+.panel-head { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.panel-title { margin: 0; font-size: 16px; }
+.panel-sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.panel-body { padding: 20px; }
+.drop {
+  display: grid;
+  place-items: center;
+  min-height: 230px;
+  padding: 26px;
+  border: 1px dashed rgba(134,217,255,.45);
+  border-radius: 8px;
+  background: rgba(134,217,255,.05);
+  text-align: center;
+  cursor: pointer;
+}
+.drop.drag { background: rgba(134,217,255,.1); border-color: var(--cyan); }
+.drop strong { display: block; margin-bottom: 8px; }
+.drop span { color: var(--muted); font-size: 13px; }
+.preview { display: none; margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; background: #020509; overflow: hidden; }
+.preview.visible { display: block; }
+.preview img { display: block; width: 100%; max-height: 360px; object-fit: contain; }
+.fields { display: grid; grid-template-columns: 1fr 120px; gap: 10px; margin-bottom: 12px; }
+input, textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(4,9,14,.8);
+  color: var(--text);
+  padding: 11px 12px;
+  font: inherit;
+  outline: none;
+}
+textarea { min-height: 240px; resize: vertical; line-height: 1.7; }
+input:focus, textarea:focus { border-color: rgba(134,217,255,.65); }
+.buttons { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  padding: 10px 13px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+button:hover { border-color: rgba(255,255,255,.28); background: rgba(255,255,255,.08); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.primary { border-color: rgba(134,217,255,.55); color: var(--cyan); background: rgba(134,217,255,.1); }
+.gold { border-color: rgba(241,197,106,.55); color: var(--gold); background: rgba(241,197,106,.09); }
+.green { border-color: rgba(126,226,168,.5); color: var(--green); background: rgba(126,226,168,.08); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+.chip { display: inline-flex; padding: 4px 8px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.04); }
+.result { display: grid; gap: 12px; }
+.card { border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.035); padding: 14px; }
+.card h3 { margin: 0 0 8px; font-size: 14px; color: var(--cyan); }
+.card p { margin: 0; color: var(--muted); line-height: 1.65; font-size: 13px; }
+.memo-text { color: var(--text) !important; font-size: 15px !important; }
+.list { display: grid; gap: 8px; }
+.item { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: rgba(0,0,0,.12); }
+.item-title { font-size: 13px; line-height: 1.45; }
+.item-meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%) translateY(90px);
+  opacity: 0;
+  transition: .25s;
+  z-index: 20;
+  max-width: min(520px, calc(100% - 28px));
+  padding: 11px 16px;
+  border: 1px solid rgba(134,217,255,.35);
+  border-radius: 8px;
+  background: rgba(14,26,36,.96);
+  color: var(--cyan);
+  font-size: 13px;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+@media (max-width: 860px) {
+  .grid, .fields { grid-template-columns: 1fr; }
+  .hero { display: block; }
+  .status { margin-top: 16px; }
+  .topbar { padding: 0 16px; }
+  .nav { display: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="stars-cv"></canvas>
+
+<header class="topbar">
+  <a href="/" class="logo">
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:32px;object-fit:contain" onerror="this.style.display='none'">
+    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
+      <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--gold);line-height:1">LUMA</span>
+      <span id="luma-tagline" style="font-size:.58rem;color:var(--muted);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    </div>
+  </a>
+  <nav class="nav">
+    <a href="/" class="npill">별자리 지도</a>
+    <a href="/heart" class="npill">마음 행성계</a>
+    <a href="/lounge" class="npill">탐사 성운</a>
+    <a href="/social" class="npill">독자 광장</a>
+    <a href="/live" class="npill">라이브</a>
+    <a href="/socrates" class="npill">소크라테스</a>
+    <a href="/profile" class="npill">프로필</a>
+  </nav>
+  <div class="nav-user" id="nav-user"></div>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <div>
+      <h1>OCR 스캔 독서 메모 스튜디오</h1>
+      <p>책 페이지를 스캔하고, 추출한 문장을 정리한 뒤 메모로 저장하고 분석까지 이어갑니다.</p>
+    </div>
+    <div class="status" id="status-badge"><span class="dot"></span><span id="status-text">상태 확인 중</span></div>
+  </section>
+
+  <section class="grid">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">1. 이미지 입력</h2>
+          <p class="panel-sub">JPG, PNG, WEBP 이미지를 올리거나 모바일 카메라로 촬영하세요.</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <label class="drop" id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" hidden>
+          <span>
+            <strong>이미지를 선택하거나 여기에 놓기</strong>
+            최대 10MB까지 처리합니다.
+          </span>
+        </label>
+        <div class="preview" id="preview-area"><img id="preview-img" alt="업로드 이미지 미리보기"></div>
+        <div class="buttons">
+          <button class="primary" id="btn-scan" onclick="runScan()" disabled>OCR 추출</button>
+          <button onclick="openCamera()">카메라 촬영</button>
+          <button onclick="clearUpload()">초기화</button>
+        </div>
+        <div class="meta" id="scan-meta"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">2. 텍스트와 책 정보</h2>
+          <p class="panel-sub">추출 결과를 직접 다듬고, 책 제목을 입력하면 저장과 분석 품질이 좋아집니다.</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="fields">
+          <input id="book-title" placeholder="책 제목">
+          <input id="page-number" type="number" min="1" placeholder="쪽수">
+        </div>
+        <textarea id="extracted-text" placeholder="OCR로 추출한 텍스트가 여기에 표시됩니다. 직접 붙여넣어도 분석할 수 있습니다."></textarea>
+        <div class="meta"><span class="chip"><span id="char-count">0</span>자</span><span class="chip" id="book-detect-chip">책 정보 미감지</span></div>
+        <div class="buttons">
+          <button class="primary" onclick="enhanceText()">텍스트 개선</button>
+          <button onclick="detectBookCover()">표지에서 책 정보 감지</button>
+          <button class="gold" onclick="generateMemo()">메모 초안 생성</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid" style="margin-top:18px;">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">3. 메모 저장</h2>
+          <p class="panel-sub">생성된 초안을 검토한 뒤 데이터베이스에 OCR 메모로 저장합니다.</p>
+        </div>
+      </div>
+      <div class="panel-body result">
+        <div class="card">
+          <h3>메모 초안</h3>
+          <p class="memo-text" id="memo-draft">아직 생성된 메모가 없습니다.</p>
+          <div class="meta" id="memo-tags"></div>
+        </div>
+        <div class="buttons">
+          <button class="green" onclick="saveMemo()">DB 저장 + 분석</button>
+          <button onclick="askSocrates()">소크라테스로 보내기</button>
+        </div>
+        <div class="card" id="save-result" style="display:none;">
+          <h3>저장 결과</h3>
+          <p id="save-result-text"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">4. 분석과 자료 추출</h2>
+          <p class="panel-sub">현재 텍스트로 키워드, 주제, 질문, 관련 자료를 한 번에 가져옵니다.</p>
+        </div>
+      </div>
+      <div class="panel-body result">
+        <div class="buttons" style="margin-top:0;">
+          <button class="primary" id="btn-pipeline" onclick="runPipeline()">전체 분석 실행</button>
+        </div>
+        <div class="card" id="analysis-card">
+          <h3>분석</h3>
+          <p id="analysis-text">분석 결과가 여기에 표시됩니다.</p>
+          <div class="meta" id="analysis-tags"></div>
+        </div>
+        <div class="card">
+          <h3>YouTube</h3>
+          <div class="list" id="yt-results"><p>관련 영상이 아직 없습니다.</p></div>
+        </div>
+        <div class="card">
+          <h3>학술 자료</h3>
+          <div class="list" id="paper-results"><p>관련 자료가 아직 없습니다.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = {
+  status: '/api/ocr/status',
+  scan: '/api/ocr/scan',
+  enhance: '/api/ocr/enhance',
+  bookCover: '/api/ocr/book-cover',
+  generateMemo: '/api/ocr/generate-memo',
+  saveMemo: '/api/ocr/save-memo',
+  pipeline: '/api/ocr/full-pipeline'
+};
+
+function initStars() {
+  const canvas = $('stars-cv');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let width = 0;
+  let height = 0;
+  let stars = [];
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    stars = Array.from({ length: Math.max(80, Math.floor(width * height / 9000)) }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() * 1.2 + .2,
+      a: Math.random() * .7 + .2,
+      d: (Math.random() - .5) * .006
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+    for (const star of stars) {
+      star.a += star.d;
+      if (star.a < .15 || star.a > .95) star.d *= -1;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(230,240,255,${star.a})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();
+  draw();
+  window.addEventListener('resize', resize);
+}
+
+function initNav() {
+  const el = $('nav-user');
+  if (!el) return;
+  const user = JSON.parse(localStorage.getItem('luma_user') || '{}');
+  if (user.display_name || user.email) {
+    el.innerHTML = `<span>${user.emoji || '✨'}</span><span style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${user.display_name || user.email}</span><button onclick="logout()" class="nav-logout">로그아웃</button>`;
+  } else {
+    el.innerHTML = '<a href="/auth/login" class="nav-login-btn">로그인</a>';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('luma_token');
+  localStorage.removeItem('luma_user');
+  window.location.href = '/auth/login';
+}
+
+function initTagline() {
+  const phrases = [
+    { t: '생각은 빛이 된다', ko: true },
+    { t: '읽을수록 더 깊은 우주로', ko: true },
+    { t: '문장 하나가 별이 되듯', ko: true },
+    { t: 'Where Thoughts Become Constellations', ko: false },
+    { t: 'Read. Think. Expand.', ko: false }
+  ];
+  const el = $('luma-tagline');
+  if (!el) return;
+  let i = 0;
+  setInterval(() => {
+    i = (i + 1) % phrases.length;
+    const phrase = phrases[i];
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-5px)';
+    setTimeout(() => {
+      el.textContent = phrase.t;
+      el.style.fontFamily = phrase.ko ? "'Pretendard',sans-serif" : "'Cinzel','DM Serif Display',serif";
+      el.style.letterSpacing = phrase.ko ? '.05em' : '.14em';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 450);
+  }, 9000);
+}
+
+const state = {
+  file: null,
+  generatedMemo: null,
+  savedMemo: null,
+  analysis: null
+};
+
+const $ = (id) => document.getElementById(id);
+
+function authHeaders(extra = {}) {
+  const token = localStorage.getItem('luma_token');
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
+}
+
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.error || `요청 실패 (${response.status})`);
+  }
+  return data;
+}
+
+function showToast(message) {
+  const toast = $('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function setBusy(buttonId, busy, label) {
+  const button = $(buttonId);
+  if (!button) return;
+  if (!button.dataset.label) button.dataset.label = button.textContent;
+  button.disabled = busy;
+  button.textContent = busy ? label : button.dataset.label;
+}
+
+async function checkStatus() {
+  const badge = $('status-badge');
+  const text = $('status-text');
+  try {
+    const data = await fetchJson(API.status);
+    badge.classList.add('online');
+    badge.classList.remove('offline');
+    text.textContent = data.mode === 'gemini-vision' ? 'Gemini OCR 초기화됨' : 'Mock OCR 모드';
+  } catch (error) {
+    badge.classList.add('offline');
+    badge.classList.remove('online');
+    text.textContent = 'OCR 오프라인';
+  }
+}
+
+function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    showToast('이미지 파일만 업로드할 수 있습니다.');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('이미지는 10MB 이하로 올려주세요.');
+    return;
+  }
+  state.file = file;
+  $('btn-scan').disabled = false;
+  $('scan-meta').innerHTML = `<span class="chip">${file.name}</span><span class="chip">${Math.round(file.size / 1024).toLocaleString()}KB</span>`;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    $('preview-img').src = event.target.result;
+    $('preview-area').classList.add('visible');
+  };
+  reader.readAsDataURL(file);
+}
+
+function openCamera() {
+  $('file-input').setAttribute('capture', 'environment');
+  $('file-input').click();
+}
+
+function clearUpload() {
+  state.file = null;
+  state.generatedMemo = null;
+  state.savedMemo = null;
+  state.analysis = null;
+  $('file-input').value = '';
+  $('preview-img').src = '';
+  $('preview-area').classList.remove('visible');
+  $('btn-scan').disabled = true;
+  $('scan-meta').innerHTML = '';
+  $('extracted-text').value = '';
+  $('memo-draft').textContent = '아직 생성된 메모가 없습니다.';
+  $('memo-tags').innerHTML = '';
+  $('save-result').style.display = 'none';
+  renderAnalysis(null);
+  renderResources({ youtube: [], papers: [] });
+  updateCharCount();
+}
+
+async function runScan() {
+  if (!state.file) {
+    showToast('먼저 이미지를 선택해주세요.');
+    return;
+  }
+  const form = new FormData();
+  form.append('image', state.file);
+  setBusy('btn-scan', true, '추출 중...');
+  try {
+    const data = await fetchJson(API.scan, { method: 'POST', body: form });
+    $('extracted-text').value = data.text || '';
+    $('scan-meta').innerHTML = `
+      <span class="chip">source: ${data.source || 'unknown'}</span>
+      <span class="chip">confidence: ${Math.round((data.confidence || 0) * 100)}%</span>
+      <span class="chip">${data.char_count || 0}자</span>
+    `;
+    updateCharCount();
+    showToast('텍스트 추출이 완료되었습니다.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    setBusy('btn-scan', false);
+  }
+}
+
+async function enhanceText() {
+  const text = $('extracted-text').value.trim();
+  if (!text) {
+    showToast('개선할 텍스트가 필요합니다.');
+    return;
+  }
+  try {
+    const data = await fetchJson(API.enhance, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ text })
+    });
+    $('extracted-text').value = data.corrected || data.enhanced || text;
+    updateCharCount();
+    showToast('텍스트를 정리했습니다.');
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function detectBookCover() {
+  if (!state.file) {
+    showToast('표지 이미지를 먼저 선택해주세요.');
+    return;
+  }
+  const form = new FormData();
+  form.append('image', state.file);
+  try {
+    const data = await fetchJson(API.bookCover, { method: 'POST', body: form });
+    if (data.title) $('book-title').value = data.title;
+    $('book-detect-chip').textContent = [data.title, data.author].filter(Boolean).join(' / ') || '책 정보 미감지';
+    showToast('책 정보를 반영했습니다.');
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function generateMemo() {
+  const text = $('extracted-text').value.trim();
+  if (!text) {
+    showToast('메모를 만들 텍스트가 필요합니다.');
+    return;
+  }
+  try {
+    const data = await fetchJson(API.generateMemo, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ text, book_title: $('book-title').value.trim() })
+    });
+    state.generatedMemo = data;
+    renderMemo(data);
+    renderAnalysis(data.analysis);
+    showToast('메모 초안을 생성했습니다.');
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+function renderMemo(data) {
+  const draft = data.memo_draft || data.quote || '';
+  $('memo-draft').textContent = draft || '생성된 메모가 없습니다.';
+  const tags = data.tags || data.keywords || [];
+  $('memo-tags').innerHTML = tags.map((tag) => `<span class="chip">${escapeHtml(String(tag))}</span>`).join('');
+}
+
+async function saveMemo() {
+  const draft = (state.generatedMemo && (state.generatedMemo.memo_draft || state.generatedMemo.quote)) || $('extracted-text').value.trim();
+  if (!draft) {
+    showToast('저장할 메모가 필요합니다.');
+    return;
+  }
+  const payload = {
+    content: draft,
+    text: $('extracted-text').value.trim(),
+    book_title: $('book-title').value.trim(),
+    page_number: $('page-number').value || null,
+    tags: (state.generatedMemo && state.generatedMemo.tags) || [],
+    mood: (state.generatedMemo && state.generatedMemo.mood) || 'neutral'
+  };
+  try {
+    const data = await fetchJson(API.saveMemo, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload)
+    });
+    state.savedMemo = data.memo;
+    $('save-result').style.display = 'block';
+    $('save-result-text').textContent = `저장됨: ${data.memo.memo_id}`;
+    renderAnalysis(data.analysis);
+    showToast('DB 저장과 분석이 완료되었습니다.');
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function runPipeline() {
+  const text = $('extracted-text').value.trim();
+  if (!text) {
+    showToast('분석할 텍스트가 필요합니다.');
+    return;
+  }
+  setBusy('btn-pipeline', true, '분석 중...');
+  try {
+    const data = await fetchJson(API.pipeline, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ text, book_title: $('book-title').value.trim() })
+    });
+    state.generatedMemo = data.memo;
+    renderMemo(data.memo || {});
+    renderAnalysis(data.analysis);
+    renderResources(data);
+    showToast('전체 분석이 완료되었습니다.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    setBusy('btn-pipeline', false);
+  }
+}
+
+function renderAnalysis(analysis) {
+  if (!analysis) {
+    $('analysis-text').textContent = '분석 결과가 여기에 표시됩니다.';
+    $('analysis-tags').innerHTML = '';
+    return;
+  }
+  const parts = [
+    analysis.summary,
+    analysis.theme ? `주제: ${analysis.theme}` : '',
+    analysis.emotion ? `정서: ${analysis.emotion}` : '',
+    analysis.question ? `질문: ${analysis.question}` : ''
+  ].filter(Boolean);
+  $('analysis-text').textContent = parts.join('  ');
+  const tags = analysis.keywords || [];
+  $('analysis-tags').innerHTML = tags.map((tag) => `<span class="chip">${escapeHtml(String(tag))}</span>`).join('');
+}
+
+function renderResources(data) {
+  const youtube = data.youtube || (data.resources && data.resources.youtube) || [];
+  const papers = data.papers || (data.resources && data.resources.papers) || [];
+  $('yt-results').innerHTML = youtube.length ? youtube.map(renderVideo).join('') : '<p>관련 영상이 아직 없습니다.</p>';
+  $('paper-results').innerHTML = papers.length ? papers.map(renderPaper).join('') : '<p>관련 자료가 아직 없습니다.</p>';
+}
+
+function renderVideo(video) {
+  const title = escapeHtml(video.title || '제목 없음');
+  const channel = escapeHtml(video.channel || video.source || '');
+  const url = video.url ? `<a href="${escapeAttr(video.url)}" target="_blank" rel="noopener">${title}</a>` : title;
+  return `<div class="item"><div class="item-title">${url}</div><div class="item-meta">${channel}</div></div>`;
+}
+
+function renderPaper(paper) {
+  const title = escapeHtml(paper.title || '제목 없음');
+  const meta = escapeHtml([paper.source || paper.journal, paper.year].filter(Boolean).join(' / '));
+  return `<div class="item"><div class="item-title">${title}</div><div class="item-meta">${meta}</div></div>`;
+}
+
+function askSocrates() {
+  const text = $('extracted-text').value.trim().slice(0, 700);
+  if (!text) {
+    showToast('보낼 텍스트가 필요합니다.');
+    return;
+  }
+  window.location.href = `/socrates?context=${encodeURIComponent(text)}`;
+}
+
+function updateCharCount() {
+  $('char-count').textContent = $('extracted-text').value.length.toLocaleString();
+}
+
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[char]));
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/`/g, '&#096;');
+}
+
+const dropZone = $('drop-zone');
+const fileInput = $('file-input');
+
+dropZone.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  dropZone.classList.add('drag');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', (event) => {
+  event.preventDefault();
+  dropZone.classList.remove('drag');
+  handleFile(event.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+$('extracted-text').addEventListener('input', updateCharCount);
+
+initStars();
+initNav();
+initTagline();
+checkStatus();
+</script>
+</body>
+</html>
