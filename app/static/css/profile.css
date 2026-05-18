@@ -153,7 +153,7 @@ button, input, textarea, select { font: inherit; cursor: pointer; }
   transition: .2s;
 }
 .avatar:hover { border-color: var(--amber); box-shadow: 0 0 20px var(--glow-gold); }
-.avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3; }
 #avatar-initial { color: #07130f; font-family: 'Pretendard', sans-serif; z-index: 1; }
 .avatar-cam {
   position: absolute; bottom: -2px; right: -2px;
@@ -464,7 +464,7 @@ button, input, textarea, select { font: inherit; cursor: pointer; }
   overflow: hidden; position: relative; transition: .2s;
 }
 .modal-avatar:hover { border-color: var(--amber); box-shadow: 0 0 16px var(--glow-gold); }
-.modal-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.modal-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3; }
 #modal-avatar-initial { color: #07130f; font-family: 'Pretendard', sans-serif; z-index: 1; }
 .modal-avatar-cam {
   font-size: .78rem; color: var(--amber);
@@ -472,6 +472,12 @@ button, input, textarea, select { font: inherit; cursor: pointer; }
   border-radius: 8px; padding: 6px 12px;
 }
 #modal-avatar-upload { display: none; }
+
+.avatar.has-image #avatar-initial,
+.modal-avatar.has-image #modal-avatar-initial { display: none !important; }
+.avatar.has-image img,
+.modal-avatar.has-image img { display: block !important; visibility: visible !important; opacity: 1 !important; }
+
 
 /* Modal fields */
 .modal-fields { display: flex; flex-direction: column; gap: 16px; }

@@ -3,206 +3,539 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LUMA — 독자 피드</title>
+<title>LUMA — 생각 피드</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── BASE ─────────────────────────────────────── */
+/* ── VARIABLES ─────────────────────────────── */
 :root{
-  --bg:#050815; --panel:rgba(9,14,32,.86); --panel-solid:#090e20;
-  --accent:#f5c86b; --accent-dim:rgba(245,200,107,.15); --accent-glow:rgba(245,200,107,.28);
-  --text:#eef3ff; --muted:#9da9c7; --border:rgba(255,255,255,.08);
-  --card:rgba(255,255,255,.04);
-  --green:#4ade80; --red:#f87171; --blue:#60a5fa; --purple:#a78bfa;
+  --bg:#05060e;
+  --panel:rgba(10,12,24,.9);
+  --panel-solid:#0a0c18;
+  --accent:#f5c86b;
+  --accent-dim:rgba(245,200,107,.12);
+  --accent-glow:rgba(245,200,107,.28);
+  --text:#eef3ff;
+  --muted:#8899bb;
+  --border:rgba(255,255,255,.07);
+  --card:rgba(255,255,255,.03);
+  --card-hover:rgba(255,255,255,.055);
+  --radius:16px;
+  --nav-h:56px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--text);font-family:'Pretendard',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard',sans-serif;min-height:100vh;overflow-x:hidden;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px;}
 a{text-decoration:none;color:inherit;}
+button{border:none;cursor:pointer;font-family:inherit;}
+img{display:block;max-width:100%;}
 
 /* ── STARFIELD ──────────────────────────────── */
 #star-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
 /* ── NAV ────────────────────────────────────── */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:rgba(5,8,21,.96);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100;position:relative;}
-.logo{display:flex;align-items:center;gap:9px;}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--accent-glow)}50%{box-shadow:0 0 0 8px transparent}}
-.nav-links{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.nav{
+  position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:var(--nav-h);
+  background:rgba(5,6,14,.97);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:9px;flex-shrink:0;text-decoration:none;}
+.logo-img{height:28px;object-fit:contain;}
+.logo-text{display:flex;flex-direction:column;gap:1px;}
+.logo-name{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent);line-height:1;}
+.logo-tag{font-size:.54rem;color:var(--muted);letter-spacing:.09em;font-style:italic;transition:opacity .5s,transform .5s;}
+.nav-links{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 16px;flex:1;min-width:0;justify-content:center;}
 .nav-links::-webkit-scrollbar{display:none;}
-.npill{padding:6px 9px;border-radius:18px;font-size:.7rem;color:var(--muted);transition:.2s;cursor:pointer;text-decoration:none;white-space:nowrap;}
+.npill{padding:6px 9px;border-radius:18px;font-size:.7rem;color:var(--muted);transition:.2s;white-space:nowrap;text-decoration:none;display:inline-block;}
 .npill:hover{background:var(--accent-dim);color:var(--accent);}
 .npill.active{background:rgba(245,200,107,.16);color:var(--accent);font-weight:500;}
-.nav-user{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted);}
-.nav-logout{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);color:#f87171;padding:5px 12px;border-radius:8px;font-size:.72rem;cursor:pointer;font-family:'Pretendard',sans-serif;}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted);flex-shrink:0;}
+.nav-logout{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);color:#f87171;padding:5px 12px;border-radius:8px;font-size:.72rem;cursor:pointer;}
 .nav-login-btn{background:var(--accent-dim);border:1px solid rgba(245,200,107,.28);color:var(--accent);padding:6px 14px;border-radius:18px;font-size:.74rem;}
 
-/* ── LAYOUT ─────────────────────────────────── */
-.app-body{flex:1;display:grid;grid-template-columns:250px 1fr 240px;overflow:hidden;position:relative;z-index:1;}
+/* ── HERO ───────────────────────────────────── */
+.hero{
+  position:relative;overflow:hidden;
+  padding:72px 24px 56px;
+  background:var(--bg);
+  z-index:1;
+  min-height:380px;display:flex;align-items:center;
+}
+.hero-video-bg{
+  position:absolute;inset:0;
+  width:100%;height:100%;object-fit:cover;
+  opacity:.18;pointer-events:none;z-index:0;
+}
+.hero-img-bg{
+  position:absolute;inset:0;
+  background:center/cover no-repeat;
+  opacity:.22;z-index:0;
+}
+.hero-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(180deg,rgba(5,6,14,0) 0%,rgba(5,6,14,.75) 65%,rgba(5,6,14,1) 100%),
+    linear-gradient(90deg,rgba(5,6,14,.45) 0%,transparent 60%);
+}
+.hero-inner{
+  position:relative;z-index:2;
+  max-width:700px;margin:0 auto;text-align:center;width:100%;
+}
+.hero-label{
+  display:inline-block;font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--accent);border:1px solid rgba(245,200,107,.22);
+  padding:4px 14px;border-radius:20px;margin-bottom:20px;
+  background:rgba(245,200,107,.06);
+}
+.hero-title{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(1.8rem,4.5vw,3rem);
+  color:var(--text);line-height:1.2;margin-bottom:14px;
+}
+.hero-title em{color:var(--accent);font-style:italic;}
+.hero-sub{
+  font-family:'Noto Serif KR',serif;
+  font-size:clamp(.82rem,1.4vw,.96rem);
+  color:var(--muted);line-height:1.9;margin-bottom:30px;
+}
+.hero-search-wrap{display:flex;gap:10px;max-width:500px;margin:0 auto 22px;}
+.hero-search{
+  flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:28px;padding:12px 20px;color:var(--text);
+  font-family:'Pretendard',sans-serif;font-size:.88rem;outline:none;transition:.25s;
+}
+.hero-search:focus{border-color:rgba(245,200,107,.4);background:rgba(255,255,255,.09);}
+.hero-search::placeholder{color:rgba(157,169,199,.42);}
+.hero-search-btn{
+  background:rgba(245,200,107,.18);border:1px solid rgba(245,200,107,.35);
+  color:var(--accent);padding:0 20px;border-radius:28px;font-size:.82rem;font-weight:500;
+  white-space:nowrap;transition:.2s;
+}
+.hero-search-btn:hover{background:rgba(245,200,107,.3);}
+.hero-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.hero-chip{
+  padding:6px 16px;border-radius:20px;font-size:.72rem;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  color:var(--muted);cursor:pointer;transition:.2s;
+}
+.hero-chip:hover,.hero-chip.active{
+  border-color:rgba(245,200,107,.38);color:var(--accent);background:rgba(245,200,107,.09);
+}
 
-/* ── SIDEBARS ───────────────────────────────── */
-.sidebar{background:var(--panel);backdrop-filter:blur(12px);overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:16px;}
-.sidebar-l{border-right:1px solid var(--border);}
-.sidebar-r{border-left:1px solid var(--border);}
+/* ── TRENDING BOOKS ─────────────────────────── */
+.trending-section{position:relative;z-index:1;padding:28px 24px 0;}
+.section-header{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;}
+.section-title{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--text);}
+.section-sub{font-size:.68rem;color:var(--muted);}
+.trending-carousel{
+  display:flex;gap:14px;overflow-x:auto;overflow-y:hidden;padding-bottom:12px;
+  scrollbar-width:thin;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;
+}
+.trending-carousel::-webkit-scrollbar{height:6px;}
+.trending-carousel::-webkit-scrollbar-thumb{background:rgba(245,200,107,.2);border-radius:999px;}
+.trending-book-card{
+  flex-shrink:0;width:138px;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;cursor:pointer;transition:.25s;scroll-snap-align:start;
+}
+.trending-book-card:hover{
+  border-color:rgba(245,200,107,.3);
+  transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,0,0,.45);
+}
+.trending-cover{
+  width:100%;height:178px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0e1836,#1c0e3e);
+  display:flex;align-items:center;justify-content:center;
+}
+.trending-cover img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:rgba(5,6,14,.76);
+  transition:transform .4s ease;
+}
+.trending-book-card:hover .trending-cover img{transform:scale(1.05);}
+.trending-cover-emoji{font-size:2.4rem;position:relative;z-index:1;}
+.trending-meta{padding:10px;}
+.trending-title{
+  font-size:.74rem;color:var(--text);font-weight:500;line-height:1.35;margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.trending-author{
+  font-size:.62rem;color:var(--muted);margin-bottom:7px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.trending-stats{display:flex;gap:8px;flex-wrap:wrap;}
+.trending-stat{font-size:.58rem;color:var(--muted);}
+.trending-stat b{color:var(--accent);}
 
-.sb-section-title{font-size:.6rem;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+/* skeleton */
+.skel{
+  background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.07) 50%,rgba(255,255,255,.04) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-cover{width:138px;height:178px;border-radius:14px;flex-shrink:0;}
+.skel-line{height:9px;margin-bottom:5px;border-radius:4px;}
 
-/* clubs */
-.club-list{display:flex;flex-direction:column;gap:8px;}
-.club-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;cursor:pointer;transition:.2s;}
-.club-item:hover{border-color:rgba(245,200,107,.3);background:var(--accent-dim);}
-.club-name{font-size:.82rem;color:var(--text);font-weight:500;margin-bottom:3px;}
-.club-meta{font-size:.66rem;color:var(--muted);}
-.club-book{font-size:.68rem;color:var(--accent);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* ── PAGE LAYOUT ────────────────────────────── */
+.page-body{
+  position:relative;z-index:1;
+  max-width:1400px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 284px;gap:24px;
+  padding:24px 24px 60px;
+}
 
-/* challenge */
-.challenge-card{background:linear-gradient(135deg,rgba(15,20,50,.9),rgba(20,12,50,.9));border:1px solid rgba(167,139,250,.25);border-radius:14px;padding:14px;}
-.ch-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.ch-title{font-size:.78rem;color:var(--text);font-weight:500;}
-.ch-fraction{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--purple);}
-.ch-bar-track{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:6px;}
-.ch-bar-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width 1s ease;}
-.ch-label{font-size:.64rem;color:var(--muted);line-height:1.5;}
+/* ── COMPOSE ────────────────────────────────── */
+.compose-card{
+  background:var(--panel);backdrop-filter:blur(10px);
+  border:1px solid rgba(245,200,107,.16);border-radius:var(--radius);
+  padding:18px;margin-bottom:20px;
+}
+.compose-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.compose-av{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#1e2f6e,#2d1b6e);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.compose-header-text{flex:1;}
+.compose-header-name{font-size:.8rem;color:var(--text);font-weight:500;}
+.compose-header-hint{font-size:.65rem;color:var(--muted);margin-top:1px;}
+.compose-toggle-btn{
+  font-size:.7rem;color:var(--muted);border:1px solid var(--border);
+  background:none;border-radius:8px;padding:5px 11px;transition:.2s;
+}
+.compose-toggle-btn:hover{border-color:rgba(245,200,107,.3);color:var(--accent);}
 
-/* badges */
-.badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.badge-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
-.badge-icon{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,rgba(245,200,107,.12),rgba(167,139,250,.12));border:1px solid rgba(245,200,107,.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:.2s;}
-.badge-icon:hover{background:rgba(245,200,107,.2);transform:scale(1.08);}
-.badge-icon.locked{opacity:.35;filter:grayscale(1);}
-.badge-name{font-size:.56rem;color:var(--muted);text-align:center;line-height:1.3;}
+/* collapsed: 한 줄 quick input */
+.compose-quick{display:flex;gap:8px;align-items:center;}
+.compose-quick-in{
+  flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:28px;padding:10px 18px;color:var(--text);
+  font-family:'Noto Serif KR',serif;font-size:.84rem;outline:none;transition:.2s;
+}
+.compose-quick-in:focus{border-color:rgba(245,200,107,.32);}
+.compose-quick-in::placeholder{color:rgba(157,169,199,.38);}
+.compose-quick-btn{
+  background:linear-gradient(135deg,rgba(245,200,107,.22),rgba(245,200,107,.1));
+  border:1px solid rgba(245,200,107,.38);color:var(--accent);
+  padding:10px 16px;border-radius:28px;font-size:.78rem;font-weight:500;
+  white-space:nowrap;transition:.2s;flex-shrink:0;
+}
+.compose-quick-btn:hover{background:rgba(245,200,107,.32);}
 
-/* ── MAIN FEED ──────────────────────────────── */
-.feed-main{display:flex;flex-direction:column;overflow:hidden;}
-.feed-scroll{flex:1;overflow-y:auto;padding:18px 20px;}
+/* expanded: 상세 필드 */
+.compose-expanded{display:none;flex-direction:column;gap:10px;}
+.compose-expanded.open{display:flex;}
+.compose-field-label{
+  font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:3px;
+}
+.compose-input{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:9px 13px;color:var(--text);
+  font-family:'Pretendard',sans-serif;font-size:.82rem;
+  outline:none;transition:.2s;width:100%;
+}
+.compose-input:focus{border-color:rgba(245,200,107,.3);}
+.compose-input::placeholder{color:rgba(157,169,199,.36);}
+.compose-ta{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:10px 13px;color:var(--text);
+  font-family:'Noto Serif KR',serif;font-size:.84rem;
+  resize:none;outline:none;transition:.2s;line-height:1.75;width:100%;
+}
+.compose-ta:focus{border-color:rgba(245,200,107,.3);}
+.compose-ta::placeholder{color:rgba(157,169,199,.38);}
+.compose-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.compose-tag-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.compose-tag-chip{
+  padding:5px 12px;border-radius:16px;font-size:.7rem;
+  border:1px solid var(--border);background:none;color:var(--muted);transition:.2s;cursor:pointer;
+}
+.compose-tag-chip.sel{
+  border-color:rgba(96,165,250,.4);color:#7ab4fa;background:rgba(96,165,250,.09);
+}
+.compose-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:4px;}
+.compose-cancel-btn{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  padding:9px 16px;border-radius:11px;font-size:.76rem;transition:.2s;
+}
+.compose-cancel-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text);}
+.compose-post-btn{
+  background:linear-gradient(135deg,rgba(245,200,107,.22),rgba(245,200,107,.1));
+  border:1px solid rgba(245,200,107,.38);color:var(--accent);
+  padding:9px 20px;border-radius:11px;font-size:.78rem;font-weight:500;
+  white-space:nowrap;transition:.2s;
+}
+.compose-post-btn:hover{background:rgba(245,200,107,.32);box-shadow:0 4px 18px var(--accent-glow);}
+.compose-post-btn:disabled{opacity:.5;cursor:not-allowed;}
+@media(max-width:600px){
+  .compose-two-col{grid-template-columns:1fr;}
+}
 
-/* compose */
-.compose-card{background:var(--panel);backdrop-filter:blur(10px);border:1px solid rgba(245,200,107,.2);border-radius:18px;padding:16px;margin-bottom:18px;}
-.compose-top{display:flex;gap:12px;margin-bottom:12px;}
-.composer-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#1e2f6e,#2d1b6e);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
-.compose-textarea{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:11px 14px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:.84rem;resize:none;min-height:80px;outline:none;transition:.2s;line-height:1.7;}
-.compose-textarea:focus{border-color:rgba(245,200,107,.35);}
-.compose-textarea::placeholder{color:rgba(157,169,199,.45);}
-.compose-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.compose-book-input{flex:1;min-width:140px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 12px;color:var(--text);font-family:'Pretendard',sans-serif;font-size:.76rem;outline:none;transition:.2s;}
-.compose-book-input:focus{border-color:rgba(245,200,107,.3);}
-.compose-book-input::placeholder{color:rgba(157,169,199,.4);}
-.style-pills{display:flex;gap:5px;flex-wrap:wrap;}
-.style-pill{padding:5px 11px;border-radius:16px;font-size:.7rem;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
-.style-pill:hover{border-color:rgba(245,200,107,.3);color:var(--text);}
-.style-pill.sel-dark{background:rgba(30,47,110,.5);border-color:rgba(96,165,250,.35);color:#93c5fd;}
-.style-pill.sel-warm{background:rgba(80,40,15,.5);border-color:rgba(245,158,11,.35);color:#fbbf24;}
-.style-pill.sel-cosmic{background:rgba(50,20,80,.5);border-color:rgba(167,139,250,.35);color:#c4b5fd;}
-.style-pill.sel-forest{background:rgba(10,40,25,.5);border-color:rgba(74,222,128,.35);color:#6ee7b7;}
-.style-pill.sel-pure{background:rgba(240,240,255,.06);border-color:rgba(255,255,255,.25);color:#e0e7ff;}
-.compose-post-btn{background:linear-gradient(135deg,rgba(245,200,107,.25),rgba(245,200,107,.12));border:1px solid rgba(245,200,107,.4);color:var(--accent);padding:8px 18px;border-radius:12px;font-size:.78rem;cursor:pointer;font-family:'Pretendard',sans-serif;font-weight:500;transition:.2s;white-space:nowrap;}
-.compose-post-btn:hover{background:linear-gradient(135deg,rgba(245,200,107,.35),rgba(245,200,107,.2));box-shadow:0 4px 18px var(--accent-glow);}
+/* ── FEED CHIPS ─────────────────────────────── */
+.feed-chips{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+.feed-chip{
+  padding:6px 15px;border-radius:20px;font-size:.72rem;
+  border:1px solid var(--border);background:none;color:var(--muted);transition:.2s;
+}
+.feed-chip.active,.feed-chip:hover{
+  border-color:rgba(245,200,107,.35);color:var(--accent);background:rgba(245,200,107,.08);
+}
 
-/* filter chips */
-.filter-chips{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
-.chip{padding:6px 15px;border-radius:20px;font-size:.72rem;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);font-family:'Pretendard',sans-serif;transition:.2s;}
-.chip.active,.chip:hover{border-color:rgba(245,200,107,.38);color:var(--accent);background:rgba(245,200,107,.08);}
+/* ── THOUGHT CARD ───────────────────────────── */
+.feed-list{display:flex;flex-direction:column;gap:16px;}
+.thought-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;display:flex;transition:.25s;min-height:200px;
+}
+.thought-card:hover{
+  border-color:rgba(245,200,107,.18);background:var(--card-hover);
+  transform:translateY(-2px);box-shadow:0 10px 38px rgba(0,0,0,.36);
+}
 
-/* feed cards */
-.feed-list{display:flex;flex-direction:column;gap:14px;}
+/* book cover column */
+.tc-cover{
+  flex-shrink:0;width:40%;max-width:190px;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0d1530,#1a0d38);
+  display:flex;align-items:center;justify-content:center;
+}
+.tc-cover img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:.4s;
+}
+.thought-card:hover .tc-cover img{transform:scale(1.04);}
+.tc-cover-emoji{font-size:2.8rem;position:relative;z-index:1;text-shadow:0 2px 16px rgba(0,0,0,.6);}
+.tc-cover-overlay{
+  position:absolute;inset:0;z-index:2;
+  background:linear-gradient(90deg,transparent 55%,rgba(5,6,14,.55) 100%),
+             linear-gradient(0deg,rgba(5,6,14,.85) 0%,transparent 40%);
+}
+.tc-cover-meta{
+  position:absolute;bottom:0;left:0;right:0;z-index:3;
+  padding:28px 10px 10px;
+  background:linear-gradient(0deg,rgba(5,6,14,.9) 0%,transparent 100%);
+}
+.tc-cover-title{
+  font-size:.65rem;color:var(--text);font-weight:500;
+  line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.tc-cover-author{font-size:.57rem;color:var(--muted);margin-top:2px;}
 
-.feed-card{border-radius:18px;padding:16px;border:1px solid var(--border);position:relative;overflow:hidden;transition:.22s;}
-.feed-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.35);}
+/* content column */
+.tc-content{
+  flex:1;padding:16px;display:flex;flex-direction:column;gap:9px;min-width:0;
+}
+.tc-user{display:flex;align-items:center;gap:8px;}
+.tc-avatar{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#1e2f6e,#2d1b6e);
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;
+}
+.tc-username{font-size:.77rem;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+.tc-date{font-size:.6rem;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0;}
 
-/* card style variants */
-.card-dark{background:linear-gradient(145deg,rgba(10,16,45,.95),rgba(8,12,35,.9));border-color:rgba(96,165,250,.15);}
-.card-warm{background:linear-gradient(145deg,rgba(45,22,8,.95),rgba(35,18,6,.9));border-color:rgba(245,158,11,.18);}
-.card-cosmic{background:linear-gradient(145deg,rgba(30,10,55,.95),rgba(22,8,45,.9));border-color:rgba(167,139,250,.2);}
-.card-forest{background:linear-gradient(145deg,rgba(6,30,18,.95),rgba(5,22,13,.9));border-color:rgba(74,222,128,.15);}
-.card-pure{background:linear-gradient(145deg,rgba(18,22,45,.9),rgba(14,18,38,.9));border-color:rgba(224,231,255,.12);}
+.tc-thought{
+  font-family:'Noto Serif KR',serif;font-size:.83rem;line-height:1.82;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+}
+.tc-question{
+  font-size:.77rem;color:var(--accent);line-height:1.6;
+  padding:8px 12px;
+  background:rgba(245,200,107,.05);border:1px solid rgba(245,200,107,.13);
+  border-radius:8px;
+}
+.tc-question::before{content:'Q.';font-weight:700;margin-right:5px;opacity:.65;}
+.tc-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.tc-tag{
+  font-size:.61rem;padding:3px 9px;border-radius:8px;
+  background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.14);color:#7ab4fa;
+}
 
-/* cosmic shimmer overlay */
-.card-cosmic::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 20%,rgba(167,139,250,.06) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(96,165,250,.05) 0%,transparent 60%);pointer-events:none;}
+/* action bar */
+.tc-actions{display:flex;gap:5px;margin-top:auto;flex-wrap:wrap;}
+.tc-btn{
+  display:flex;align-items:center;gap:4px;
+  padding:5px 11px;border-radius:9px;
+  border:1px solid var(--border);background:none;color:var(--muted);
+  font-size:.67rem;font-family:'Pretendard',sans-serif;transition:.2s;white-space:nowrap;
+}
+.tc-btn:hover{border-color:rgba(245,200,107,.28);color:var(--text);}
+.tc-btn.liked{border-color:rgba(248,113,113,.3);color:#f87171;background:rgba(248,113,113,.06);}
+.tc-btn.saved{border-color:rgba(245,200,107,.3);color:var(--accent);background:rgba(245,200,107,.07);}
+.tc-btn.socrates-btn{border-color:rgba(167,139,250,.22);color:#b09cf5;}
+.tc-btn.socrates-btn:hover{border-color:rgba(167,139,250,.45);background:rgba(167,139,250,.07);}
+.tc-btn.community-btn{border-color:rgba(74,222,128,.18);color:#52d97e;}
+.tc-btn.community-btn:hover{border-color:rgba(74,222,128,.38);background:rgba(74,222,128,.06);}
 
-.card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.author-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;border:1.5px solid var(--border);}
-.author-info{flex:1;}
-.author-name{font-size:.82rem;color:var(--text);font-weight:500;}
-.author-date{font-size:.63rem;color:var(--muted);margin-top:1px;}
-.book-badge{font-size:.63rem;padding:3px 9px;border-radius:8px;background:var(--accent-dim);border:1px solid rgba(245,200,107,.22);color:var(--accent);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+/* comments */
+.tc-comments{border-top:1px solid var(--border);padding-top:10px;display:none;}
+.tc-comments.open{display:block;}
+.comment-item{display:flex;gap:7px;margin-bottom:7px;}
+.comment-av{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:var(--card);display:flex;align-items:center;justify-content:center;font-size:.78rem;
+}
+.comment-body{flex:1;background:rgba(255,255,255,.03);border-radius:9px;padding:7px 10px;}
+.comment-author{font-size:.62rem;color:var(--accent);font-weight:500;margin-bottom:1px;}
+.comment-text{font-size:.74rem;color:var(--text);line-height:1.5;}
+.comment-input-row{display:flex;gap:6px;margin-top:8px;}
+.comment-input{
+  flex:1;background:var(--card);border:1px solid var(--border);border-radius:9px;
+  padding:7px 11px;color:var(--text);font-family:'Pretendard',sans-serif;font-size:.74rem;
+  outline:none;transition:.2s;
+}
+.comment-input:focus{border-color:rgba(245,200,107,.28);}
+.comment-input::placeholder{color:rgba(157,169,199,.32);}
+.comment-submit{
+  background:var(--accent-dim);border:1px solid rgba(245,200,107,.28);
+  color:var(--accent);padding:7px 12px;border-radius:9px;font-size:.7rem;cursor:pointer;
+}
 
-.card-quote{font-family:'Noto Serif KR',serif;font-size:.88rem;line-height:1.85;color:var(--text);margin-bottom:14px;position:relative;padding-left:14px;}
-.card-quote::before{content:'"';position:absolute;left:0;top:-2px;font-size:1.4rem;color:var(--accent);opacity:.5;line-height:1;}
+/* empty / error / loading */
+.state-msg{padding:44px 20px;text-align:center;color:var(--muted);font-size:.84rem;line-height:1.85;}
+.state-msg.error{color:#f87171;}
+.state-icon{font-size:2rem;margin-bottom:12px;}
+.loading-spin{
+  display:inline-block;width:22px;height:22px;
+  border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-center{display:flex;justify-content:center;padding:36px;}
 
-.card-actions{display:flex;gap:10px;align-items:center;}
-.card-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
-.card-btn:hover{border-color:rgba(245,200,107,.3);color:var(--text);}
-.card-btn.liked{border-color:rgba(248,113,113,.3);color:#f87171;background:rgba(248,113,113,.06);}
-.card-btn.liked:hover{background:rgba(248,113,113,.1);}
-
-/* cosmic star dots */
-.star-dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.7);pointer-events:none;}
-
-/* comments section */
-.comment-section{border-top:1px solid var(--border);margin-top:12px;padding-top:12px;display:none;}
-.comment-section.open{display:block;}
-.comment-item{display:flex;gap:8px;margin-bottom:8px;}
-.comment-av{width:28px;height:28px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;}
-.comment-body{flex:1;background:var(--card);border-radius:10px;padding:8px 11px;}
-.comment-author{font-size:.66rem;color:var(--accent);font-weight:500;margin-bottom:2px;}
-.comment-text{font-size:.76rem;color:var(--text);line-height:1.55;}
-.comment-input-row{display:flex;gap:7px;margin-top:8px;}
-.comment-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text);font-family:'Pretendard',sans-serif;font-size:.75rem;outline:none;transition:.2s;}
-.comment-input:focus{border-color:rgba(245,200,107,.3);}
-.comment-input::placeholder{color:rgba(157,169,199,.4);}
-.comment-submit{background:var(--accent-dim);border:1px solid rgba(245,200,107,.3);color:var(--accent);padding:7px 13px;border-radius:9px;font-size:.72rem;cursor:pointer;font-family:'Pretendard',sans-serif;transition:.2s;}
-.comment-submit:hover{background:rgba(245,200,107,.25);}
-
-/* load more */
-.load-more-btn{width:100%;padding:12px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:'Pretendard',sans-serif;font-size:.76rem;cursor:pointer;transition:.2s;margin-top:8px;}
+.load-more-btn{
+  width:100%;padding:13px;border-radius:14px;
+  border:1px solid var(--border);background:var(--card);
+  color:var(--muted);font-family:'Pretendard',sans-serif;font-size:.76rem;
+  cursor:pointer;transition:.2s;margin-top:8px;
+}
 .load-more-btn:hover{border-color:rgba(245,200,107,.3);color:var(--accent);}
 
-/* ── RIGHT SIDEBAR ──────────────────────────── */
-.match-card{background:linear-gradient(135deg,rgba(14,20,50,.9),rgba(10,16,42,.9));border:1px solid rgba(96,165,250,.2);border-radius:14px;padding:14px;}
-.match-genres{display:flex;flex-wrap:wrap;gap:5px;margin:9px 0;}
-.genre-tag{font-size:.65rem;padding:3px 9px;border-radius:8px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#93c5fd;}
-.match-btn{width:100%;padding:9px;border-radius:11px;background:linear-gradient(135deg,rgba(96,165,250,.18),rgba(167,139,250,.14));border:1px solid rgba(96,165,250,.3);color:#93c5fd;font-family:'Pretendard',sans-serif;font-size:.76rem;cursor:pointer;transition:.2s;font-weight:500;}
-.match-btn:hover{background:linear-gradient(135deg,rgba(96,165,250,.28),rgba(167,139,250,.22));box-shadow:0 4px 16px rgba(96,165,250,.18);}
-.match-label{font-size:.72rem;color:var(--muted);margin-bottom:5px;}
+/* ── RIGHT PANEL ─────────────────────────────── */
+.right-panel{display:flex;flex-direction:column;gap:18px;position:sticky;top:calc(var(--nav-h) + 16px);max-height:calc(100vh - var(--nav-h) - 32px);overflow-y:auto;scrollbar-width:none;}
+.panel-card{
+  background:var(--panel);backdrop-filter:blur(10px);
+  border:1px solid var(--border);border-radius:var(--radius);padding:16px;
+}
+.panel-title{
+  font-family:'DM Serif Display',serif;font-size:.88rem;color:var(--text);
+  margin-bottom:13px;padding-bottom:10px;border-bottom:1px solid var(--border);
+}
 
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;}
-.stat-num{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--accent);}
-.stat-lbl{font-size:.6rem;color:var(--muted);margin-top:2px;}
+/* today's question */
+.today-q-item{
+  padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:.2s;
+}
+.today-q-item:last-child{border-bottom:none;}
+.today-q-item:hover .tq-text{color:var(--accent);}
+.tq-text{font-family:'Noto Serif KR',serif;font-size:.77rem;color:var(--text);line-height:1.65;margin-bottom:4px;transition:.2s;}
+.tq-book{font-size:.61rem;color:var(--accent);}
 
-.reading-now{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;gap:10px;align-items:flex-start;}
-.book-cover{width:52px;height:72px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,#1e2f6e,#2d1b6e);display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:1px solid var(--border);}
-.reading-info{flex:1;min-width:0;}
-.reading-title{font-size:.78rem;color:var(--text);font-weight:500;margin-bottom:3px;line-height:1.4;}
-.reading-author{font-size:.65rem;color:var(--muted);margin-bottom:8px;}
-.reading-prog-track{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
-.reading-prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#f59e0b);border-radius:2px;}
-.reading-pct{font-size:.6rem;color:var(--muted);margin-top:3px;}
+/* today's quote */
+.today-quote-item{
+  padding:11px;background:rgba(245,200,107,.04);
+  border:1px solid rgba(245,200,107,.1);border-radius:10px;
+  margin-bottom:10px;cursor:pointer;transition:.2s;
+}
+.today-quote-item:last-child{margin-bottom:0;}
+.today-quote-item:hover{border-color:rgba(245,200,107,.24);}
+.tq-quote-text{
+  font-family:'Noto Serif KR',serif;font-size:.79rem;color:var(--text);
+  line-height:1.75;margin-bottom:6px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.tq-quote-book{font-size:.61rem;color:var(--muted);}
 
-/* ── UTILITY ────────────────────────────────── */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--panel-solid);border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:12px 18px;font-size:.8rem;color:var(--green);z-index:1000;transform:translateY(100px);opacity:0;transition:.35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
+/* recruit */
+.recruit-item{
+  display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:.2s;align-items:center;
+}
+.recruit-item:last-child{border-bottom:none;padding-bottom:0;}
+.recruit-item:hover{opacity:.82;}
+.recruit-cover{
+  width:36px;height:50px;border-radius:6px;flex-shrink:0;
+  background:linear-gradient(135deg,#0d1530,#1a0d38);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;
+}
+.recruit-cover img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.recruit-cover-emoji{font-size:1.2rem;position:relative;z-index:1;}
+.recruit-info{flex:1;min-width:0;}
+.recruit-book{
+  font-size:.74rem;color:var(--text);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;
+}
+.recruit-meta{font-size:.61rem;color:var(--muted);line-height:1.5;}
+.recruit-join{
+  font-size:.63rem;color:#4ade80;border:1px solid rgba(74,222,128,.2);
+  border-radius:6px;padding:3px 8px;flex-shrink:0;transition:.2s;
+}
+.recruit-join:hover{background:rgba(74,222,128,.07);}
+
+/* ── FLOATING WRITE BUTTON (mobile) ─────────── */
+.fab{
+  position:fixed;bottom:68px;right:18px;z-index:300;
+  width:50px;height:50px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#e6a830);
+  color:#000;font-size:1.35rem;font-weight:700;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 6px 24px rgba(245,200,107,.42);transition:.25s;border:none;cursor:pointer;
+}
+.fab:hover{transform:scale(1.08);}
+
+/* ── TOAST ──────────────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:500;
+  background:var(--panel-solid);border:1px solid rgba(74,222,128,.28);
+  border-radius:12px;padding:12px 18px;font-size:.8rem;color:#4ade80;
+  transform:translateY(100px);opacity:0;
+  transition:.35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
+}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.error{border-color:rgba(248,113,113,.3);color:#f87171;}
+.toast.info{border-color:rgba(96,165,250,.28);color:#7fb4fa;}
 
-.loading-spin{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-center{display:flex;justify-content:center;padding:32px;}
+/* ── BOTTOM NAV ─────────────────────────────── */
+.bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;height:56px;
+  background:rgba(5,6,14,.97);border-top:1px solid var(--border);z-index:400;
+}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.56rem;color:var(--muted);gap:2px;text-decoration:none;}
+.bn-item.active{color:var(--accent);}
+.bn-icon{font-size:1.05rem;}
 
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.fade-in{animation:fadeIn .3s ease;}
+/* ── ANIMATIONS ──────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .35s ease both;}
 
-@media(max-width:900px){
-  .app-body{grid-template-columns:0 1fr 0;}
-  .sidebar{display:none;}
+/* ── RESPONSIVE ─────────────────────────────── */
+@media(max-width:1100px){
+  .page-body{grid-template-columns:1fr;gap:0;}
+  .right-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px;position:static;max-height:none;overflow-y:visible;}
+}
+@media(max-width:820px){
+  .hero{padding:48px 16px 40px;min-height:320px;}
+  .hero-search-wrap{flex-direction:column;}
+  .trending-section{padding:20px 14px 0;}
+  .page-body{padding:16px 14px 72px;}
+  .tc-cover{width:36%;max-width:130px;}
+  .tc-content{padding:12px;}
 }
 @media(max-width:600px){
   body{padding-bottom:56px;}
-  .bottom-nav{display:flex!important;position:fixed;bottom:0;left:0;right:0;height:56px;background:rgba(5,8,21,.97);border-top:1px solid var(--border);z-index:200;}
-  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.58rem;color:var(--muted);text-decoration:none;gap:3px;}
-  .bn-item.active{color:var(--accent);}
-  .bn-icon{font-size:1.1rem;}
+  .bottom-nav{display:flex;}
+  .fab{display:flex;}
+  .right-panel{grid-template-columns:1fr;}
+  .hero-title{font-size:1.65rem;}
+  .nav-links{display:none;}
+  .tc-cover{width:34%;max-width:110px;}
+  .tc-btn{font-size:.62rem;padding:4px 8px;}
+  .compose-row{flex-direction:column;align-items:stretch;}
+  .compose-post-btn{text-align:center;}
 }
 </style>
 </head>
@@ -210,13 +543,13 @@ a{text-decoration:none;color:inherit;}
 
 <canvas id="star-canvas"></canvas>
 
-<!-- NAV -->
+<!-- ── NAV ─── -->
 <nav class="nav">
   <a href="/" class="logo">
-    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" style="height:30px;object-fit:contain" onerror="this.style.display='none'">
-    <div style="display:flex;flex-direction:column;gap:1px;margin-left:4px">
-      <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent);line-height:1">LUMA</span>
-      <span id="luma-tagline" style="font-size:.57rem;color:var(--muted);letter-spacing:.08em;font-style:italic;transition:opacity .5s,transform .5s">생각은 빛이 된다</span>
+    <img src="/asset/images/Luma_logo_1.png" alt="LUMA" class="logo-img" onerror="this.style.display='none'">
+    <div class="logo-text">
+      <span class="logo-name">LUMA</span>
+      <span class="logo-tag" id="luma-tagline">생각은 빛이 된다</span>
     </div>
   </a>
   <div class="nav-links">
@@ -226,7 +559,7 @@ a{text-decoration:none;color:inherit;}
     <a href="/community/" class="npill">은하 공동체</a>
     <a href="/live" class="npill">궤도 정거장</a>
     <a href="/socrates" class="npill">지성의 위성</a>
-    <a href="/social" class="npill active">독자 피드</a>
+    <a href="/social" class="npill active">생각 피드</a>
     <a href="/deepdive" class="npill">심층 관측소</a>
     <a href="/ocr" class="npill">광학 스캐너</a>
     <a href="/profile" class="npill">나의 조종석</a>
@@ -234,666 +567,994 @@ a{text-decoration:none;color:inherit;}
   <div class="nav-user" id="nav-user"></div>
 </nav>
 
-<!-- APP BODY -->
-<div class="app-body">
-
-  <!-- LEFT SIDEBAR -->
-  <aside class="sidebar sidebar-l">
-
-    <!-- 독서 모임 -->
-    <div>
-      <div class="sb-section-title">독서 모임</div>
-      <div class="club-list" id="club-list">
-        <div style="text-align:center;padding:16px;"><div class="loading-spin" style="display:inline-block"></div></div>
-      </div>
+<!-- ── HERO ─── -->
+<section class="hero">
+  <video class="hero-video-bg" autoplay muted loop playsinline id="hero-video">
+    <source src="/asset/videos/grory_light.mp4" type="video/mp4">
+  </video>
+  <div class="hero-img-bg" id="hero-img-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-inner">
+    <span class="hero-label">생각 피드 · Thought Feed</span>
+    <h1 class="hero-title">책으로 시작된 <em>생각들</em>이<br>사람과 사람을 연결합니다</h1>
+    <p class="hero-sub">사람들은 같은 책을 읽고도 서로 다른 우주를 발견합니다.</p>
+    <div class="hero-search-wrap">
+      <input class="hero-search" id="hero-search" type="text"
+             placeholder="지금 어떤 생각을 발견하고 싶나요?" autocomplete="off">
+      <button class="hero-search-btn" onclick="doSearch()">탐색</button>
     </div>
-
-    <!-- 독서 챌린지 -->
-    <div>
-      <div class="sb-section-title">독서 챌린지</div>
-      <div class="challenge-card" id="challenge-card">
-        <div class="ch-header">
-          <span class="ch-title">이번 달 목표</span>
-          <span class="ch-fraction" id="ch-fraction">3/5</span>
-        </div>
-        <div class="ch-bar-track">
-          <div class="ch-bar-fill" id="ch-bar" style="width:60%"></div>
-        </div>
-        <div class="ch-label" id="ch-label">목표까지 2권 더! 우주를 향해 나아가세요 🚀</div>
-      </div>
+    <div class="hero-chips">
+      <button class="hero-chip" data-tag="철학" onclick="chipFilter(this,'철학')">#철학</button>
+      <button class="hero-chip" data-tag="우주" onclick="chipFilter(this,'우주')">#우주</button>
+      <button class="hero-chip" data-tag="고독" onclick="chipFilter(this,'고독')">#고독</button>
+      <button class="hero-chip" data-tag="성장" onclick="chipFilter(this,'성장')">#성장</button>
+      <button class="hero-chip" data-tag="관계" onclick="chipFilter(this,'관계')">#관계</button>
+      <button class="hero-chip" data-tag="자유" onclick="chipFilter(this,'자유')">#자유</button>
     </div>
+  </div>
+</section>
 
-    <!-- 나의 배지 -->
-    <div>
-      <div class="sb-section-title">나의 배지</div>
-      <div class="badge-grid" id="badge-grid"></div>
-    </div>
+<!-- ── TRENDING BOOKS ─── -->
+<section class="trending-section">
+  <div class="section-header">
+    <h2 class="section-title">오늘 많이 이야기되는 책</h2>
+    <span class="section-sub">지금 독자들이 생각을 나누고 있는 책들</span>
+  </div>
+  <div class="trending-carousel" id="trending-carousel">
+    <!-- JS로 렌더링 -->
+    <div class="skel skel-cover"></div>
+    <div class="skel skel-cover"></div>
+    <div class="skel skel-cover"></div>
+    <div class="skel skel-cover"></div>
+    <div class="skel skel-cover"></div>
+  </div>
+</section>
 
-  </aside>
+<!-- ── PAGE BODY ─── -->
+<div class="page-body">
 
-  <!-- MAIN FEED -->
-  <main class="feed-main">
-    <div class="feed-scroll" id="feed-scroll">
-
-      <!-- Compose -->
-      <div class="compose-card fade-in">
-        <div class="compose-top">
-          <div class="composer-avatar" id="composer-avatar">✨</div>
-          <textarea class="compose-textarea" id="compose-text" placeholder="오늘 읽은 구절을 나눠보세요..." rows="3"></textarea>
+  <!-- FEED COLUMN -->
+  <div id="feed-col">
+    <!-- compose -->
+    <div class="compose-card" id="compose-card">
+      <!-- 헤더 -->
+      <div class="compose-header">
+        <div class="compose-av" id="compose-av">✨</div>
+        <div class="compose-header-text">
+          <div class="compose-header-name" id="compose-name">나의 생각</div>
+          <div class="compose-header-hint">책에서 발견한 생각을 나눠보세요</div>
         </div>
-        <div class="compose-toolbar">
-          <input class="compose-book-input" id="compose-book" type="text" placeholder="📖 책 제목 태그...">
-          <div class="style-pills" id="style-pills">
-            <button class="style-pill" data-style="dark" onclick="selectStyle(this,'dark')">어둠</button>
-            <button class="style-pill" data-style="warm" onclick="selectStyle(this,'warm')">온기</button>
-            <button class="style-pill" data-style="cosmic" onclick="selectStyle(this,'cosmic')">우주</button>
-            <button class="style-pill" data-style="forest" onclick="selectStyle(this,'forest')">숲</button>
-            <button class="style-pill" data-style="pure" onclick="selectStyle(this,'pure')">순수</button>
-          </div>
-          <button class="compose-post-btn" onclick="postCard()">✦ 올리기</button>
-        </div>
+        <button class="compose-toggle-btn" id="compose-toggle" onclick="toggleCompose()">
+          자세히 ▾
+        </button>
       </div>
 
-      <!-- Filter chips -->
-      <div class="filter-chips">
-        <button class="chip active" data-tag="" onclick="filterFeed(this,'')">전체</button>
-        <button class="chip" data-tag="영감" onclick="filterFeed(this,'영감')">#영감</button>
-        <button class="chip" data-tag="철학" onclick="filterFeed(this,'철학')">#철학</button>
-        <button class="chip" data-tag="인문" onclick="filterFeed(this,'인문')">#인문</button>
-        <button class="chip" data-tag="SF" onclick="filterFeed(this,'SF')">#SF</button>
-        <button class="chip" data-tag="자기계발" onclick="filterFeed(this,'자기계발')">#자기계발</button>
+      <!-- 빠른 입력 (기본 노출) -->
+      <div class="compose-quick" id="compose-quick">
+        <input class="compose-quick-in" id="compose-quick-in" type="text"
+          placeholder="책에서 마음에 남은 구절이나 생각을 적어주세요...">
+        <button class="compose-quick-btn" onclick="quickPost()">✦ 나누기</button>
       </div>
 
-      <!-- Feed list -->
-      <div class="feed-list" id="feed-list">
-        <div class="loading-center"><div class="loading-spin"></div></div>
-      </div>
-
-      <button class="load-more-btn" id="load-more-btn" onclick="loadMore()" style="display:none">
-        더 보기 ···
-      </button>
-
-    </div>
-  </main>
-
-  <!-- RIGHT SIDEBAR -->
-  <aside class="sidebar sidebar-r">
-
-    <!-- 독서 짝꿍 찾기 -->
-    <div>
-      <div class="sb-section-title">독서 짝꿍 찾기</div>
-      <div class="match-card" id="match-card">
-        <div class="match-label">취향이 비슷한 독자</div>
-        <div class="match-genres" id="match-genres">
-          <span class="genre-tag">SF</span>
-          <span class="genre-tag">철학</span>
-          <span class="genre-tag">인문</span>
+      <!-- 상세 필드 (확장 시 노출) -->
+      <div class="compose-expanded" id="compose-expanded">
+        <div>
+          <div class="compose-field-label">📖 책 제목</div>
+          <input class="compose-input" id="compose-book" type="text" placeholder="읽은 책 제목을 입력하세요">
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:1rem;">🌌</div>
+        <div>
+          <div class="compose-field-label">💬 공유할 구절</div>
+          <textarea class="compose-ta" id="compose-passage" rows="2"
+            placeholder="책에서 마음에 남은 문장을 그대로 적어보세요..."></textarea>
+        </div>
+        <div>
+          <div class="compose-field-label">✦ 내 생각</div>
+          <textarea class="compose-ta" id="compose-thought" rows="3"
+            placeholder="이 구절이나 이 책에서 어떤 생각이 떠올랐나요?"></textarea>
+        </div>
+        <div class="compose-two-col">
           <div>
-            <div style="font-size:.78rem;color:var(--text)" id="match-name">별빛 독자</div>
-            <div style="font-size:.63rem;color:var(--muted)" id="match-books">공통 관심서 3권</div>
+            <div class="compose-field-label">❓ 독자에게 남길 질문 (선택)</div>
+            <input class="compose-input" id="compose-question" type="text"
+              placeholder="이 책이 당신에게 어떤 질문을 남겼나요?">
+          </div>
+          <div>
+            <div class="compose-field-label"># 감정 태그</div>
+            <div class="compose-tag-wrap" id="compose-tags">
+              <button class="compose-tag-chip" data-tag="철학" onclick="toggleTag(this)">철학</button>
+              <button class="compose-tag-chip" data-tag="우주" onclick="toggleTag(this)">우주</button>
+              <button class="compose-tag-chip" data-tag="고독" onclick="toggleTag(this)">고독</button>
+              <button class="compose-tag-chip" data-tag="성장" onclick="toggleTag(this)">성장</button>
+              <button class="compose-tag-chip" data-tag="관계" onclick="toggleTag(this)">관계</button>
+              <button class="compose-tag-chip" data-tag="자유" onclick="toggleTag(this)">자유</button>
+              <button class="compose-tag-chip" data-tag="위로" onclick="toggleTag(this)">위로</button>
+              <button class="compose-tag-chip" data-tag="인문" onclick="toggleTag(this)">인문</button>
+            </div>
           </div>
         </div>
-        <button class="match-btn" onclick="connectMatch()">연결하기</button>
+        <div class="compose-footer">
+          <button class="compose-cancel-btn" onclick="collapseCompose()">취소</button>
+          <button class="compose-post-btn" id="compose-btn" onclick="postThought()">✦ 생각 나누기</button>
+        </div>
       </div>
     </div>
 
-    <!-- 이번 달 활동 -->
-    <div>
-      <div class="sb-section-title">이번 달 활동</div>
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-num" id="stat-posts">—</div>
-          <div class="stat-lbl">포스트</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-num" id="stat-likes">—</div>
-          <div class="stat-lbl">받은 ♥</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-num" id="stat-comments">—</div>
-          <div class="stat-lbl">댓글</div>
-        </div>
+    <!-- feed filter -->
+    <div class="feed-chips">
+      <button class="feed-chip active" data-tag="" onclick="filterFeed(this,'')">전체</button>
+      <button class="feed-chip" data-tag="철학" onclick="filterFeed(this,'철학')">#철학</button>
+      <button class="feed-chip" data-tag="문학" onclick="filterFeed(this,'문학')">#문학</button>
+      <button class="feed-chip" data-tag="우주" onclick="filterFeed(this,'우주')">#우주</button>
+      <button class="feed-chip" data-tag="심리" onclick="filterFeed(this,'심리')">#심리</button>
+      <button class="feed-chip" data-tag="인문" onclick="filterFeed(this,'인문')">#인문</button>
+      <button class="feed-chip" data-tag="SF" onclick="filterFeed(this,'SF')">#SF</button>
+    </div>
+
+    <!-- feed list -->
+    <div class="feed-list" id="feed-list">
+      <div class="loading-center"><div class="loading-spin"></div></div>
+    </div>
+    <button class="load-more-btn" id="load-more-btn" onclick="loadMore()" style="display:none">더 보기 ···</button>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel" id="right-panel">
+
+    <div class="panel-card">
+      <div class="panel-title">오늘의 질문</div>
+      <div id="questions-list">
+        <div class="loading-center" style="padding:14px"><div class="loading-spin"></div></div>
       </div>
     </div>
 
-    <!-- 읽는 책 -->
-    <div>
-      <div class="sb-section-title">읽는 책</div>
-      <div class="reading-now">
-        <div class="book-cover" id="reading-cover">📖</div>
-        <div class="reading-info">
-          <div class="reading-title" id="reading-title">로딩 중...</div>
-          <div class="reading-author" id="reading-author"></div>
-          <div class="reading-prog-track">
-            <div class="reading-prog-fill" id="reading-prog" style="width:0%"></div>
-          </div>
-          <div class="reading-pct" id="reading-pct">0% 완독</div>
-        </div>
+    <div class="panel-card">
+      <div class="panel-title">오늘의 문장</div>
+      <div id="quotes-list">
+        <div class="loading-center" style="padding:14px"><div class="loading-spin"></div></div>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <div class="panel-title">독서모임 모집 중</div>
+      <div id="recruit-list">
+        <div class="loading-center" style="padding:14px"><div class="loading-spin"></div></div>
       </div>
     </div>
 
   </aside>
 </div>
 
-<!-- TOAST -->
+<!-- mobile floating write btn -->
+<button class="fab" onclick="scrollToCompose()" title="생각 쓰기" aria-label="생각 쓰기">✦</button>
+
+<!-- toast -->
 <div class="toast" id="toast"></div>
 
-<!-- BOTTOM NAV (mobile) -->
-<nav class="bottom-nav" style="display:none;">
+<!-- bottom nav (mobile) -->
+<nav class="bottom-nav">
   <a href="/" class="bn-item"><span class="bn-icon">✦</span>별자리</a>
   <a href="/heart" class="bn-item"><span class="bn-icon">◎</span>행성계</a>
   <a href="/lounge" class="bn-item"><span class="bn-icon">✧</span>성운</a>
-  <a href="/social" class="bn-item active"><span class="bn-icon">⬡</span>독자 피드</a>
+  <a href="/social" class="bn-item active"><span class="bn-icon">⬡</span>생각피드</a>
 </nav>
 
 <script>
-// ══════════════════════════════════════════════════
+'use strict';
+// ════════════════════════════════════════════════
+//  CONSTANTS & ASSET POOLS
+// ════════════════════════════════════════════════
+const API_BASE = '/api/v2/community';
+
+// 로컬 책 이미지 — API cover_url 없을 때 순환 사용
+const BOOK_IMGS = [
+  '/asset/images/책/BOOK.jpg',
+  '/asset/images/책/BOOK (2).jpg',
+  '/asset/images/책/BOOK (3).jpg',
+  '/asset/images/책/BOOK (4).jpg',
+  '/asset/images/책/BOOK (5).jpg',
+  '/asset/images/책/BOOK (6).jpg',
+  '/asset/images/책/BOOK (7).jpg',
+  '/asset/images/책/BOOK (8).jpg',
+  '/asset/images/책/BOOK (9).jpg',
+  '/asset/images/책/BOOK (10).jpg',
+  '/asset/images/책/BOOK (11).jpg',
+  '/asset/images/책/BOOK (12).jpg',
+  '/asset/images/책/BOOK (13).jpg',
+];
+const BOOKSTORE_IMGS = [
+  '/asset/images/책/BOOK STORE.jpg',
+  '/asset/images/책/BOOK STORE (2).jpg',
+  '/asset/images/책/BOOK STORE (3).jpg',
+  '/asset/images/책/BOOK STORE (4).jpg',
+  '/asset/images/책/BOOK STORE (5).jpg',
+  '/asset/images/책/BOOK STORE (6).jpg',
+  '/asset/images/책/BOOK STORE (7).jpg',
+  '/asset/images/책/BOOK STORE (8).jpg',
+];
+const SPACE_IMGS = [
+  '/asset/images/우주배경/SPACE.jpg',
+  '/asset/images/우주배경/SPACE (2).jpg',
+  '/asset/images/우주배경/galaxy_20.png',
+  '/asset/images/우주배경/galaxy_21.png',
+];
+
+let _bookIdx = 0;
+let _bsIdx   = 0;
+function nextBookImg()  { return BOOK_IMGS[_bookIdx++ % BOOK_IMGS.length]; }
+function nextBsImg()    { return BOOKSTORE_IMGS[_bsIdx++ % BOOKSTORE_IMGS.length]; }
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let _page = 1, _tag = '', _q = '', _hasNext = false;
+const _postCache = {};   // postId → normalized post
+
+// ════════════════════════════════════════════════
 //  STARFIELD
-// ══════════════════════════════════════════════════
-(function(){
-  const c=document.getElementById('star-canvas');
-  const ctx=c.getContext('2d');
-  let W,H,stars=[];
-  function resize(){
-    W=c.width=window.innerWidth;
-    H=c.height=window.innerHeight;
-    initStars();
-  }
-  function initStars(){
-    stars=[];
-    const n=Math.floor((W*H)/5500);
-    for(let i=0;i<n;i++){
-      stars.push({
-        x:Math.random()*W,y:Math.random()*H,
-        r:Math.random()*1.3+.2,
-        a:Math.random(),da:(Math.random()-.5)*.004
-      });
+// ════════════════════════════════════════════════
+(function () {
+  const c = document.getElementById('star-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  let W, H, stars = [];
+  function resize() {
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+    stars = [];
+    const n = Math.floor((W * H) / 6500);
+    for (let i = 0; i < n; i++) {
+      stars.push({ x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.2 + .2, a: Math.random(), da: (Math.random() - .5) * .003 });
     }
   }
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    stars.forEach(s=>{
-      s.a=Math.max(.05,Math.min(1,s.a+s.da));
-      if(s.a<=.05||s.a>=1)s.da*=-1;
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(200,220,255,${s.a})`;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.a = Math.max(.04, Math.min(1, s.a + s.da));
+      if (s.a <= .04 || s.a >= 1) s.da *= -1;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(200,215,255,' + s.a + ')';
       ctx.fill();
     });
     requestAnimationFrame(draw);
   }
-  window.addEventListener('resize',resize);
-  resize();draw();
+  window.addEventListener('resize', resize);
+  resize(); draw();
 })();
 
-// ══════════════════════════════════════════════════
-//  NAV + AUTH
-// ══════════════════════════════════════════════════
-function initNav(){
-  const el=document.getElementById('nav-user');
-  if(!el)return;
-  const user=JSON.parse(localStorage.getItem('luma_user')||'{}');
-  if(user.display_name||user.email){
-    el.innerHTML=`<span>${user.emoji||'✨'}</span><span>${user.display_name||user.email}</span><button onclick="logout()" class="nav-logout">로그아웃</button>`;
-    const av=document.getElementById('composer-avatar');
-    if(av)av.textContent=user.emoji||'✨';
+// ════════════════════════════════════════════════
+//  HERO BACKGROUND (video fallback → image)
+// ════════════════════════════════════════════════
+(function () {
+  const vid = document.getElementById('hero-video');
+  const imgBg = document.getElementById('hero-img-bg');
+  if (!vid) return;
+  vid.addEventListener('error', function () {
+    vid.style.display = 'none';
+    if (imgBg) imgBg.style.backgroundImage = "url('" + SPACE_IMGS[0] + "')";
+  });
+  // 로드 확인 후에도 재생이 안되면 이미지로 대체
+  setTimeout(function () {
+    if (vid.readyState === 0) {
+      vid.style.display = 'none';
+      if (imgBg) imgBg.style.backgroundImage = "url('" + SPACE_IMGS[0] + "')";
+    }
+  }, 2000);
+})();
+
+// ════════════════════════════════════════════════
+//  TAGLINE ROTATOR
+// ════════════════════════════════════════════════
+(function () {
+  const lines = [
+    '생각은 빛이 된다',
+    '책으로 시작된 생각의 우주',
+    '읽을수록 더 깊은 우주로',
+    'Where Thoughts Become Stars',
+    '당신의 생각은 하나의 우주',
+  ];
+  const el = document.getElementById('luma-tagline');
+  if (!el) return;
+  let i = 0;
+  setInterval(function () {
+    i = (i + 1) % lines.length;
+    el.style.opacity = '0';
+    setTimeout(function () { el.textContent = lines[i]; el.style.opacity = '1'; }, 420);
+  }, 8500);
+})();
+
+// ════════════════════════════════════════════════
+//  NAV & AUTH
+// ════════════════════════════════════════════════
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + (localStorage.getItem('luma_token') || '')
+  };
+}
+
+function initNav() {
+  const el = document.getElementById('nav-user');
+  if (!el) return;
+  const user = JSON.parse(localStorage.getItem('luma_user') || '{}');
+  if (user.display_name || user.email) {
+    el.innerHTML =
+      '<span>' + esc(user.emoji || '✨') + '</span>' +
+      '<span>' + esc(user.display_name || user.email) + '</span>' +
+      '<button onclick="logout()" class="nav-logout">로그아웃</button>';
+    const av = document.getElementById('compose-av');
+    if (av) av.textContent = user.emoji || '✨';
+    const nm = document.getElementById('compose-name');
+    if (nm) nm.textContent = esc(user.display_name || user.email);
   } else {
-    el.innerHTML='<a href="/auth" class="nav-login-btn">로그인</a>';
+    el.innerHTML = '<a href="/auth" class="nav-login-btn">로그인</a>';
   }
 }
-function logout(){
+function logout() {
   localStorage.removeItem('luma_token');
   localStorage.removeItem('luma_user');
-  window.location.href='/auth';
+  location.href = '/auth';
 }
-document.addEventListener('DOMContentLoaded',initNav);
+document.addEventListener('DOMContentLoaded', initNav);
 
-// ══════════════════════════════════════════════════
-//  ROTATING TAGLINE
-// ══════════════════════════════════════════════════
-(function(){
-  const phrases=[
-    {t:'생각은 빛이 된다',ko:true},
-    {t:'읽을수록 더 깊은 우주로',ko:true},
-    {t:'당신의 생각은 하나의 우주가 됩니다',ko:true},
-    {t:'한 문장이 하나의 별이 되듯',ko:true},
-    {t:'책으로 시작된 생각의 우주',ko:true},
-    {t:'Where Thoughts Become Constellations',ko:false},
-    {t:'Read. Think. Expand.',ko:false},
-    {t:'Illuminate Your Thoughts',ko:false},
-  ];
-  const el=document.getElementById('luma-tagline');
-  if(!el)return;
-  let i=0;
-  function show(idx){
-    const p=phrases[idx];
-    el.style.opacity='0';el.style.transform='translateY(-5px)';
-    setTimeout(()=>{
-      el.textContent=p.t;
-      el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"'DM Serif Display',serif";
-      el.style.letterSpacing=p.ko?'.05em':'.12em';
-      el.style.opacity='1';el.style.transform='translateY(0)';
-    },500);
-  }
-  show(0);
-  setInterval(()=>{i=(i+1)%phrases.length;show(i);},9000);
-})();
-
-// ══════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════
-let currentPage=1,currentTag='',selectedCardStyle='dark';
-
-// ══════════════════════════════════════════════════
-//  TOAST
-// ══════════════════════════════════════════════════
-function showToast(msg,type){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast'+(type==='error'?' error':'');
-  setTimeout(()=>t.classList.add('show'),10);
-  setTimeout(()=>t.classList.remove('show'),3200);
+// ════════════════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════════════════
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function jsArg(s) {
+  return encodeURIComponent(String(s || '')).replace(/'/g, '%27');
+}
+function fmtDate(iso) {
+  try {
+    const d = new Date(iso), now = new Date(), diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return Math.floor(diff / 60) + '분 전';
+    if (diff < 86400) return Math.floor(diff / 3600) + '시간 전';
+    if (diff < 604800) return Math.floor(diff / 86400) + '일 전';
+    return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+  } catch (e) { return ''; }
+}
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  setTimeout(function () { t.classList.add('show'); }, 10);
+  setTimeout(function () { t.classList.remove('show'); }, 3300);
 }
 
-// ══════════════════════════════════════════════════
-//  COMPOSE
-// ══════════════════════════════════════════════════
-function selectStyle(el,style){
-  selectedCardStyle=style;
-  document.querySelectorAll('.style-pill').forEach(p=>{p.className='style-pill';});
-  el.classList.add('sel-'+style);
-}
-
-async function postCard(){
-  const text=document.getElementById('compose-text').value.trim();
-  const book=document.getElementById('compose-book').value.trim();
-  if(!text){showToast('내용을 입력해주세요.','error');return;}
-  const user=JSON.parse(localStorage.getItem('luma_user')||'{}');
-  const payload={
-    content:text,
-    passage:text,
-    thought:text,
-    book_title:book||null,
-    style:selectedCardStyle,
-    card_style:selectedCardStyle,
-    user_id:user.user_id||UID,
-    display_name:user.display_name||'독서인',
-    user_emoji:user.emoji||'📚'
-  };
-  try{
-    const r=await fetch('/api/social/cards',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')},
-      body:JSON.stringify(payload)
-    });
-    const d=await r.json().catch(()=>({}));
-    if(r.ok&&d.ok!==false){
-      document.getElementById('compose-text').value='';
-      document.getElementById('compose-book').value='';
-      showToast('✦ 피드에 올렸습니다!');
-      currentPage=1;loadFeed(false);
-    } else { showToast(d.error||'업로드 실패. 다시 시도해주세요.','error'); }
-  } catch(e){
-    prependDemoCard(text,book,selectedCardStyle,user);
-    showToast('✦ 피드에 올렸습니다!');
-    document.getElementById('compose-text').value='';
-    document.getElementById('compose-book').value='';
-  }
-}
-
-function prependDemoCard(text,book,style,user){
-  const div=document.createElement('div');
-  div.innerHTML=buildCardHTML({
-    id:'demo_'+Date.now(),
-    author_name:user.display_name||'나',
-    author_emoji:user.emoji||'✨',
-    author_color:'#1e2f6e',
-    book_title:book||null,
-    content:text,style,
-    created_at:new Date().toISOString(),
-    like_count:0,comment_count:0,liked:false
+// ════════════════════════════════════════════════
+//  API HELPERS
+// ════════════════════════════════════════════════
+async function apiGet(path, params) {
+  params = params || {};
+  const entries = Object.entries(params).filter(function (kv) { return kv[1] !== '' && kv[1] != null; });
+  const qs = new URLSearchParams(entries).toString();
+  const url = API_BASE + path + (qs ? '?' + qs : '');
+  const r = await fetch(url, {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('luma_token') || '') }
   });
-  document.getElementById('feed-list').prepend(div.firstElementChild);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+async function apiPost(path, body) {
+  const r = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(body || {})
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
 }
 
-// ══════════════════════════════════════════════════
-//  FILTER
-// ══════════════════════════════════════════════════
-function filterFeed(el,tag){
-  currentTag=tag;currentPage=1;
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  loadFeed(false);
-}
-
-// ══════════════════════════════════════════════════
-//  LOAD FEED
-// ══════════════════════════════════════════════════
-async function loadFeed(append){
-  if(!append){
-    document.getElementById('feed-list').innerHTML='<div class="loading-center"><div class="loading-spin"></div></div>';
-    document.getElementById('load-more-btn').style.display='none';
-  }
-  try{
-    const url=`/api/social/feed?page=${currentPage}&limit=5${currentTag?'&tag='+encodeURIComponent(currentTag):''}`;
-    const r=await fetch(url,{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    const data=await r.json();
-  const cards=(data.cards||data||[]).map(normalizeCard);
-    renderFeed(cards,append);
-    if(cards.length>=5)document.getElementById('load-more-btn').style.display='block';
-  } catch(e){
-    renderFeed(getDemoCards(),append);
-    document.getElementById('load-more-btn').style.display='block';
-  }
-}
-
-function loadMore(){currentPage++;loadFeed(true);}
-
-// ══════════════════════════════════════════════════
-//  BUILD CARD HTML
-// ══════════════════════════════════════════════════
-function buildCardHTML(c){
-  const sc='card-'+(c.style||'dark');
-  const date=formatDate(c.created_at);
-  const badge=c.book_title?`<span class="book-badge" title="${esc(c.book_title)}">📖 ${esc(c.book_title)}</span>`:'';
-  const cosmicDots=c.style==='cosmic'?genCosmicDots():'';
-  return `<div class="feed-card ${sc} fade-in" id="card-${c.id}">
-  ${cosmicDots}
-  <div class="card-header">
-    <div class="author-avatar" style="background:linear-gradient(135deg,${c.author_color||'#1e2f6e'},${shiftColor(c.author_color||'#1e2f6e')})">${c.author_emoji||'📚'}</div>
-    <div class="author-info">
-      <div class="author-name">${esc(c.author_name||'독자')}</div>
-      <div class="author-date">${date}</div>
-    </div>
-    ${badge}
-  </div>
-  <div class="card-quote">${esc(c.content||'')}</div>
-  <div class="card-actions">
-    <button class="card-btn${c.liked?' liked':''}" id="like-btn-${c.id}" onclick="toggleLike('${c.id}',this)">♥ <span id="like-count-${c.id}">${c.like_count||0}</span></button>
-    <button class="card-btn" onclick="toggleComments('${c.id}')">💬 <span id="comment-count-${c.id}">${c.comment_count||0}</span></button>
-  </div>
-  <div class="comment-section" id="comments-${c.id}">
-    <div class="comment-list" id="comment-list-${c.id}"></div>
-    <div class="comment-input-row">
-      <input class="comment-input" id="comment-input-${c.id}" placeholder="댓글을 남겨보세요..." onkeydown="if(event.key==='Enter')submitComment('${c.id}')">
-      <button class="comment-submit" onclick="submitComment('${c.id}')">↑</button>
-    </div>
-  </div>
-</div>`;
-}
-
-function normalizeCard(raw){
-  const c=raw||{};
+// ════════════════════════════════════════════════
+//  NORMALIZE POST
+// ════════════════════════════════════════════════
+function normalizePost(raw) {
+  const r = raw || {};
+  const book = r.book || {};
+  const user = r.user || {};
   return {
-    ...c,
-    id:c.id||c.card_id,
-    author_name:c.author_name||c.display_name||c.user_name||'독자',
-    author_emoji:c.author_emoji||c.user_emoji||c.emoji||'📚',
-    author_color:c.author_color||'#1e2f6e',
-    content:c.content||c.passage||c.thought||'',
-    style:c.style||c.card_style||'dark',
-    like_count:c.like_count??c.likes??0,
-    comment_count:c.comment_count??c.comments_cnt??c.comments??0,
-    liked:!!(c.liked||c.is_liked)
+    post_id:  r.post_id || r.id || r.card_id || ('p_' + Date.now() + Math.random()),
+    type:     r.type || 'thought',
+    user: {
+      display_name: user.display_name || r.author_name || r.display_name || '독자',
+      emoji:        user.emoji || r.author_emoji || r.user_emoji || '📚',
+      tags:         user.tags || []
+    },
+    book: {
+      book_id:    book.book_id || r.book_id || '',
+      title:      book.title || r.book_title || '',
+      author:     book.author || r.book_author || r.author || '',
+      cover_url:  book.cover_url || r.cover_url || '',
+      cover_emoji:book.cover_emoji || r.cover_emoji || '📚'
+    },
+    thought:      r.thought || r.content || r.passage || '',
+    question:     r.question || '',
+    emotion_tags: r.emotion_tags || r.tags || [],
+    likes:        (r.likes != null ? r.likes : (r.like_count != null ? r.like_count : 0)),
+    comments:     (r.comments != null ? r.comments : (r.comment_count != null ? r.comment_count : 0)),
+    saved:        !!(r.saved),
+    liked:        !!(r.liked || r.is_liked),
+    created_at:   r.created_at || ''
   };
 }
 
-function genCosmicDots(){
-  let h='';
-  for(let i=0;i<14;i++){
-    const x=Math.random()*100,y=Math.random()*100,s=Math.random()*1.8+.4,o=Math.random()*.5+.15;
-    h+=`<div class="star-dot" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;opacity:${o.toFixed(2)}"></div>`;
+// ════════════════════════════════════════════════
+//  RENDER THOUGHT CARD
+// ════════════════════════════════════════════════
+function renderThoughtCard(p, localCoverSrc) {
+  var pid = esc(p.post_id);
+  var tagsHtml = (p.emotion_tags || []).slice(0, 5)
+    .map(function (t) { return '<span class="tc-tag">#' + esc(t) + '</span>'; }).join('');
+
+  var coverInner;
+  if (p.book.cover_url) {
+    coverInner =
+      '<img src="' + esc(p.book.cover_url) + '" alt="' + esc(p.book.title) + '" loading="lazy"' +
+      ' onerror="this.src=\'' + esc(localCoverSrc) + '\';this.onerror=null;">';
+  } else {
+    coverInner =
+      '<img src="' + esc(localCoverSrc) + '" alt="' + esc(p.book.title) + '" loading="lazy"' +
+      ' onerror="this.style.display=\'none\';">' +
+      '<span class="tc-cover-emoji">' + esc(p.book.cover_emoji) + '</span>';
   }
-  return h;
+
+  var bookMeta = p.book.title
+    ? '<div class="tc-cover-meta">' +
+        '<div class="tc-cover-title">' + esc(p.book.title) + '</div>' +
+        (p.book.author ? '<div class="tc-cover-author">' + esc(p.book.author) + '</div>' : '') +
+      '</div>'
+    : '';
+
+  var thoughtHtml = p.thought
+    ? '<p class="tc-thought">' + esc(p.thought) + '</p>' : '';
+  var questionHtml = p.question
+    ? '<div class="tc-question">' + esc(p.question) + '</div>' : '';
+  var tagsSection = tagsHtml
+    ? '<div class="tc-tags">' + tagsHtml + '</div>' : '';
+
+  var socratesBtn = p.question
+    ? '<button class="tc-btn socrates-btn" onclick="openSocrates(\'' + pid + '\')">⚡ 소크라테스</button>' : '';
+  var communityBtn = p.book.title
+    ? '<button class="tc-btn community-btn" onclick="openCommunity(\'' + pid + '\')">🌐 모임 연결</button>' : '';
+
+  return '<article class="thought-card fade-up" id="card-' + pid + '">' +
+    '<div class="tc-cover">' +
+      coverInner +
+      '<div class="tc-cover-overlay"></div>' +
+      bookMeta +
+    '</div>' +
+    '<div class="tc-content">' +
+      '<div class="tc-user">' +
+        '<div class="tc-avatar">' + esc(p.user.emoji) + '</div>' +
+        '<span class="tc-username">' + esc(p.user.display_name) + '</span>' +
+        '<span class="tc-date">' + fmtDate(p.created_at) + '</span>' +
+      '</div>' +
+      thoughtHtml +
+      questionHtml +
+      tagsSection +
+      '<div class="tc-actions">' +
+        '<button class="tc-btn' + (p.liked ? ' liked' : '') + '" id="like-btn-' + pid + '"' +
+          ' onclick="togglePostLike(\'' + pid + '\',this)">' +
+          '♥ <span id="like-cnt-' + pid + '">' + p.likes + '</span>' +
+        '</button>' +
+        '<button class="tc-btn" onclick="toggleComments(\'' + pid + '\')">' +
+          '💬 <span id="cmt-cnt-' + pid + '">' + p.comments + '</span>' +
+        '</button>' +
+        '<button class="tc-btn' + (p.saved ? ' saved' : '') + '" id="save-btn-' + pid + '"' +
+          ' onclick="togglePostSave(\'' + pid + '\',this)">' +
+          (p.saved ? '🔖 저장됨' : '🔖 저장') +
+        '</button>' +
+        socratesBtn + communityBtn +
+      '</div>' +
+      '<div class="tc-comments" id="comments-' + pid + '">' +
+        '<div class="comment-list" id="cmt-list-' + pid + '"></div>' +
+        '<div class="comment-input-row">' +
+          '<input class="comment-input" id="cmt-input-' + pid + '"' +
+            ' placeholder="인사이트를 남겨보세요..."' +
+            ' onkeydown="if(event.key===\'Enter\')submitComment(\'' + pid + '\')">' +
+          '<button class="comment-submit" onclick="submitComment(\'' + pid + '\')">↑</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
 }
 
-function renderFeed(cards,append){
-  const list=document.getElementById('feed-list');
-  if(!append)list.innerHTML='';
-  if(!cards.length&&!append){
-    list.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted);font-size:.84rem;">아직 게시물이 없습니다.<br>첫 번째로 생각을 나눠보세요 ✦</div>';
+// ════════════════════════════════════════════════
+//  RENDER FEED
+// ════════════════════════════════════════════════
+function renderFeed(posts, append) {
+  const list = document.getElementById('feed-list');
+  if (!append) list.innerHTML = '';
+
+  if (!posts.length && !append) {
+    list.innerHTML =
+      '<div class="state-msg">' +
+        '<div class="state-icon">📭</div>' +
+        '아직 발견할 생각이 없습니다.<br>' +
+        '첫 생각을 남기거나 책 메모를 공개해보세요.' +
+      '</div>';
     return;
   }
-  cards.forEach(c=>{
-    const div=document.createElement('div');
-    div.innerHTML=buildCardHTML(c);
+
+  posts.forEach(function (raw) {
+    const p = normalizePost(raw);
+    _postCache[p.post_id] = p;
+    const localCover = nextBookImg();
+    const div = document.createElement('div');
+    div.innerHTML = renderThoughtCard(p, localCover);
     list.appendChild(div.firstElementChild);
   });
 }
 
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+//  LOAD FEED
+// ════════════════════════════════════════════════
+async function loadFeed(opts) {
+  opts = opts || {};
+  const append = opts.append || false;
+  const page   = opts.page  || 1;
+  const tag    = opts.tag   != null ? opts.tag : _tag;
+  const q      = opts.q     != null ? opts.q   : _q;
+
+  if (!append) {
+    document.getElementById('feed-list').innerHTML =
+      '<div class="loading-center"><div class="loading-spin"></div></div>';
+    document.getElementById('load-more-btn').style.display = 'none';
+    _bookIdx = 0;
+  }
+
+  try {
+    const params = { page: page, limit: 10 };
+    if (tag) params.tag = tag;
+    if (q)   params.q   = q;
+    const data = await apiGet('/feed', params);
+    const posts = data.posts || data.cards || [];
+    renderFeed(posts, append);
+    _hasNext = data.has_next || posts.length >= 10;
+    document.getElementById('load-more-btn').style.display = _hasNext ? 'block' : 'none';
+  } catch (e) {
+    if (!append) {
+      document.getElementById('feed-list').innerHTML =
+        '<div class="state-msg error">' +
+          '<div class="state-icon">⚠</div>' +
+          '생각 피드를 불러오지 못했습니다.<br>잠시 후 다시 시도해주세요.' +
+        '</div>';
+    }
+  }
+}
+
+function loadMore() {
+  _page++;
+  loadFeed({ append: true, page: _page });
+}
+
+// ════════════════════════════════════════════════
+//  LOAD TRENDING BOOKS
+// ════════════════════════════════════════════════
+async function loadTrendingBooks() {
+  const carousel = document.getElementById('trending-carousel');
+  try {
+    const data = await apiGet('/trending-books');
+    const books = data.books || data || [];
+    if (!books.length) { carousel.innerHTML = ''; return; }
+    carousel.innerHTML = books.map(function (b, i) {
+      const localCover = BOOKSTORE_IMGS[i % BOOKSTORE_IMGS.length];
+      var coverInner;
+      if (b.cover_url) {
+        coverInner = '<img src="' + esc(b.cover_url) + '" alt="' + esc(b.title || '') + '" loading="lazy"' +
+          ' onerror="this.src=\'' + esc(localCover) + '\';this.onerror=null;">';
+      } else {
+        coverInner =
+          '<img src="' + esc(localCover) + '" alt="' + esc(b.title || '') + '" loading="lazy"' +
+          ' onerror="this.style.display=\'none\';">' +
+          '<span class="trending-cover-emoji">' + esc(b.cover_emoji || '📚') + '</span>';
+      }
+      return '<div class="trending-book-card" onclick="filterByBook(\'' + esc(b.title || '') + '\')">' +
+        '<div class="trending-cover">' + coverInner + '</div>' +
+        '<div class="trending-meta">' +
+          '<div class="trending-title" title="' + esc(b.title || '') + '">' + esc(b.title || '제목 없음') + '</div>' +
+          '<div class="trending-author">' + esc(b.author || '') + '</div>' +
+          '<div class="trending-stats">' +
+            '<span class="trending-stat">생각 <b>' + (b.thought_count || 0) + '</b></span>' +
+            '<span class="trending-stat">질문 <b>' + (b.question_count || 0) + '</b></span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    carousel.innerHTML = '<div style="color:var(--muted);font-size:.76rem;padding:16px 4px">트렌딩 정보를 불러오지 못했습니다.</div>';
+  }
+}
+
+// ════════════════════════════════════════════════
+//  LOAD QUESTIONS
+// ════════════════════════════════════════════════
+async function loadQuestions() {
+  const el = document.getElementById('questions-list');
+  try {
+    const data = await apiGet('/questions');
+    const questions = data.questions || data || [];
+    if (!questions.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:.74rem;padding:4px 0">오늘의 질문을 준비 중입니다.</div>';
+      return;
+    }
+    el.innerHTML = questions.slice(0, 3).map(function (q) {
+      var text  = esc(q.question || q.text || q.content || '');
+      var book  = esc(q.book_title || (q.book && q.book.title) || '');
+      var textE = jsArg(q.question || q.text || q.content || '');
+      var bookE = jsArg(q.book_title || (q.book && q.book.title) || '');
+      return '<div class="today-q-item" onclick="goSocrates(decodeURIComponent(\'' + textE + '\'),decodeURIComponent(\'' + bookE + '\'))">' +
+        '<div class="tq-text">' + text + '</div>' +
+        (book ? '<div class="tq-book">📖 ' + book + '</div>' : '') +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:.74rem;padding:4px 0">질문을 불러오지 못했습니다.</div>';
+  }
+}
+
+// ════════════════════════════════════════════════
+//  LOAD QUOTES
+// ════════════════════════════════════════════════
+async function loadQuotes() {
+  const el = document.getElementById('quotes-list');
+  try {
+    const data = await apiGet('/quotes');
+    const quotes = data.quotes || data || [];
+    if (!quotes.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:.74rem;padding:4px 0">오늘의 문장을 준비 중입니다.</div>';
+      return;
+    }
+    el.innerHTML = quotes.slice(0, 2).map(function (q) {
+      var text = esc(q.quote || q.content || q.thought || '');
+      var book = esc((q.book || {}).title || q.book_title || '');
+      return '<div class="today-quote-item">' +
+        '<div class="tq-quote-text">' + text + '</div>' +
+        (book ? '<div class="tq-quote-book">📖 ' + book + '</div>' : '') +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:.74rem;padding:4px 0">오늘의 문장을 불러오지 못했습니다.</div>';
+  }
+}
+
+// ════════════════════════════════════════════════
+//  LOAD RECRUIT CARDS
+// ════════════════════════════════════════════════
+async function loadRecruitCards() {
+  const el = document.getElementById('recruit-list');
+  try {
+    const data = await apiGet('/lounge-recruit');
+    const recruits = data.clubs || data.recruits || data || [];
+    if (!recruits.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:.74rem;padding:4px 0">모집 중인 모임이 없습니다.</div>';
+      return;
+    }
+    el.innerHTML = recruits.slice(0, 4).map(function (r, i) {
+      const localCover = BOOK_IMGS[(i + 7) % BOOK_IMGS.length];
+      var coverInner;
+      if (r.cover_url) {
+        coverInner = '<img src="' + esc(r.cover_url) + '" alt="" loading="lazy"' +
+          ' onerror="this.src=\'' + esc(localCover) + '\';this.onerror=null;">';
+      } else {
+        coverInner =
+          '<img src="' + esc(localCover) + '" alt="" loading="lazy"' +
+          ' onerror="this.style.display=\'none\';">' +
+          '<span class="recruit-cover-emoji">' + esc(r.cover_emoji || r.emoji || '📖') + '</span>';
+      }
+      var bk = esc((r.book && r.book.title) || r.book_title || r.current_book || r.name || '');
+      var bkArg = jsArg((r.book && r.book.title) || r.book_title || r.current_book || r.name || '');
+      return '<div class="recruit-item" onclick="goRecruit(decodeURIComponent(\'' + bkArg + '\'))">' +
+        '<div class="recruit-cover">' + coverInner + '</div>' +
+        '<div class="recruit-info">' +
+          '<div class="recruit-book">' + bk + '</div>' +
+          '<div class="recruit-meta">' + (r.member_count || 0) + '명 참여 · 질문 ' + (r.question_count || 0) + '개</div>' +
+        '</div>' +
+        '<span class="recruit-join">참여</span>' +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:.74rem;padding:4px 0">모임 정보를 불러오지 못했습니다.</div>';
+  }
+}
+
+// ════════════════════════════════════════════════
 //  LIKE
-// ══════════════════════════════════════════════════
-async function toggleLike(id,btn){
-  const liked=btn.classList.contains('liked');
-  const n=document.getElementById('like-count-'+id);
-  if(liked){btn.classList.remove('liked');n.textContent=Math.max(0,parseInt(n.textContent)-1);}
-  else{btn.classList.add('liked');n.textContent=parseInt(n.textContent)+1;}
-  try{await fetch(`/api/social/cards/${id}/like`,{method:'POST',headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});}catch(e){}
+// ════════════════════════════════════════════════
+async function togglePostLike(postId, btn) {
+  const liked   = btn.classList.contains('liked');
+  const countEl = document.getElementById('like-cnt-' + postId);
+  const prev    = parseInt(countEl ? countEl.textContent : '0') || 0;
+  // optimistic
+  if (liked) { btn.classList.remove('liked'); if (countEl) countEl.textContent = Math.max(0, prev - 1); }
+  else        { btn.classList.add('liked');    if (countEl) countEl.textContent = prev + 1; }
+  try {
+    const d = await apiPost('/posts/' + postId + '/like');
+    const newCount = d.likes != null ? d.likes : (d.like_count != null ? d.like_count : null);
+    if (newCount != null && countEl) countEl.textContent = newCount;
+  } catch (e) {
+    // rollback
+    if (liked) { btn.classList.add('liked');    if (countEl) countEl.textContent = prev; }
+    else        { btn.classList.remove('liked'); if (countEl) countEl.textContent = prev; }
+    showToast('공감 처리에 실패했습니다.', 'error');
+  }
 }
 
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+//  SAVE
+// ════════════════════════════════════════════════
+async function togglePostSave(postId, btn) {
+  const saved = btn.classList.contains('saved');
+  // optimistic
+  if (saved) { btn.classList.remove('saved'); btn.textContent = '🔖 저장'; }
+  else        { btn.classList.add('saved');    btn.textContent = '🔖 저장됨'; }
+  try {
+    await apiPost('/posts/' + postId + '/save');
+    showToast(saved ? '저장을 취소했습니다.' : '✦ 저장했습니다!');
+  } catch (e) {
+    // rollback
+    if (saved) { btn.classList.add('saved');    btn.textContent = '🔖 저장됨'; }
+    else        { btn.classList.remove('saved'); btn.textContent = '🔖 저장'; }
+    showToast('저장 처리에 실패했습니다.', 'error');
+  }
+}
+
+// ════════════════════════════════════════════════
 //  COMMENTS
-// ══════════════════════════════════════════════════
-async function toggleComments(id){
-  const sec=document.getElementById('comments-'+id);
-  const open=sec.classList.toggle('open');
-  if(open&&!sec.dataset.loaded){sec.dataset.loaded='1';await loadComments(id);}
+// ════════════════════════════════════════════════
+async function toggleComments(postId) {
+  const sec  = document.getElementById('comments-' + postId);
+  const open = sec.classList.toggle('open');
+  if (open && !sec.dataset.loaded) { sec.dataset.loaded = '1'; await loadComments(postId); }
 }
 
-async function loadComments(id){
-  const listEl=document.getElementById('comment-list-'+id);
-  try{
-    const r=await fetch(`/api/social/cards/${id}/comments`,{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    const data=await r.json();
-    renderComments(listEl,data.comments||data);
-  } catch(e){ renderComments(listEl,getDemoComments()); }
+async function loadComments(postId) {
+  const listEl = document.getElementById('cmt-list-' + postId);
+  listEl.innerHTML = '<div class="loading-center" style="padding:8px"><div class="loading-spin" style="width:16px;height:16px;border-width:1.5px"></div></div>';
+  try {
+    const d = await apiGet('/posts/' + postId + '/comments');
+    renderComments(listEl, d.comments || d || []);
+  } catch (e) {
+    listEl.innerHTML = '<div style="font-size:.72rem;color:var(--muted);padding:4px 0">댓글을 불러오지 못했습니다.</div>';
+  }
 }
 
-function renderComments(listEl,comments){
-  listEl.innerHTML='';
-  if(!comments.length){
-    listEl.innerHTML='<div style="font-size:.72rem;color:var(--muted);padding:4px 0 8px">첫 댓글을 남겨보세요.</div>';
+function renderComments(listEl, comments) {
+  listEl.innerHTML = '';
+  if (!comments.length) {
+    listEl.innerHTML = '<div style="font-size:.72rem;color:var(--muted);padding:4px 0 8px">첫 인사이트를 남겨보세요.</div>';
     return;
   }
-  comments.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='comment-item';
-    d.innerHTML=`<div class="comment-av">${c.author_emoji||'📚'}</div><div class="comment-body"><div class="comment-author">${esc(c.author_name||'독자')}</div><div class="comment-text">${esc(c.content||'')}</div></div>`;
+  comments.forEach(function (c) {
+    const d = document.createElement('div');
+    d.className = 'comment-item';
+    d.innerHTML =
+      '<div class="comment-av">' + esc(c.author_emoji || c.emoji || '📚') + '</div>' +
+      '<div class="comment-body">' +
+        '<div class="comment-author">' + esc(c.author_name || c.display_name || '독자') + '</div>' +
+        '<div class="comment-text">' + esc(c.content || c.text || '') + '</div>' +
+      '</div>';
     listEl.appendChild(d);
   });
 }
 
-async function submitComment(id){
-  const input=document.getElementById('comment-input-'+id);
-  const text=input.value.trim();if(!text)return;
-  const user=JSON.parse(localStorage.getItem('luma_user')||'{}');
-  input.value='';
-  const listEl=document.getElementById('comment-list-'+id);
-  const d=document.createElement('div');d.className='comment-item';
-  d.innerHTML=`<div class="comment-av">${user.emoji||'✨'}</div><div class="comment-body"><div class="comment-author">${esc(user.display_name||'나')}</div><div class="comment-text">${esc(text)}</div></div>`;
+async function submitComment(postId) {
+  const input = document.getElementById('cmt-input-' + postId);
+  const text  = input.value.trim();
+  if (!text) return;
+  const user = JSON.parse(localStorage.getItem('luma_user') || '{}');
+  input.value = '';
+  const listEl = document.getElementById('cmt-list-' + postId);
+  // optimistic
+  const d = document.createElement('div');
+  d.className = 'comment-item';
+  d.innerHTML =
+    '<div class="comment-av">' + esc(user.emoji || '✨') + '</div>' +
+    '<div class="comment-body">' +
+      '<div class="comment-author">' + esc(user.display_name || '나') + '</div>' +
+      '<div class="comment-text">' + esc(text) + '</div>' +
+    '</div>';
   listEl.appendChild(d);
-  const cn=document.getElementById('comment-count-'+id);
-  cn.textContent=parseInt(cn.textContent||'0')+1;
-  try{await fetch(`/api/social/cards/${id}/comments`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')},body:JSON.stringify({content:text,text:text,user_id:UID,display_name:user.display_name||'나',emoji:user.emoji||'✨'})});}catch(e){}
+  const cn = document.getElementById('cmt-cnt-' + postId);
+  if (cn) cn.textContent = (parseInt(cn.textContent || '0') || 0) + 1;
+  try {
+    await apiPost('/posts/' + postId + '/comments', { content: text });
+  } catch (e) {
+    showToast('댓글 전송에 실패했습니다.', 'error');
+  }
 }
 
-// ══════════════════════════════════════════════════
-//  LEFT SIDEBAR
-// ══════════════════════════════════════════════════
-async function loadClubs(){
-  try{
-    const r=await fetch('/api/social/clubs',{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    const data=await r.json();renderClubs(data.clubs||data);
-  } catch(e){renderClubs(getDemoClubs());}
+// ════════════════════════════════════════════════
+//  NAVIGATION HELPERS
+// ════════════════════════════════════════════════
+function openSocrates(postId) {
+  const p = _postCache[postId]; if (!p) return;
+  const params = new URLSearchParams({
+    question:   p.question || '',
+    book_id:    p.book.book_id || '',
+    book_title: p.book.title || '',
+    thought:    p.thought || ''
+  });
+  location.href = '/socrates?' + params.toString();
 }
-function renderClubs(clubs){
-  const el=document.getElementById('club-list');
-  if(!clubs.length){el.innerHTML='<div style="font-size:.74rem;color:var(--muted);text-align:center;padding:10px">가입한 모임이 없습니다</div>';return;}
-  el.innerHTML=clubs.map(c=>`<div class="club-item"><div class="club-name">${esc(c.name)}</div><div class="club-meta">👥 ${c.member_count||0}명</div><div class="club-book">📖 ${esc(c.current_book||'선정 중')}</div></div>`).join('');
+function openCommunity(postId) {
+  const p = _postCache[postId]; if (!p) return;
+  const params = new URLSearchParams({ book_id: p.book.book_id || '', book_title: p.book.title || '' });
+  location.href = '/community/?' + params.toString();
 }
-
-async function loadChallenge(){
-  try{
-    const r=await fetch('/api/social/challenge',{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    updateChallenge(await r.json());
-  } catch(e){updateChallenge({read:3,goal:5,label:'목표까지 2권 더! 우주를 향해 나아가세요 🚀'});}
+function goSocrates(question, bookTitle) {
+  const params = new URLSearchParams({ question: question, book_title: bookTitle });
+  location.href = '/socrates?' + params.toString();
 }
-function updateChallenge(d){
-  const pct=Math.min(100,Math.round((d.read/d.goal)*100));
-  document.getElementById('ch-fraction').textContent=`${d.read}/${d.goal}`;
-  document.getElementById('ch-bar').style.width=pct+'%';
-  document.getElementById('ch-label').textContent=d.label||(d.goal-d.read>0?`목표까지 ${d.goal-d.read}권 더!`:'이번 달 목표 달성! 🎉');
+function goRecruit(bookTitle) {
+  location.href = '/community/?' + new URLSearchParams({ book_title: bookTitle }).toString();
 }
 
-const ALL_BADGES=[
-  {icon:'⭐',name:'첫 별빛'},{icon:'🔭',name:'관측자'},{icon:'📚',name:'다독가'},{icon:'🌌',name:'은하수'},
-  {icon:'🪐',name:'행성인'},{icon:'🌠',name:'별똥별'},{icon:'🌙',name:'달빛 독자'},{icon:'💫',name:'우주 탐험가'},
-];
-async function loadBadges(){
-  let earned=['⭐','🔭','📚','🌌'];
-  try{
-    const r=await fetch('/api/social/badges',{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    const d=await r.json();earned=d.badges||d;
-  } catch(e){}
-  const el=document.getElementById('badge-grid');
-  el.innerHTML=ALL_BADGES.map(b=>{
-    const active=earned.includes(b.icon)||earned.some(e=>e.icon===b.icon);
-    return `<div class="badge-item" title="${b.name}"><div class="badge-icon${active?'':' locked'}">${b.icon}</div><div class="badge-name">${b.name}</div></div>`;
-  }).join('');
+// ════════════════════════════════════════════════
+//  SEARCH & FILTER
+// ════════════════════════════════════════════════
+function doSearch() {
+  const q = document.getElementById('hero-search').value.trim();
+  _q = q; _tag = ''; _page = 1;
+  document.querySelectorAll('.hero-chip,.feed-chip').forEach(function (c) { c.classList.remove('active'); });
+  loadFeed({ page: 1, q: q, tag: '' });
+}
+function chipFilter(el, tag) {
+  document.querySelectorAll('.hero-chip,.feed-chip').forEach(function (c) { c.classList.remove('active'); });
+  el.classList.add('active');
+  _tag = tag; _q = ''; _page = 1;
+  loadFeed({ page: 1, tag: tag, q: '' });
+}
+function filterFeed(el, tag) {
+  document.querySelectorAll('.hero-chip,.feed-chip').forEach(function (c) { c.classList.remove('active'); });
+  el.classList.add('active');
+  _tag = tag; _q = ''; _page = 1;
+  loadFeed({ page: 1, tag: tag, q: '' });
+}
+function filterByBook(title) {
+  if (!title) return;
+  _q = title; _tag = ''; _page = 1;
+  document.getElementById('hero-search').value = title;
+  document.querySelectorAll('.hero-chip,.feed-chip').forEach(function (c) { c.classList.remove('active'); });
+  loadFeed({ page: 1, q: title, tag: '' });
+  const feedEl = document.getElementById('feed-col');
+  if (feedEl) feedEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('hero-search').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') doSearch();
+  });
+});
+
+// ════════════════════════════════════════════════
+//  COMPOSE EXPAND / COLLAPSE
+// ════════════════════════════════════════════════
+function expandCompose() {
+  document.getElementById('compose-quick').style.display = 'none';
+  document.getElementById('compose-expanded').classList.add('open');
+  document.getElementById('compose-toggle').textContent = '접기 ▴';
+  // quick input에 내용이 있으면 thought로 이동
+  var q = document.getElementById('compose-quick-in');
+  if (q && q.value.trim()) {
+    var t = document.getElementById('compose-thought');
+    if (t && !t.value) t.value = q.value.trim();
+    q.value = '';
+  }
+  setTimeout(function () {
+    var t = document.getElementById('compose-thought');
+    if (t) t.focus();
+  }, 60);
 }
 
-// ══════════════════════════════════════════════════
-//  RIGHT SIDEBAR
-// ══════════════════════════════════════════════════
-async function loadMatch(){
-  try{
-    const r=await fetch('/api/social/match',{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    const d=await r.json();
-    const match=(d.matches&&d.matches[0])||d;
-    if(match.display_name||match.name)document.getElementById('match-name').textContent=match.display_name||match.name;
-    if(match.shared_books)document.getElementById('match-books').textContent=`공통 관심서 ${match.shared_books.length}권`;
-    if(match.shared_genres||match.genres)document.getElementById('match-genres').innerHTML=(match.shared_genres||match.genres||[]).map(g=>`<span class="genre-tag">${esc(g)}</span>`).join('');
-  } catch(e){}
-}
-function connectMatch(){showToast('✦ 연결 요청을 보냈습니다!');}
-
-function setDemoStats(){
-  document.getElementById('stat-posts').textContent='12';
-  document.getElementById('stat-likes').textContent='34';
-  document.getElementById('stat-comments').textContent='9';
-}
-async function loadStats(){
-  try{
-    const r=await fetch('/api/social/feed?page=1&limit=1',{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    const d=await r.json();
-    if(d.my_stats){
-      document.getElementById('stat-posts').textContent=d.my_stats.posts||'—';
-      document.getElementById('stat-likes').textContent=d.my_stats.likes||'—';
-      document.getElementById('stat-comments').textContent=d.my_stats.comments||'—';
-    } else {setDemoStats();}
-  } catch(e){setDemoStats();}
+function collapseCompose() {
+  document.getElementById('compose-quick').style.display = 'flex';
+  document.getElementById('compose-expanded').classList.remove('open');
+  document.getElementById('compose-toggle').textContent = '자세히 ▾';
 }
 
-async function loadReadingNow(){
-  try{
-    const r=await fetch('/api/v2/shelf?user_id='+encodeURIComponent(UID),{headers:{'Authorization':'Bearer '+(localStorage.getItem('luma_token')||'')}});
-    if(!r.ok)throw new Error();
-    const d=await r.json();
-    const books=(d.books||d||[]).filter(b=>b.status==='reading');
-    if(books.length){
-      const b=books[0];
-      document.getElementById('reading-title').textContent=b.title||'제목 없음';
-      document.getElementById('reading-author').textContent=b.author||'';
-      const pct=b.progress||0;
-      document.getElementById('reading-prog').style.width=pct+'%';
-      document.getElementById('reading-pct').textContent=pct+'% 완독';
-      document.getElementById('reading-cover').textContent=b.emoji||'📖';
-    } else {setDemoReading();}
-  } catch(e){setDemoReading();}
-}
-function setDemoReading(){
-  document.getElementById('reading-title').textContent='파친코';
-  document.getElementById('reading-author').textContent='이민진';
-  document.getElementById('reading-prog').style.width='63%';
-  document.getElementById('reading-pct').textContent='63% 완독';
-  document.getElementById('reading-cover').textContent='🌊';
+function toggleCompose() {
+  var expanded = document.getElementById('compose-expanded');
+  if (expanded.classList.contains('open')) { collapseCompose(); }
+  else { expandCompose(); }
 }
 
-// ══════════════════════════════════════════════════
-//  DEMO DATA
-// ══════════════════════════════════════════════════
-function getDemoCards(){
-  return [
-    {id:'d1',author_name:'별빛 독자',author_emoji:'🌌',author_color:'#0f1e4a',book_title:'파친코',content:'역사는 우리를 망쳤다고, 그녀는 생각했다. 그러나 그것과 상관없이 우리는 살아야 한다는 것도.',style:'dark',created_at:new Date(Date.now()-3600000).toISOString(),like_count:24,comment_count:3,liked:false},
-    {id:'d2',author_name:'새벽 탐험가',author_emoji:'🌙',author_color:'#1a0d3a',book_title:'코스모스',content:'우주는 우리 안에 있다. 우리는 별의 재료로 만들어졌다. 우리는 우주가 스스로를 알아가는 방식이다.',style:'cosmic',created_at:new Date(Date.now()-7200000).toISOString(),like_count:41,comment_count:7,liked:true},
-    {id:'d3',author_name:'숲속 독자',author_emoji:'🌿',author_color:'#071a0f',book_title:'채식주의자',content:'세상에 존재하는 모든 것들은 이유 없이 거기 있지 않다. 나무가 그러하듯, 꽃이 그러하듯.',style:'forest',created_at:new Date(Date.now()-18000000).toISOString(),like_count:15,comment_count:2,liked:false},
-    {id:'d4',author_name:'온기 수집가',author_emoji:'☕',author_color:'#2d1205',book_title:'도둑맞은 집중력',content:'우리는 끊임없이 무언가를 확인하고, 클릭하고, 스와이프한다. 하지만 진짜 생각은 고요함 속에서 자란다.',style:'warm',created_at:new Date(Date.now()-86400000).toISOString(),like_count:33,comment_count:5,liked:false},
-    {id:'d5',author_name:'순백 관찰자',author_emoji:'❄️',author_color:'#111428',book_title:'나미야 잡화점의 기적',content:'편지 한 통으로 누군가의 인생이 바뀔 수 있다면, 우리가 나누는 모든 말도 그럴 수 있지 않을까.',style:'pure',created_at:new Date(Date.now()-172800000).toISOString(),like_count:18,comment_count:4,liked:false},
-  ];
-}
-function getDemoComments(){
-  return [
-    {author_name:'별빛 독자',author_emoji:'🌌',content:'정말 공감해요. 이 문장에서 오래 멈췄어요.'},
-    {author_name:'새벽 탐험가',author_emoji:'🌙',content:'이 책 꼭 읽어봐야겠다는 생각이 드네요!'},
-  ];
-}
-function getDemoClubs(){
-  return [
-    {name:'SF 우주 독서단',member_count:12,current_book:'코스모스'},
-    {name:'철학 사유 클럽',member_count:8,current_book:'존재와 시간'},
-    {name:'한국문학 탐험대',member_count:15,current_book:'파친코'},
-  ];
+function toggleTag(btn) {
+  btn.classList.toggle('sel');
 }
 
-// ══════════════════════════════════════════════════
-//  UTILITIES
-// ══════════════════════════════════════════════════
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-function formatDate(iso){
-  try{
-    const d=new Date(iso),now=new Date(),diff=Math.floor((now-d)/1000);
-    if(diff<60)return '방금 전';
-    if(diff<3600)return `${Math.floor(diff/60)}분 전`;
-    if(diff<86400)return `${Math.floor(diff/3600)}시간 전`;
-    if(diff<604800)return `${Math.floor(diff/86400)}일 전`;
-    return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
-  } catch(e){return '';}
+function getSelectedTags() {
+  var chips = document.querySelectorAll('#compose-tags .compose-tag-chip.sel');
+  return Array.from(chips).map(function (c) { return c.dataset.tag; });
 }
 
-function shiftColor(hex){
-  try{
-    const n=parseInt(hex.replace('#',''),16);
-    const r=Math.min(255,((n>>16)&255)+35),g=Math.min(255,((n>>8)&255)+20),b=Math.min(255,(n&255)+65);
-    return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
-  } catch(e){return '#2d1b6e';}
+// ════════════════════════════════════════════════
+//  QUICK POST (collapsed)
+// ════════════════════════════════════════════════
+async function quickPost() {
+  var text = document.getElementById('compose-quick-in').value.trim();
+  if (!text) { showToast('내용을 입력해주세요.', 'error'); return; }
+  var btn = document.querySelector('.compose-quick-btn');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    await apiPost('/posts', { content: text, thought: text });
+    document.getElementById('compose-quick-in').value = '';
+    showToast('✦ 생각을 나눴습니다!');
+    _page = 1; _tag = ''; _q = '';
+    loadFeed({ page: 1, tag: '', q: '' });
+  } catch (e) {
+    showToast('올리기에 실패했습니다. 다시 시도해주세요.', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '✦ 나누기';
+  }
 }
 
-// ══════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+//  POST THOUGHT (expanded)
+// ════════════════════════════════════════════════
+async function postThought() {
+  var passage = document.getElementById('compose-passage').value.trim();
+  var thought  = document.getElementById('compose-thought').value.trim();
+  var book     = document.getElementById('compose-book').value.trim();
+  var question = document.getElementById('compose-question').value.trim();
+  var tags     = getSelectedTags();
+
+  var content = (passage && thought)
+    ? '\uacf5\uc720\ud55c \uad6c\uc808:\n' + passage + '\n\n\ub0b4 \uc0dd\uac01:\n' + thought
+    : (thought || passage);
+  if (!content) { showToast('내 생각 또는 공유할 구절을 입력해주세요.', 'error'); return; }
+
+  var btn = document.getElementById('compose-btn');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    await apiPost('/posts', {
+      content:    content,
+      thought:    content,
+      passage:    passage,
+      book_title: book || null,
+      question:   question || null,
+      tags:       tags,
+    });
+    // 초기화
+    ['compose-passage','compose-thought','compose-book','compose-question'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.querySelectorAll('#compose-tags .compose-tag-chip.sel')
+      .forEach(function (c) { c.classList.remove('sel'); });
+    collapseCompose();
+    showToast('✦ 생각을 나눴습니다!');
+    _page = 1; _tag = ''; _q = '';
+    loadFeed({ page: 1, tag: '', q: '' });
+  } catch (e) {
+    showToast('올리기에 실패했습니다. 다시 시도해주세요.', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '✦ 생각 나누기';
+  }
+}
+
+// ════════════════════════════════════════════════
+//  MOBILE SCROLL TO COMPOSE
+// ════════════════════════════════════════════════
+function scrollToCompose() {
+  const card = document.querySelector('.compose-card');
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(function () {
+    expandCompose();
+  }, 350);
+}
+
+// ════════════════════════════════════════════════
 //  INIT
-// ══════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
-  loadFeed(false);
-  loadClubs();
-  loadChallenge();
-  loadBadges();
-  loadMatch();
-  loadStats();
-  loadReadingNow();
-  // set default style pill
-  const defaultPill=document.querySelector('.style-pill[data-style="dark"]');
-  if(defaultPill)defaultPill.classList.add('sel-dark');
+// ════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function () {
+  loadFeed({ page: 1, tag: '', q: '' });
+  loadTrendingBooks();
+  loadQuestions();
+  loadQuotes();
+  loadRecruitCards();
 });
 </script>
 </body>

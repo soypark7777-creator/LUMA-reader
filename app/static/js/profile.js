@@ -2,7 +2,6 @@
   'use strict';
 
   const API_BASE = '/api/v2/profile';
-  const DEMO_USER_ID = 'user_demo';
 
   const state = {
     userId: getUserId(),
@@ -22,6 +21,10 @@
 
   /* ─── Init ─────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('luma_token') && !state.userId) {
+      window.location.href = '/auth/login';
+      return;
+    }
     initNav();
     loadAvatarFromStorage();
     bindActions();
@@ -36,14 +39,15 @@
   function getUserId() {
     const params = new URLSearchParams(window.location.search);
     const stored = getStoredUser();
-    return params.get('user_id') || stored.user_id || stored.id || DEMO_USER_ID;
+    return params.get('user_id') || stored.user_id || stored.id || '';
   }
   function authHeaders() {
     const token = localStorage.getItem('luma_token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
   async function apiGet(path) {
-    const url = `${API_BASE}${path}?user_id=${encodeURIComponent(state.userId)}`;
+    const qs = state.userId ? `?user_id=${encodeURIComponent(state.userId)}` : '';
+    const url = `${API_BASE}${path}${qs}`;
     const res = await fetch(url, { headers: { Accept: 'application/json', ...authHeaders() } });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false) throw new Error(data.error || `API ${res.status}`);
@@ -71,20 +75,40 @@
 
   /* ─── Avatar photo (localStorage) ──────────────────── */
   function loadAvatarFromStorage() {
-    const saved = localStorage.getItem('luma_avatar');
-    if (saved) setAvatarImage(saved);
+    const key = avatarStorageKey();
+    const saved = localStorage.getItem(key) || localStorage.getItem('luma_avatar');
+    if (!saved) return;
+    setAvatarImage(saved);
+    try {
+      if (!localStorage.getItem(key)) localStorage.setItem(key, saved);
+    } catch (_) {}
   }
+  function avatarStorageKey() {
+    return `luma_avatar_${state.userId || 'anonymous'}`;
+  }
+
   function setAvatarImage(dataUrl) {
+    if (!dataUrl) return;
     state.avatarDataUrl = dataUrl;
+    ['#profile-avatar', '#modal-avatar-preview'].forEach((sel) => {
+      const box = $(sel);
+      if (box) box.classList.add('has-image');
+    });
     ['#avatar-img', '#modal-avatar-img'].forEach((sel) => {
       const img = $(sel);
       if (!img) return;
       img.src = dataUrl;
+      img.removeAttribute('hidden');
       img.style.display = 'block';
+      img.style.visibility = 'visible';
+      img.style.opacity = '1';
+      img.style.zIndex = '3';
     });
     ['#avatar-initial', '#modal-avatar-initial'].forEach((sel) => {
       const el = $(sel);
-      if (el) el.style.display = 'none';
+      if (!el) return;
+      el.style.display = 'none';
+      el.setAttribute('aria-hidden', 'true');
     });
   }
 
@@ -96,10 +120,13 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        const url = e.target.result;
-        localStorage.setItem('luma_avatar', url);
+        const url = e.target && e.target.result;
+        if (!url) return;
         setAvatarImage(url);
-        toast('프로필 사진을 변경했습니다.');
+        try {
+          localStorage.setItem(avatarStorageKey(), url);
+        } catch (_) {}
+        toast('프로필을 저장했습니다. 🌿');
       };
       reader.readAsDataURL(file);
     });
@@ -159,13 +186,13 @@
     const profile = {
       display_name: stored.display_name || stored.name || 'LUMA 독자',
       email: stored.email || state.userId,
-      bio: stored.bio || '사람의 마음과 우주, 고독에 대해 읽는 독자',
-      tags: stored.tags || ['철학', '우주', '고독', '성장'],
+      bio: stored.bio || '',
+      tags: stored.tags || [],
       mbti: stored.mbti || '',
       persona: '사유형 독자',
       ...(state.summary || {})
     };
-    const tags = Array.isArray(profile.tags) && profile.tags.length ? profile.tags : ['철학', '우주', '고독'];
+    const tags = Array.isArray(profile.tags) ? profile.tags : [];
 
     setText('#hero-name', profile.display_name);
     setText('#hero-bio', profile.bio);
@@ -179,14 +206,15 @@
     const initials = (profile.display_name || '나').trim().slice(0, 1);
     setText('#avatar-initial', initials);
     setText('#modal-avatar-initial', initials);
+    if (state.avatarDataUrl) setAvatarImage(state.avatarDataUrl);
 
     renderTags('#hero-tags', tags);
     renderTags('#profile-tags', tags);
 
     const stats = profile.stats || {};
-    setText('#stat-books', stats.books_read || stats.total_books || stats.books || 3);
-    setText('#stat-memos', stats.memos || stats.saved_sentences || state.sentences.length || 12);
-    setText('#stat-connections', stats.connections || state.readers.length || 5);
+    setText('#stat-books', stats.books_read || stats.total_books || stats.books || 0);
+    setText('#stat-memos', stats.memos || stats.saved_sentences || state.sentences.length || 0);
+    setText('#stat-connections', stats.connections || 0);
     setText('#stat-streak', (stats.streak_days || stats.streak || 7) + '일');
   }
 
@@ -199,23 +227,12 @@
     const nodes = Array.isArray(data.nodes) ? data.nodes : [];
     const links = Array.isArray(data.links) ? data.links : [];
 
-    // Fallback demo data if empty
-    const displayNodes = nodes.length > 1 ? nodes : [
-      { id: 'user', label: '나', type: 'user' },
-      { id: 'b1', label: '코스모스', type: 'book' },
-      { id: 'b2', label: '데미안', type: 'book' },
-      { id: 's1', label: '자유롭도록 선고받았다', type: 'sentence' },
-      { id: 'q1', label: '인간은 왜 의미를 찾는가', type: 'question' },
-      { id: 'e1', label: '경외', type: 'emotion' },
-      { id: 't1', label: '철학', type: 'tag' },
-      { id: 't2', label: '우주', type: 'tag' }
-    ];
-    const displayLinks = links.length ? links : [
-      { source: 'user', target: 'b1' }, { source: 'user', target: 'b2' },
-      { source: 'b1', target: 's1' }, { source: 'b1', target: 'q1' },
-      { source: 'b1', target: 'e1' }, { source: 'b2', target: 't1' },
-      { source: 'user', target: 't2' }
-    ];
+    if (nodes.length <= 1) {
+      root.innerHTML = '<div class="empty-state">별자리 데이터를 불러오는 중입니다.</div>';
+      return;
+    }
+    const displayNodes = nodes;
+    const displayLinks = links;
 
     const W = 760, H = 320;
     const cx = W / 2, cy = H / 2;
@@ -279,8 +296,12 @@
     const root = $('#current-reading');
     if (!root) return;
     const book = state.currentReading || {};
-    const progress = Math.min(Math.max(Number(book.progress || book.progress_percent || 62), 0), 100);
-    const tags = book.tags || ['우주', '인간', '질문'];
+    if (!book || !book.title) {
+      root.innerHTML = '<article class="reading-card empty-state">별자리 데이터를 불러오는 중입니다.</article>';
+      return;
+    }
+    const progress = Math.min(Math.max(Number(book.progress || book.progress_percent || 0), 0), 100);
+    const tags = book.tags || [];
 
     root.innerHTML = `
       <article class="reading-card">
@@ -291,7 +312,7 @@
         </div>
         <div class="reading-body">
           <span class="section-kicker">지금 읽는 책</span>
-          <h3>${escHtml(book.title || '코스모스')}</h3>
+          <h3>${escHtml(book.title || '')}</h3>
           <p class="muted">${escHtml(book.author || '칼 세이건')}</p>
           <div class="progress-row">
             <div class="progress-bar"><span style="width:${progress}%"></span></div>
@@ -321,8 +342,8 @@
       '철학과 인간 존재에 관심이 많습니다.',
       '감정보다 의미를 오래 붙잡습니다.'
     ];
-    const topics = persona.topics || persona.favorite_topics || ['철학', '인간', '우주'];
-    const emotions = persona.emotions || ['경외', '고독', '호기심'];
+    const topics = persona.top_subjects || persona.topics || persona.favorite_topics || [];
+    const emotions = persona.top_emotions || persona.emotions || [];
 
     root.innerHTML = `
       <article class="persona-card">
@@ -350,10 +371,11 @@
   function renderSentences() {
     const root = $('#sentence-list');
     if (!root) return;
-    const sentences = state.sentences.length ? state.sentences : [
-      { sentence: '인간은 자유롭도록 선고받았다.', book_title: '실존주의와 인간감정', saved_at: '2026.05.11', tags: ['자유', '책임', '불안'] },
-      { sentence: '우주는 우리 안에 있다. 우리는 별의 재로 만들어졌다.', book_title: '코스모스', saved_at: '2026.05.08', tags: ['우주', '인간', '과학'] }
-    ];
+    if (!state.sentences.length) {
+      root.innerHTML = '<div class="empty-state">읽는 책을 확인하는 중입니다.</div>';
+      return;
+    }
+    const sentences = state.sentences;
 
     root.innerHTML = sentences.map((item) => `
       <article class="archive-card">
@@ -374,11 +396,11 @@
   function renderTimeline() {
     const root = $('#timeline-list');
     if (!root) return;
-    const items = state.timeline.length ? state.timeline : [
-      { date: '2026.05', title: '코스모스 읽기 시작', detail: '우주 관련 질문 3개 생성', emoji: '📖' },
-      { date: '2026.05', title: '소크라테스 대화 2회 완료', detail: '인간의 자유에 대한 토론 기록', emoji: '💬' },
-      { date: '2026.04', title: '데미안 완독', detail: '성장 키워드 7개 저장', emoji: '✅' }
-    ];
+    if (!state.timeline.length) {
+      root.innerHTML = '<div class="empty-state">문장을 불러오는 중입니다.</div>';
+      return;
+    }
+    const items = state.timeline;
 
     root.innerHTML = '<div class="timeline-list">' + items.map((item) => `
       <div class="timeline-item">
@@ -395,15 +417,16 @@
   function renderQuestions() {
     const root = $('#question-list');
     if (!root) return;
-    const questions = state.questions.length ? state.questions : [
-      { question: '인간은 왜 자신의 위치를 알고 싶어할까?', book_title: '코스모스', tags: ['우주', '인간', '존재'] },
-      { question: '자유는 항상 좋은 것인가?', book_title: '실존주의와 인간감정', tags: ['자유', '책임', '불안'] }
-    ];
+    if (!state.questions.length) {
+      root.innerHTML = '<div class="empty-state">타임라인을 정리하는 중입니다.</div>';
+      return;
+    }
+    const questions = state.questions;
 
     root.innerHTML = questions.map((item) => `
       <article class="question-card">
         <h3>${escHtml(item.question || item.title || '')}</h3>
-        <p class="card-meta">관련 책: ${escHtml(item.book_title || item.book || '코스모스')}</p>
+        <p class="card-meta">${escHtml(item.book_title || item.book || '')}</p>
         <div class="tag-row compact">
           ${(item.tags || []).map((t) => `<span>#${escHtml(t)}</span>`).join('')}
         </div>
@@ -444,7 +467,7 @@
   function openModal() {
     const stored = getStoredUser();
     const profile = state.summary || {};
-    const tags = profile.tags || stored.tags || ['철학', '우주', '고독', '성장'];
+    const tags = profile.tags || stored.tags || [];
 
     const nameEl = $('#edit-name');
     const bioEl = $('#edit-bio');
@@ -558,7 +581,7 @@
 
   /* ─── Rotating tagline ──────────────────────────────── */
   function initTagline() {
-    const phrases = ['생각은 빛이 된다', '읽을수록 더 깊어진다', '나의 독서 우주를 탐험하세요', 'Illuminate Your Thoughts'];
+    const phrases = ['생각은 빛이 된다', '읽을수록 더 깊어진다', '나의 독서 우주를 탐험하세요', '나의 독서 우주를 탐험하세요'];
     const el = $('#luma-tagline');
     if (!el) return;
     let i = 0;

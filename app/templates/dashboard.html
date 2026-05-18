@@ -147,6 +147,7 @@ header{
 .recent-memo-text{font-size:.78rem;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .insight-card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:7px;cursor:pointer;transition:.15s;font-size:.8rem;line-height:1.5;}
 .insight-card:hover{border-color:rgba(193,127,59,.25);}
+.insight-card.active{border-color:rgba(244,205,137,.7);box-shadow:0 0 18px rgba(244,205,137,.12);}
 .insight-books{font-size:.68rem;color:var(--amber);margin-bottom:4px;}
 
 /* MODALS */
@@ -346,12 +347,9 @@ textarea{min-height:110px;resize:vertical;}
   <p class="section-label">최근 남긴 별빛</p>
   <div id="recent-memos-wrap"><div class="box"><div class="muted">불러오는 중...</div></div></div>
   <p class="section-label">연결된 생각</p>
-  {% for insight in insights %}
-  <div class="insight-card" onclick="highlightConnection({{ loop.index0 }})">
-    <div class="insight-books">{{ insight.book1 }} → {{ insight.book2 }}</div>
-    <div>{{ insight.text }}</div>
+  <div id="connected-thoughts-wrap">
+    <div class="box"><div class="muted">연결된 생각을 불러오는 중...</div></div>
   </div>
-  {% endfor %}
 </aside>
 
 <div id="memo-modal" class="modal">
@@ -515,7 +513,11 @@ function renderConstellation(){
   const mg=filt.append('feMerge');mg.append('feMergeNode').attr('in','blur');mg.append('feMergeNode').attr('in','SourceGraphic');
 
   const nodes=(CONSTELLATION_DATA.nodes||[]).map((d,i)=>({...d,title:d.title||d.label||'제목 없음',memos:d.memos||0,size:Number(d.size||22),bookCover:d.cover_url||'',orbitImage:ORBIT_IMGS[i%ORBIT_IMGS.length]}));
-  const links=(CONSTELLATION_DATA.links||[]).map(d=>({...d,insight:d.insight||d.theme||'서로 이어지는 생각입니다.',strength:Number(d.strength||.5)}));
+  const nodeIds=new Set(nodes.map(n=>String(n.id)));
+  const links=(CONSTELLATION_DATA.links||[])
+    .map(d=>({...d,insight:d.insight||d.theme||'서로 이어지는 생각입니다.',strength:Number(d.strength||.5)}))
+    .filter(d=>nodeIds.has(linkNodeId(d.source))&&nodeIds.has(linkNodeId(d.target)));
+  renderConnectedThoughts(nodes,links);
 
   const connCount={};
   links.forEach(l=>{const s=typeof l.source==='object'?l.source.id:l.source;const t=typeof l.target==='object'?l.target.id:l.target;connCount[s]=(connCount[s]||0)+1;connCount[t]=(connCount[t]||0)+1;});
@@ -601,7 +603,7 @@ function renderConstellation(){
     ne.attr('transform',d=>`translate(${d.x},${d.y})`);
   });
 
-  /* 행성 반짝이기 — 2.8초마다 무작위 */
+  /* orbit sparkle */
   function sparkle(){
     if(!nodes.length)return;
     const idx=Math.floor(Math.random()*nodes.length);
@@ -609,19 +611,70 @@ function renderConstellation(){
     ne.filter((d,i)=>i===idx).select('.planet-glow')
       .transition().duration(700).attr('opacity',Math.min(pG(nd)+.3,.55)).attr('r',pR(nd)+28)
       .transition().duration(900).attr('opacity',pG(nd)).attr('r',pR(nd)+14);
-    if(links.length){
-      const li=Math.floor(Math.random()*links.length);
-      le.filter((d,j)=>j===li).transition().duration(600).attr('stroke','rgba(244,205,137,.95)').attr('stroke-dasharray','0')
-        .transition().duration(1100).attr('stroke',d=>`rgba(244,205,137,${.18+d.strength*.44})`).attr('stroke-dasharray','4,4');
+    if(links.length) focusLink(Math.floor(Math.random()*links.length),false);
+  }
+  function focusLink(index,markCard=true){
+    if(!links.length)return sparkle();
+    const idx=Math.max(0,Math.min(links.length-1,Number(index)||0));
+    const link=links[idx];
+    const sid=linkNodeId(link.source);
+    const tid=linkNodeId(link.target);
+    le.transition().duration(120)
+      .attr('stroke',d=>`rgba(244,205,137,${.18+d.strength*.44})`)
+      .attr('stroke-dasharray','4,4')
+      .attr('stroke-width',d=>.8+d.strength*2.2);
+    le.filter((d,j)=>j===idx)
+      .transition().duration(180)
+      .attr('stroke','rgba(244,205,137,.98)')
+      .attr('stroke-dasharray','0')
+      .attr('stroke-width',Math.max(3,link.strength*4));
+    ne.select('.planet-glow').transition().duration(160).attr('opacity',d=>pG(d)).attr('r',d=>pR(d)+14);
+    ne.filter(d=>String(d.id)===sid||String(d.id)===tid).select('.planet-glow')
+      .transition().duration(220).attr('opacity',.52).attr('r',d=>pR(d)+30);
+    if(markCard){
+      document.querySelectorAll('#connected-thoughts-wrap .insight-card').forEach((card,i)=>card.classList.toggle('active',i===idx));
     }
   }
   if(constellationSparkleTimer)clearInterval(constellationSparkleTimer);
   constellationSparkleTimer=setInterval(sparkle,2800);
 
   window.triggerRandomLink=sparkle;
-  window.highlightConnection=sparkle;
+  window.highlightConnection=focusLink;
   window.burstStarEffect=()=>ne.selectAll('.planet-glow').transition().attr('opacity',.44).transition().attr('opacity',d=>pG(d));
   window.openMemoModal=openMemoModal;
+}
+
+function linkNodeId(value){
+  if(value&&typeof value==='object')return String(value.id||value.book_id||'');
+  return String(value||'');
+}
+function renderConnectedThoughts(nodes=[],links=[]){
+  const wrap=document.getElementById('connected-thoughts-wrap');
+  if(!wrap)return;
+  const nodeMap=new Map(nodes.map(n=>[String(n.id),n]));
+  const rows=(links||[]).map((link,index)=>{
+    const sid=linkNodeId(link.source);
+    const tid=linkNodeId(link.target);
+    const source=nodeMap.get(sid)||(typeof link.source==='object'?link.source:null)||{};
+    const target=nodeMap.get(tid)||(typeof link.target==='object'?link.target:null)||{};
+    return {
+      index,
+      sourceTitle:source.title||source.label||sid,
+      targetTitle:target.title||target.label||tid,
+      insight:link.insight||link.theme||link.note||'두 책 사이에 직접 저장한 생각의 연결입니다.',
+      strength:Number(link.strength||0),
+    };
+  }).filter(row=>row.sourceTitle&&row.targetTitle);
+  if(!rows.length){
+    wrap.innerHTML='<div class="box"><div class="muted">아직 직접 연결한 생각이 없습니다. 마음 행성계에서 두 책을 연결하면 이곳에 나타납니다.</div><a class="cta-link" href="/heart">마음 행성계에서 연결하기 &rarr;</a></div>';
+    return;
+  }
+  wrap.innerHTML=rows.slice(0,6).map(row=>`
+    <div class="insight-card" onclick="highlightConnection(${row.index})">
+      <div class="insight-books">${esc(row.sourceTitle)} → ${esc(row.targetTitle)}</div>
+      <div>${esc(row.insight)}</div>
+      <div class="muted" style="font-size:.66rem;margin-top:6px">연결 강도 ${Math.round(row.strength*100)||50}%</div>
+    </div>`).join('');
 }
 
 function populateMemoBookOptions(books=[]){
@@ -884,9 +937,19 @@ async function initDashboard(){
     const st=d.stats||{};
     const se=(id,v)=>{const el=document.getElementById(id);if(el&&v!==undefined)el.textContent=v;};
     se('stat-total-books',st.total??st.done);se('stat-total-memos',st.memos);se('stat-connections',st.connections);se('stat-this-month',st.this_month??st.reading);
-    const book=currentReadingBook||(d.books||[]).find(b=>b.status==='reading');
+    const books=(d.books||[]).slice();
+    const book=books.find(b=>b.status==='reading')||currentReadingBook||books[0]||null;
     const area=document.getElementById('current-book-area');
-    if(area&&book){const p=Math.max(0,Math.min(100,Number(book.progress||0)));area.innerHTML=`<b style="font-family:'Noto Serif KR',serif">${esc(book.title)}</b><div class="muted">${esc(book.author||'')}</div><div class="progress"><div class="bar" style="width:${p}%"></div></div><div class="muted">${p}% 읽음</div>`;}
+    if(area&&book){
+      currentReadingBook=book;
+      const p=Math.max(0,Math.min(100,Number(book.progress||0)));
+      const cover=book.cover_url
+        ? `<img src="${esc(book.cover_url)}" alt="${esc(book.title||'')}" style="width:42px;height:62px;object-fit:cover;border-radius:6px" onerror="this.outerHTML='<div style=&quot;font-size:1.6rem&quot;>${esc(book.cover_emoji||'📚')}</div>'">`
+        : `<div style="font-size:1.6rem">${esc(book.cover_emoji||'📚')}</div>`;
+      area.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start">${cover}<div style="min-width:0;flex:1"><b style="font-family:'Noto Serif KR',serif">${esc(book.title)}</b><div class="muted">${esc(book.author||'')}</div><div class="progress"><div class="bar" style="width:${p}%"></div></div><div class="muted">${p}% 읽음</div></div></div>`;
+    }else if(area){
+      area.innerHTML='<div class="muted">현재 읽는 책이 없습니다.</div>';
+    }
     const se2=document.getElementById('streak-badge');if(se2&&st.reading_streak!==undefined)se2.textContent=`🔥 ${st.reading_streak}일 연속 독서`;
   }catch(e){}
 }

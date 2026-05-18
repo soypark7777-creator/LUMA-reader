@@ -92,6 +92,14 @@ def api_update_settings(club_id):
     return jsonify(update_club_settings(club_id, data))
 
 
+@community_bp.route('/api/<club_id>', methods=['DELETE'])
+def api_delete_club(club_id):
+    data = request.get_json(silent=True) or {}
+    from app.services.club_service import delete_club
+    result = delete_club(club_id, data.get('user_id', 'user_demo'))
+    return jsonify(result), 200 if result.get("ok") else 404
+
+
 @community_bp.route('/api/cards/<card_id>/like', methods=['POST'])
 def api_like(card_id):
     data = request.get_json() or {}

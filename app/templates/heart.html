@@ -782,9 +782,12 @@ async function loadShelf() {
   } catch(e) {
     shelfData = [];
   }
+  mergeReadingBooksIntoConstellation();
   renderShelf();
   renderShelfSidebar();
   renderConnectionBuilder();
+  renderMiniConst();
+  if (document.getElementById('panel-constellation')?.classList.contains('active')) renderConstellation();
   updateStats();
 }
 
@@ -820,7 +823,9 @@ async function loadConstellation() {
   } catch(e) {
     constellationData = { nodes: [], links: [] };
   }
+  mergeReadingBooksIntoConstellation();
   renderMiniConst();
+  if (document.getElementById('panel-constellation')?.classList.contains('active')) renderConstellation();
 }
 
 async function loadMemoConnections() {
@@ -863,10 +868,65 @@ function normalizeBook(b) {
   return Object.assign({}, b, {
     id: b.id || b.book_id,
     book_id: b.book_id || b.id,
-    cover_url: b.cover_url || b.thumbnail || '',
+    cover_url: b.cover_url || b.thumbnail || b.book_cover_url || b.image || '',
+    cover_emoji: b.cover_emoji || b.emoji || '📚',
     progress: Number(b.progress || 0),
     status: b.status || b.reading_status || 'want'
   });
+}
+
+function mergeReadingBooksIntoConstellation() {
+  if (!constellationData || typeof constellationData !== 'object') constellationData = { nodes: [], links: [] };
+  const nodes = Array.isArray(constellationData.nodes) ? constellationData.nodes.slice() : [];
+  const links = Array.isArray(constellationData.links) ? constellationData.links.slice() : [];
+  const seen = new Set(nodes.map(n => String(n.id || n.book_id || '')));
+
+  (shelfData || []).filter(b => b.status === 'reading').forEach((book) => {
+    const id = String(book.book_id || book.id || '');
+    if (!id || seen.has(id)) return;
+    nodes.push({
+      id,
+      book_id: id,
+      label: book.title || '\uCC45',
+      title: book.title || '\uCC45',
+      author: book.author || '',
+      emoji: book.cover_emoji || '\uD83D\uDCDA',
+      genre: book.genre || '',
+      status: 'reading',
+      progress: Number(book.progress || 0),
+      cover_url: book.cover_url || '',
+      isbn: book.isbn || '',
+      publisher: book.publisher || '',
+      total_pages: book.total_pages || 0,
+      description: book.description || '',
+      memos: 0,
+      is_current: true,
+      size: 18,
+      color: '#F4CD89',
+      emotion: 'reading'
+    });
+    seen.add(id);
+  });
+
+  const live = new Set(nodes.map(n => String(n.id || n.book_id || '')));
+  constellationData.nodes = nodes.map(n => Object.assign({}, n, { is_current: n.is_current || n.status === 'reading' }));
+  constellationData.links = links.filter(l => {
+    const s = l.source && l.source.id !== undefined ? l.source.id : l.source;
+    const t = l.target && l.target.id !== undefined ? l.target.id : l.target;
+    return live.has(String(s)) && live.has(String(t));
+  });
+}
+
+
+function bookCoverHtml(b, cls='cover-img') {
+  const title = esc(b.title || '');
+  const emoji = esc(b.cover_emoji || '📚');
+  const label = esc(String(b.title || '책').slice(0, 8));
+  const fallback = `<div class="cover-fallback" style="display:flex"><span>${emoji}</span><span>${label}</span></div>`;
+  if (!b.cover_url) return fallback;
+  return `<img class="${cls}" src="${esc(b.cover_url)}" alt="${title}" loading="lazy"
+    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="cover-fallback"><span>${emoji}</span><span>${label}</span></div>`;
 }
 
 function normalizeEmotion(e) {
@@ -919,12 +979,7 @@ function renderShelf() {
     return `
     <div class="book-card" onclick="openBookDetail('${esc(b.book_id || b.id)}')">
       <div class="cover-wrap">
-        <img class="cover-img" src="${esc(b.cover_url||'')}" alt="${esc(b.title)}"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="cover-fallback">
-          <span>📚</span>
-          <span>${esc(b.title.slice(0,6))}</span>
-        </div>
+        ${bookCoverHtml(b)}
       </div>
       <div class="book-info">
         <div class="book-title">${esc(b.title)}</div>
@@ -959,7 +1014,9 @@ function renderShelfSidebar() {
     const sl = statusLabel(b.status);
     return `<div class="shelf-row" onclick="switchMainPanel('shelf')">
       <div class="shelf-thumb">
-        <img src="${esc(b.cover_url||'')}" alt="" onerror="this.style.display='none'">
+        ${b.cover_url
+          ? `<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" loading="lazy" onerror="this.outerHTML='<span>${esc(b.cover_emoji || '📚')}</span>'">`
+          : `<span>${esc(b.cover_emoji || '📚')}</span>`}
       </div>
       <div class="shelf-info">
         <div class="shelf-title">${esc(b.title)}</div>
@@ -1103,7 +1160,7 @@ function renderConstellation() {
   const nodes = (constellationData.nodes || []).map(d => Object.assign({}, d));
   const links = (constellationData.links || []).map(d => Object.assign({}, d));
 
-  if (nodes.length < 2) {
+  if (nodes.length < 1) {
     svgEl.style.display = 'none';
     empty.style.display = 'flex';
     return;
@@ -1147,9 +1204,9 @@ function renderConstellation() {
       .on('end',   (ev, d) => { if (!ev.active) sim.alphaTarget(0); d.fx=null; d.fy=null; })
     );
 
-  nSel.append('circle').attr('r', 15)
-    .attr('fill','rgba(45,74,62,.85)')
-    .attr('stroke','rgba(193,127,59,.55)').attr('stroke-width',1.6)
+  nSel.append('circle').attr('r', d => d.is_current ? 18 : 15)
+    .attr('fill', d => d.is_current ? 'rgba(244,205,137,.42)' : 'rgba(45,74,62,.85)')
+    .attr('stroke', d => d.is_current ? 'rgba(244,205,137,.95)' : 'rgba(193,127,59,.55)').attr('stroke-width', d => d.is_current ? 2.4 : 1.6)
     .attr('filter','url(#cg-glow)');
 
   nSel.append('text')
@@ -1350,11 +1407,10 @@ function renderMiniConst() {
     return allIds.includes(s) && allIds.includes(t);
   }).map(d => Object.assign({}, d));
 
-  if (nodes.length < 2) return;
-
   const W = 192, H = 300;
   const svg = d3.select(svgEl).attr('viewBox', '0 0 ' + W + ' ' + H);
   svg.selectAll('*').remove();
+  if (nodes.length < 1) return;
 
   const sim = d3.forceSimulation(nodes)
     .force('link',      d3.forceLink(links).id(d => d.id).distance(52))
@@ -1366,8 +1422,8 @@ function renderMiniConst() {
     .attr('stroke','rgba(193,127,59,.2)').attr('stroke-width',1);
 
   const nSel = svg.append('g').selectAll('circle').data(nodes).enter().append('circle')
-    .attr('r', 8).attr('fill','rgba(45,74,62,.85)')
-    .attr('stroke','rgba(193,127,59,.45)').attr('stroke-width',1.2);
+    .attr('r', d => d.is_current ? 10 : 8).attr('fill', d => d.is_current ? 'rgba(244,205,137,.5)' : 'rgba(45,74,62,.85)')
+    .attr('stroke', d => d.is_current ? 'rgba(244,205,137,.95)' : 'rgba(193,127,59,.45)').attr('stroke-width', d => d.is_current ? 1.8 : 1.2);
 
   sim.on('tick', () => {
     lSel.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
@@ -1554,7 +1610,9 @@ async function openBookDetail(id) {
   body.innerHTML = `
     <div class="detail-book">
       <div class="detail-cover">
-        ${b.cover_url ? `<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" onerror="this.style.display='none'">` : '<span>📚</span>'}
+        ${b.cover_url
+          ? `<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${esc(b.cover_emoji||'📚')}</span>`
+          : `<span>${esc(b.cover_emoji||'📚')}</span>`}
       </div>
       <div>
         <div class="detail-title">${esc(b.title)}</div>

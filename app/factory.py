@@ -7,6 +7,13 @@ import json
 from flask import Flask, render_template, jsonify, send_from_directory
 
 try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except Exception:
+    pass
+
+try:
     from flask_cors import CORS
     _has_cors = True
 except ImportError:
@@ -62,6 +69,8 @@ def create_app() -> Flask:
     _try_bp("app.routes.ocr",         "ocr_bp",        "/api/ocr")
     # _try_bp("app.routes.live", "live_bp", "/live/api")  # new_features.py로 대체
     _try_bp("app.routes.new_features","new_features_bp","/api")
+    _try_bp("app.routes.lounge_books","lounge_books_bp","/api/v2/lounge")
+    _try_bp("app.routes.community_api","community_api_bp","/api/v2/community")
 
     # MySQL API (/api/v2/*)
     _try_bp("app.routes.mysql_api",   "mysql_bp",      "/api/v2")
@@ -72,42 +81,23 @@ def create_app() -> Flask:
 
     @app.route("/")
     def dashboard():
-        try:
-            from app.services.reading_service import get_constellation
-            constellation = get_constellation("user_demo")
-            for node in constellation.get("nodes", []):
-                node["title"] = node.get("title") or node.get("label", "")
-                node["memos"] = node.get("memos", 0)
-            for link in constellation.get("links", []):
-                link["insight"] = link.get("insight") or link.get("theme", "")
-            from app.services.shelf_service import get_shelf
-            from app.services.user_service import get_user_stats
-            shelf_stats = get_shelf("user_demo").get("stats", {})
-            user_stats = get_user_stats("user_demo")
-            stats = {
-                "total_books": shelf_stats.get("total", constellation.get("total_books", 0)),
-                "total_memos": user_stats.get("memos", constellation.get("total_emotions", 0)),
-                "reading_streak": shelf_stats.get("reading_streak", 0),
-                "total_pages": shelf_stats.get("total_pages", 0),
-                "this_month": shelf_stats.get("this_month", constellation.get("this_month_reads", 0)),
-                "connections": user_stats.get("connections", constellation.get("total_links", 0)),
-            }
-            insights = [
-                {
-                    "book1": link.get("source", ""),
-                    "book2": link.get("target", ""),
-                    "text": link.get("theme", "새로운 연결을 탐색 중입니다."),
-                }
-                for link in constellation.get("links", [])[:3]
-            ]
-            return render_template(
-                "dashboard.html",
-                constellation=json.dumps(constellation, ensure_ascii=False),
-                stats=stats,
-                insights=insights,
-            )
-        except Exception:
-            return render_template("dashboard.html", constellation='{"nodes":[],"links":[]}', stats={}, insights=[])
+        # Client-side API calls hydrate this page with the authenticated user.
+        # Keeping the server payload empty prevents user_demo data from flashing
+        # for a different logged-in reader.
+        stats = {
+            "total_books": 0,
+            "total_memos": 0,
+            "reading_streak": 0,
+            "total_pages": 0,
+            "this_month": 0,
+            "connections": 0,
+        }
+        return render_template(
+            "dashboard.html",
+            constellation=json.dumps({"nodes": [], "links": []}, ensure_ascii=False),
+            stats=stats,
+            insights=[],
+        )
 
     @app.route("/heart")
     def heart():         return render_template("heart.html")
@@ -147,8 +137,21 @@ def create_app() -> Flask:
             streak = 12
         return render_template("deepdive.html", streak=streak)
 
-    @app.route("/ocr")
+    @app.route("/ocr", methods=["GET"])
     def ocr():           return render_template("ocr.html")
+
+    @app.route("/ocr", methods=["POST"])
+    def ocr_upload_root():
+        from app.routes.ocr import ocr_google_upload
+
+        return ocr_google_upload()
+
+    @app.route("/ocr/health")
+    @app.route("/health/ocr")
+    def ocr_health_root():
+        from app.services.google_vision_ocr import get_google_vision_status
+
+        return jsonify({"success": True, **get_google_vision_status()})
 
     @app.route("/lounge")
     def lounge():

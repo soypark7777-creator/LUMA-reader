@@ -70,7 +70,12 @@ def list_saved_deepdive_items(user_id: str, limit: int = 50) -> dict:
 def _search_books(query: str, limit: int = 5) -> list[dict]:
     try:
         from app.services.shelf_service import search_books, search_books_naver, search_books_google
-        books = search_books(query, limit) or search_books_naver(query, limit) or search_books_google(query, limit)
+
+        books = []
+        books.extend(search_books_naver(query, limit))
+        books.extend(search_books_google(query, limit))
+        books.extend(_enrich_local_books(search_books(query, limit)))
+        books = _dedupe_books(books)
     except Exception:
         books = []
     if not books:
@@ -79,17 +84,74 @@ def _search_books(query: str, limit: int = 5) -> list[dict]:
 
 
 def _shape_book(book: dict) -> dict:
+    try:
+        from app.services.book_normalizer_service import normalize_book
+
+        normalized = normalize_book(book, book.get("source") or "deepdive")
+    except Exception:
+        normalized = book
+    cover_url = normalized.get("cover_url") or book.get("cover_url") or book.get("thumbnail") or ""
     return {
-        "book_id": book.get("book_id") or book.get("isbn") or "",
-        "title": book.get("title", ""),
-        "author": book.get("author") or book.get("authors", ""),
-        "publisher": book.get("publisher", ""),
-        "published_date": book.get("published_date") or book.get("publishedDate") or book.get("pub_year") or "",
-        "cover_url": book.get("cover_url") or book.get("thumbnail") or "",
-        "isbn": book.get("isbn", ""),
-        "description": book.get("description", ""),
-        "source": book.get("source", "local"),
+        "book_id": normalized.get("book_id") or normalized.get("isbn") or "",
+        "title": normalized.get("title", ""),
+        "author": normalized.get("author", ""),
+        "publisher": normalized.get("publisher", ""),
+        "published_date": normalized.get("published_date", ""),
+        "cover_url": cover_url,
+        "thumbnail": normalized.get("thumbnail") or cover_url,
+        "thumbnail_url": normalized.get("thumbnail_url") or cover_url,
+        "cover_url_candidates": normalized.get("cover_url_candidates") or ([cover_url] if cover_url else []),
+        "fallback_cover": normalized.get("fallback_cover") or {},
+        "initial": normalized.get("initial", ""),
+        "theme": normalized.get("theme", "classic"),
+        "isbn": normalized.get("isbn", ""),
+        "description": normalized.get("description", ""),
+        "source": normalized.get("source") or book.get("source", "local"),
     }
+
+
+def _enrich_local_books(books: list[dict]) -> list[dict]:
+    enriched = []
+    for book in books or []:
+        if book.get("cover_url"):
+            enriched.append(book)
+            continue
+        query = " ".join(x for x in [book.get("title", ""), book.get("author", "")] if x).strip()
+        if query:
+            cover = _lookup_cover(query)
+            if cover:
+                book = {**book, "cover_url": cover, "thumbnail": cover, "thumbnail_url": cover}
+        enriched.append(book)
+    return enriched
+
+
+def _lookup_cover(query: str) -> str:
+    try:
+        from app.services.shelf_service import search_books_google, search_books_naver
+
+        for provider in (search_books_naver, search_books_google):
+            for book in provider(query, 3):
+                cover = book.get("cover_url") or book.get("thumbnail_url") or book.get("thumbnail") or ""
+                if cover:
+                    return cover
+    except Exception:
+        return ""
+    return ""
+
+
+def _dedupe_books(books: list[dict]) -> list[dict]:
+    seen: set[str] = set()
+    result: list[dict] = []
+    for book in books or []:
+        title = "".join(str(book.get("title") or "").lower().split())
+        author = "".join(str(book.get("author") or book.get("authors") or "").lower().split())
+        isbn = "".join(ch for ch in str(book.get("isbn") or book.get("book_id") or "") if ch.isalnum())
+        key = isbn or f"{title}|{author}"
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        result.append(book)
+    return result
 
 
 def _mock_books(query: str) -> list[dict]:

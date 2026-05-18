@@ -134,7 +134,8 @@ CREATE TABLE IF NOT EXISTS memos (
     user_id      VARCHAR(36)  NOT NULL,
     book_id      VARCHAR(36),
     content      TEXT         NOT NULL,
-    tags         VARCHAR(500),                           -- JSON 배열
+    tags         VARCHAR(500),
+    is_public    TINYINT(1) NOT NULL DEFAULT 0,                           -- JSON 배열
     source       ENUM('manual','ocr','voice','ai') DEFAULT 'manual',
     page_num     INT,
     ai_keywords  TEXT,                                   -- AI 추출 키워드 JSON
@@ -142,6 +143,7 @@ CREATE TABLE IF NOT EXISTS memos (
     updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
     INDEX idx_book_id (user_id, book_id),
+    INDEX idx_public_created (is_public, created_at),
     FULLTEXT idx_ft_content (content)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 """,
@@ -401,9 +403,37 @@ def create_all_tables():
             print(f"  [FAIL] {name}: {e}")
             err += 1
 
+    ensure_memo_public_columns()
+
     print(f"\n테이블 생성 완료: {ok}개 성공, {err}개 실패")
     return err == 0
 
+
+
+def ensure_memo_public_columns():
+    """Add memos.is_public and its feed index to existing databases."""
+    if not is_connected():
+        return False
+    try:
+        with get_db() as cur:
+            cur.execute("SHOW COLUMNS FROM memos LIKE 'is_public'")
+            exists = cur.fetchone()
+        if not exists:
+            with get_db() as cur:
+                cur.execute("ALTER TABLE memos ADD COLUMN is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER tags")
+    except Exception as e:
+        print(f"  [WARN] memos.is_public migration skipped: {e}")
+        return False
+    try:
+        with get_db() as cur:
+            cur.execute("SHOW INDEX FROM memos WHERE Key_name='idx_public_created'")
+            exists = cur.fetchone()
+        if not exists:
+            with get_db() as cur:
+                cur.execute("CREATE INDEX idx_public_created ON memos (is_public, created_at)")
+    except Exception as e:
+        print(f"  [WARN] memos.idx_public_created migration skipped: {e}")
+    return True
 
 def seed_data():
     """개발/시연용 기본 데이터 입력 (중복 안전)."""
@@ -497,8 +527,8 @@ def seed_data():
             cur.executemany(
                 """
                 INSERT IGNORE INTO memos
-                    (memo_id, user_id, book_id, content, tags, source, page_num)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    (memo_id, user_id, book_id, content, tags, is_public, source, page_num)
+                VALUES (%s, %s, %s, %s, %s, 1, %s, %s)
                 """,
                 memos,
             )

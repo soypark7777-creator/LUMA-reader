@@ -1090,7 +1090,7 @@ function getStoredUser() {
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 async function loadRooms() {
   try {
-    const r = await fetch('/api/live/rooms?status=live', { headers: authHeaders() });
+    const r = await fetch('/api/v2/live/rooms?status=live', { headers: authHeaders() });
     const d = await r.json();
     renderRoomGrid(d.rooms || []);
   } catch(e) {}
@@ -1149,7 +1149,7 @@ async function createRoom() {
   const maxP   = parseInt(document.getElementById('room-max-in')?.value || '8');
   if (!title) { showToast('방 이름을 입력해주세요.', true); return; }
   try {
-    const r = await fetch('/api/live/rooms', {
+    const r = await fetch('/api/v2/live/rooms', {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({ title, book_title: book, max_participants: maxP, password: prompt('방 비밀번호를 입력하세요. 공개방이면 비워두세요.') || '' })
@@ -1180,7 +1180,7 @@ async function confirmJoin() {
   if (!joinTarget) return;
   closeModal('join-modal');
   try {
-    const r = await fetch(`/api/live/${joinTarget}/join`, {
+    const r = await fetch(`/api/v2/live/rooms/${joinTarget}/join`, {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({ password: prompt('방 비밀번호를 입력하세요.') || '' })
@@ -1212,7 +1212,7 @@ async function enterRoom(roomId, roomData) {
   document.getElementById('my-participant-name').textContent = myName;
 
   try {
-    const r = await fetch(`/api/live/${roomId}/join`, {
+    const r = await fetch(`/api/v2/live/rooms/${roomId}/join`, {
       method: 'POST', headers: authHeaders(),
       body: JSON.stringify({ display_name: myName, password: sessionStorage.getItem('luma_live_password_' + roomId) || prompt('방 비밀번호를 입력하세요.') || '' })
     });
@@ -1317,7 +1317,7 @@ function startSpeechRecognition() {
       addTranscriptLine(myName, finalText.trim());
       if (interim) { interim.style.display = 'none'; interim.textContent = ''; }
       if (indicator) indicator.textContent = '';
-      fetch(`/api/live/${curRoomId}/transcript`, {
+      fetch(`/api/v2/live/rooms/${curRoomId}/transcript`, {
         method: 'POST', headers: authHeaders(),
         body: JSON.stringify({ display_name: myName, text: finalText.trim(), is_final: true })
       }).catch(() => {});
@@ -1356,7 +1356,7 @@ async function sendChat() {
   if (!text || !curRoomId) return;
   el.value = '';
   try {
-    const r = await fetch(`/api/live/${curRoomId}/chat`, {
+    const r = await fetch(`/api/v2/live/rooms/${curRoomId}/message`, {
       method: 'POST', headers: authHeaders(),
       body: JSON.stringify({ display_name: myName, emoji: myEmoji, text })
     });
@@ -1412,7 +1412,7 @@ function startPolling() {
   pollInt = setInterval(async () => {
     if (!curRoomId) return;
     try {
-      const r = await fetch(`/api/live/${curRoomId}/poll?since=${lastMsgId}`, { headers: authHeaders() });
+      const r = await fetch(`/api/v2/live/rooms/${curRoomId}/poll?since=${lastMsgId}`, { headers: authHeaders() });
       const d = await r.json();
       if (d.ok) {
         (d.messages || []).forEach(m => {
@@ -1482,7 +1482,7 @@ async function leaveRoom() {
   if (localStream) localStream.getTracks().forEach(t => t.stop());
   clearInterval(roomTimer);
   try {
-    await fetch(`/api/live/${curRoomId}/leave`, { method: 'POST', headers: authHeaders() });
+    await fetch(`/api/v2/live/rooms/${curRoomId}/leave`, { method: 'POST', headers: authHeaders() });
   } catch(e) {}
   window.location.href = '/live';
 }
@@ -1495,7 +1495,7 @@ async function openReportModal() {
   const area = document.getElementById('report-content-area');
   area.innerHTML = '<div class="report-loading">AI가 리포트를 생성하는 중… ✨</div>';
   try {
-    const r = await fetch(`/api/live/${curRoomId}/report`, { headers: authHeaders() });
+    const r = await fetch(`/api/v2/live/rooms/${curRoomId}/report`, { headers: authHeaders() });
     const d = await r.json();
     if (d.ok && d.report) renderReport(d.report);
     else area.innerHTML = '<div class="report-loading">아직 리포트가 없습니다. 독서가 끝난 뒤 다시 시도해보세요.</div>';
@@ -1563,7 +1563,7 @@ async function saveMemo() {
     const d = await r.json();
     if (!r.ok || !d.ok) throw new Error(d.error || 'memo-save-failed');
 
-    fetch(`/api/live/${curRoomId}/transcript`, {
+    fetch(`/api/v2/live/rooms/${curRoomId}/transcript`, {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({ display_name: myName, text: content, is_final: true, memo: true })
@@ -1683,50 +1683,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-(function(){
-  const phrases=[
-    {t:'생각은 빛이 된다',ko:true},
-    {t:'읽을수록 더 깊은 우주로',ko:true},
-    {t:'당신의 생각은 하나의 우주가 됩니다',ko:true},
-    {t:'한 문장이 하나의 별이 되듯',ko:true},
-    {t:'책으로 시작된 생각의 우주',ko:true},
-    {t:'Where Thoughts Become Constellations',ko:false},
-    {t:'Read. Think. Expand.',ko:false},
-    {t:'Illuminate Your Thoughts',ko:false},
-  ];
-  const el=document.getElementById('luma-tagline');
-  if(!el)return;
-  let i=0;
-  function show(idx){
-    const p=phrases[idx];
-    el.style.opacity='0';el.style.transform='translateY(-5px)';
-    setTimeout(()=>{
-      el.textContent=p.t;
-      el.style.fontFamily=p.ko?"'Pretendard',sans-serif":"'Cinzel','DM Serif Display',serif";
-      el.style.letterSpacing=p.ko?'.05em':'.14em';
-      el.style.opacity='1';el.style.transform='translateY(0)';
-    },500);
-  }
-  show(0);
-  setInterval(()=>{i=(i+1)%phrases.length;show(i);},10000);
-})();
 
-function initNav(){
-  const el=document.getElementById('nav-user');
-  if(!el)return;
-  const user=JSON.parse(localStorage.getItem('luma_user')||'{}');
-  if(user.display_name||user.email){
-    el.innerHTML=`<span>${user.emoji||'✨'}</span><span>${user.display_name||user.email}</span><button onclick="logout()" class="nav-logout">로그아웃</button>`;
-  } else {
-    el.innerHTML='<a href="/auth" class="nav-login-btn">로그인</a>';
-  }
-}
-function logout(){
-  localStorage.removeItem('luma_token');
-  localStorage.removeItem('luma_user');
-  window.location.href='/auth';
-}
-document.addEventListener('DOMContentLoaded',initNav);
 </script>
 </body>
 </html>

@@ -224,7 +224,7 @@ def get_constellation(user_id: str) -> dict:
                 (user_id, user_id)
             )
             link_rows = execute_all(
-                "SELECT * FROM book_connections WHERE user_id=%s", (user_id,)
+                "SELECT * FROM book_connections WHERE user_id=%s AND COALESCE(auto_created,0)=0", (user_id,)
             )
         except Exception:
             books_rows, link_rows = [], []
@@ -320,6 +320,9 @@ def add_connection(user_id: str, data: dict) -> dict:
 
 
 def _auto_connect(book_id: str, user_id: str):
+    # Only explicit reader-created links should appear as connected thoughts.
+    return
+
     """감정 기록 후 같은 서재의 책들과 약한 자동 연결을 만든다."""
     if not book_id:
         return
@@ -577,16 +580,22 @@ def save_memo(user_id: str, data: dict) -> dict:
     source  = data.get("source", "manual")
     book_id = data.get("book_id", "") or _resolve_book_id(user_id, data.get("book_title", ""))
     page_num = data.get("page_num", data.get("page_number"))
+    is_public = 1 if data.get("is_public") else 0
     if source not in ("manual", "ocr", "voice", "ai"):
         source = "manual"
 
     book_title = data.get("book_title", "")
     if is_connected():
         try:
+            try:
+                from app.services.community_feed_service import ensure_community_tables
+                ensure_community_tables()
+            except Exception:
+                pass
             execute_write(
-                "INSERT INTO memos(memo_id,user_id,book_id,content,tags,source,page_num,created_at) "
-                "VALUES(%s,%s,%s,%s,%s,%s,%s,%s)",
-                (memo_id, user_id, book_id, content, tags, source, page_num, now)
+                "INSERT INTO memos(memo_id,user_id,book_id,content,tags,source,page_num,is_public,created_at) "
+                "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (memo_id, user_id, book_id, content, tags, source, page_num, is_public, now)
             )
         except Exception as e:
             return {"ok": False, "error": str(e)}
@@ -619,20 +628,21 @@ def save_memo(user_id: str, data: dict) -> dict:
 
 
 def _publish_memo_to_feed(user_id: str, memo: dict) -> dict | None:
+    # The community feed is now a DB-backed projection over memos. Publishing a
+    # memo should therefore expose the existing memo, not create a second social
+    # card copy in memory.
     try:
-        from app.services.social_feed_service import create_card, check_and_create_bookclub
-        card = create_card(user_id, {
-            "book_title": memo.get("book_title", ""),
-            "passage": memo.get("content", ""),
-            "thought": memo.get("content", ""),
-            "emotion": memo.get("mood") if memo.get("mood") in EM_META else "inspired",
-            "tags": memo.get("tags", []),
-            "card_style": "cosmic",
-        })
+        from app.services.community_feed_service import check_and_create_bookclub
         check_and_create_bookclub(memo.get("book_title", ""))
-        return card
     except Exception:
-        return None
+        pass
+    return {
+        "post_id": memo.get("memo_id"),
+        "memo_id": memo.get("memo_id"),
+        "book_id": memo.get("book_id", ""),
+        "book_title": memo.get("book_title", ""),
+        "source": "memos",
+    }
 
 
 def list_memos(user_id: str, book_id: str = None, limit: int = 20) -> dict:

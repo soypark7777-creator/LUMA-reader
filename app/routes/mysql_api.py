@@ -953,39 +953,115 @@ def socrates_checkin(plan_id):
 #  소셜 피드  /api/v2/social/*
 # ══════════════════════════════════════════════════════
 
+@mysql_bp.route("/community/feed", methods=["GET"])
+def v2_community_feed():
+    from app.services.community_feed_service import get_feed
+    return _json(get_feed(
+        user_id=_get_uid(),
+        page=int(request.args.get("page", 1)),
+        limit=int(request.args.get("limit", 12)),
+        tag=request.args.get("tag", ""),
+        q=request.args.get("q", ""),
+        emotion=request.args.get("emotion", ""),
+    ))
+
+
+@mysql_bp.route("/community/trending-books", methods=["GET"])
+def v2_community_trending_books():
+    from app.services.community_feed_service import get_trending_books
+    return _json(get_trending_books(_get_uid(), int(request.args.get("limit", 12))))
+
+
+@mysql_bp.route("/community/questions", methods=["GET"])
+def v2_community_questions():
+    from app.services.community_feed_service import get_questions
+    return _json(get_questions(_get_uid(), int(request.args.get("limit", 12))))
+
+
+@mysql_bp.route("/community/quotes", methods=["GET"])
+def v2_community_quotes():
+    from app.services.community_feed_service import get_quotes
+    return _json(get_quotes(_get_uid(), int(request.args.get("limit", 12))))
+
+
+@mysql_bp.route("/community/same-book-readers", methods=["GET"])
+def v2_community_same_book_readers():
+    from app.services.community_feed_service import get_same_book_readers
+    return _json(get_same_book_readers(
+        book_id=request.args.get("book_id", ""),
+        title=request.args.get("title", ""),
+        limit=int(request.args.get("limit", 12)),
+    ))
+
+
+@mysql_bp.route("/community/lounge-recruit", methods=["GET"])
+def v2_community_lounge_recruit():
+    from app.services.community_feed_service import get_lounge_recruit
+    return _json(get_lounge_recruit(_get_uid(), int(request.args.get("limit", 8))))
+
+
+@mysql_bp.route("/community/posts", methods=["POST"])
+def v2_community_create_post():
+    from app.services.community_feed_service import create_post
+    data = request.get_json(silent=True) or {}
+    result = create_post(_get_uid(), data)
+    return _json(result, 201 if result.get("ok") else 400)
+
+
+@mysql_bp.route("/community/posts/<post_id>/like", methods=["POST"])
+def v2_community_like(post_id):
+    from app.services.community_feed_service import toggle_like
+    return _json(toggle_like(post_id, _get_uid()))
+
+
+@mysql_bp.route("/community/posts/<post_id>/comments", methods=["GET"])
+def v2_community_comments(post_id):
+    from app.services.community_feed_service import get_comments
+    return _json({"ok": True, "comments": get_comments(post_id, int(request.args.get("limit", 50)))})
+
+
+@mysql_bp.route("/community/posts/<post_id>/comments", methods=["POST"])
+def v2_community_add_comment(post_id):
+    from app.services.community_feed_service import add_comment
+    data = request.get_json(silent=True) or {}
+    result = add_comment(post_id, data, _get_uid())
+    return _json(result, 201 if result.get("ok") else 400)
+
+
+@mysql_bp.route("/community/posts/<post_id>/save", methods=["POST"])
+def v2_community_save(post_id):
+    from app.services.community_feed_service import toggle_save
+    return _json(toggle_save(post_id, _get_uid()))
+
+
 @mysql_bp.route("/social/feed", methods=["GET"])
 def v2_social_feed():
-    from app.services.social_feed_service import get_feed
-    page = int(request.args.get("page", 1))
-    limit = int(request.args.get("limit", 10))
-    tag = request.args.get("tag")
-    return _json({"ok": True, **get_feed(page, limit, tag)})
+    return v2_community_feed()
 
 
 @mysql_bp.route("/social/cards", methods=["POST"])
 def v2_social_create_card():
-    from app.services.social_feed_service import create_card, check_and_create_bookclub
+    from app.services.community_feed_service import create_post, check_and_create_bookclub
     data = request.get_json(silent=True) or {}
     content = (data.get("passage") or data.get("content") or data.get("text") or "").strip()
     if not content:
         return _json({"ok": False, "error": "구절(passage)이 필요합니다."}, 400)
     data["passage"] = content
-    card = create_card(_get_uid(), data)
+    result = create_post(_get_uid(), data)
     club = check_and_create_bookclub(data.get("book_title", ""))
-    return _json({"ok": True, "card": card, "new_club": club}, 201)
+    if not result.get("ok"):
+        return _json(result, 400)
+    return _json({"ok": True, "card": result.get("post"), "post": result.get("post"), "new_club": club}, 201)
 
 
 @mysql_bp.route("/social/cards/<card_id>/like", methods=["POST"])
 def v2_social_like(card_id):
-    from app.services.social_feed_service import toggle_like
-    data = request.get_json(silent=True) or {}
-    return _json(toggle_like(card_id, data.get("user_id") or _get_uid()))
+    return v2_community_like(card_id)
 
 
 @mysql_bp.route("/social/cards/<card_id>/comments", methods=["GET"])
 def v2_social_comments(card_id):
-    from app.services.social_feed_service import get_comments
-    return _json({"ok": True, "comments": get_comments(card_id)})
+    return v2_community_comments(card_id)
 
 
 @mysql_bp.route("/social/cards/<card_id>/comments", methods=["POST"])

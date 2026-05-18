@@ -673,7 +673,7 @@ function onBookBlur(){
 }
 async function loadBookBrief(passage, book){
   try{
-    const r = await fetch('/api/socrates/book-brief',{
+    const r = await fetch('/api/v2/socrates/book-brief',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({passage, book_title:book, user_id:UID})
     });
@@ -710,7 +710,7 @@ async function startSession(passage, book){
   updateProgress(1,5);
   addTyping(); setWaiting(true);
   try{
-    const r = await fetch('/api/socrates/start',{
+    const r = await fetch('/api/v2/socrates/start',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({passage, book_title:book||'', user_id:UID, discussion_mode:selectedDiscussionMode})
     });
@@ -737,7 +737,7 @@ async function sendAnswer(){
   document.getElementById('answer-input').value = '';
   setWaiting(true); addUserMsg(answer); addTyping();
   try{
-    const r = await fetch('/api/socrates/answer',{
+    const r = await fetch('/api/v2/socrates/answer',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({session_id:curSession.session_id, answer})
     });
@@ -837,7 +837,7 @@ async function generateDiscussionQuestions(){
   btn.disabled = true;
   btn.innerHTML = '<span class="mini-spinner"></span>생성 중...';
   try{
-    const r = await fetch('/api/socrates/discussion-questions',{
+    const r = await fetch('/api/v2/socrates/discussion-questions',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({
         session_id:curSession.session_id,
@@ -888,7 +888,7 @@ async function generateDebateTopic(){
   btn.disabled=true;
   btn.innerHTML='<span class="mini-spinner"></span>생성 중...';
   try{
-    const r = await fetch('/api/socrates/debate-topic',{
+    const r = await fetch('/api/v2/socrates/debate-topic',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({
         passage:curSession.passage,
@@ -950,7 +950,7 @@ async function generateLoungeCard(){
   btn.disabled=true;
   btn.innerHTML='<span class="mini-spinner"></span>생성 중...';
   try{
-    const r = await fetch('/api/socrates/lounge-card',{
+    const r = await fetch('/api/v2/socrates/lounge-card',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({
         passage:curSession.passage,
@@ -1026,7 +1026,7 @@ async function saveWordEntry(){
   const book    = document.getElementById('modal-book').value.trim();
   if(!concept){ showToast('개념 이름을 입력하세요.','warn'); return; }
   try{
-    const r = await fetch('/api/socrates/dictionary',{
+    const r = await fetch('/api/v2/socrates/dictionary',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({concept, user_thought:def, user_id:UID, book_title:book, sources:[]})
     });
@@ -1043,7 +1043,7 @@ async function saveWordEntry(){
 // ── ACTION PLANS ──────────────────────────────────────────
 async function createActionPlan(insight, book){
   try{
-    const r = await fetch('/api/socrates/action',{
+    const r = await fetch('/api/v2/socrates/action',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({insight, book_title:book||'', user_id:UID})
     });
@@ -1058,7 +1058,7 @@ async function createActionPlan(insight, book){
 async function autoCreateAction(insight, book){
   if(!insight?.next_action) return;
   try{
-    const r = await fetch('/api/socrates/action',{
+    const r = await fetch('/api/v2/socrates/action',{
       method:'POST', headers:authHeaders(),
       body:JSON.stringify({insight:insight.next_action, book_title:book||'', user_id:UID})
     });
@@ -1106,7 +1106,7 @@ function renderActions(){
 async function checkinAction(planId, btn){
   if(btn.classList.contains('done')) return;
   try{
-    const r = await fetch(`/api/socrates/action/${encodeURIComponent(planId)}/checkin`,{
+    const r = await fetch(`/api/v2/socrates/action/${encodeURIComponent(planId)}/checkin`,{
       method:'POST', headers:authHeaders(), body:JSON.stringify({note:''})
     });
     const d = await r.json();
@@ -1117,7 +1117,7 @@ async function checkinAction(planId, btn){
 // ── LOAD FROM SERVER ──────────────────────────────────────
 async function loadSessions(){
   try{
-    const r = await fetch(`/api/socrates/sessions?user_id=${UID}`,{headers:authHeaders()});
+    const r = await fetch(`/api/v2/socrates/sessions?user_id=${UID}`,{headers:authHeaders()});
     const d = await r.json();
     if(d.ok && d.sessions?.length){
       sessions = d.sessions.map(s=>({
@@ -1130,14 +1130,14 @@ async function loadSessions(){
 }
 async function loadDict(){
   try{
-    const r = await fetch(`/api/socrates/dictionary?user_id=${UID}`,{headers:authHeaders()});
+    const r = await fetch(`/api/v2/socrates/dictionary?user_id=${UID}`,{headers:authHeaders()});
     const d = await r.json();
     if(d.ok && d.entries?.length){ dictEntries=d.entries; renderDict(); }
   }catch(e){}
 }
 async function loadActions(){
   try{
-    const r = await fetch(`/api/socrates/actions?user_id=${UID}`,{headers:authHeaders()});
+    const r = await fetch(`/api/v2/socrates/actions?user_id=${UID}`,{headers:authHeaders()});
     const d = await r.json();
     if(d.ok && d.plans?.length){ actionPlans=d.plans; renderActions(); }
   }catch(e){}
@@ -1153,7 +1153,7 @@ async function resumeSessionClick(sessionId){
   document.getElementById('chat-area').innerHTML  = '';
   addTyping();
   try{
-    const r = await fetch(`/api/socrates/sessions/${encodeURIComponent(sessionId)}/resume`,{headers:authHeaders()});
+    const r = await fetch(`/api/v2/socrates/sessions/${encodeURIComponent(sessionId)}/resume`,{headers:authHeaders()});
     const d = await r.json();
     removeTyping();
     if(!d.ok){ showToast(d.error||'세션을 불러올 수 없습니다.','warn'); return; }

@@ -8,6 +8,7 @@ LUMA — MySQL 연결 풀 관리
 import os
 import time
 import threading
+from pathlib import Path
 from contextlib import contextmanager
 from typing import Optional
 
@@ -19,41 +20,48 @@ _mysql_ok    = False
 _DB_CONFIG: dict = {}
 
 
+def _dotenv_paths() -> list[Path]:
+    app_root = Path(__file__).resolve().parents[1]
+    return [Path.cwd() / ".env", app_root / ".env", app_root.parent / ".env"]
+
+
 def _load_config() -> dict:
-    """환경변수에서 DB 설정 로드"""
+    """Load DB settings after reading .env files."""
     try:
         from dotenv import load_dotenv
-        load_dotenv()
+        for env_path in _dotenv_paths():
+            if env_path.exists():
+                load_dotenv(env_path, override=False)
     except ImportError:
         _parse_dotenv()
 
     return {
-        "host":    os.getenv("MYSQL_HOST",     "localhost"),
-        "port":    int(os.getenv("MYSQL_PORT", "3306")),
-        "user":    os.getenv("MYSQL_USER",     "root"),
-        "password":os.getenv("MYSQL_PASSWORD", ""),
-        "db":      os.getenv("MYSQL_DB",       "luma_db"),
-        "charset": os.getenv("MYSQL_CHARSET",  "utf8mb4"),
+        "host": os.getenv("MYSQL_HOST", "localhost"),
+        "port": int(os.getenv("MYSQL_PORT", "3306")),
+        "user": os.getenv("MYSQL_USER", "root"),
+        "password": os.getenv("MYSQL_PASSWORD", ""),
+        "db": os.getenv("MYSQL_DB", "luma_db"),
+        "charset": os.getenv("MYSQL_CHARSET", "utf8mb4"),
         "connect_timeout": 5,
         "autocommit": False,
     }
 
 
 def _parse_dotenv():
-    """python-dotenv 없을 때 수동 파싱"""
-    for path in [".env", "../.env"]:
-        if not os.path.exists(path):
+    """Manual .env parser used when python-dotenv is unavailable."""
+    for path in _dotenv_paths():
+        if not path.exists():
             continue
-        with open(path, encoding="utf-8") as f:
+        with path.open(encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 k, _, v = line.partition("=")
-                k = k.strip(); v = v.strip().strip('"').strip("'")
+                k = k.strip()
+                v = v.strip().strip('"').strip("'")
                 if k and k not in os.environ:
                     os.environ[k] = v
-
 
 def init_db() -> bool:
     """DB 초기화 — 앱 시작 시 한 번 호출"""

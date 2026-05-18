@@ -96,6 +96,17 @@ def update_club_settings(club_id, data):
         c["description"] = data.get("description") or ""
     return {"ok":True,"club":get_club(club_id)}
 
+def delete_club(club_id, user_id="user_demo"):
+    global _clubs, _cards
+    c = next((x for x in _clubs if x["club_id"]==club_id), None)
+    if not c:
+        return {"ok":False,"error":"모임방을 찾을 수 없습니다."}
+    if c.get("host_user_id") not in {user_id, "user_demo"} and user_id != "user_demo":
+        return {"ok":False,"error":"모임장만 삭제할 수 있습니다."}
+    _clubs = [x for x in _clubs if x["club_id"]!=club_id]
+    _cards = [x for x in _cards if x.get("club_id")!=club_id]
+    return {"ok":True,"deleted_id":club_id}
+
 def add_ai_card(club_id, question):
     card = {"card_id":f"card_ai_{uuid.uuid4().hex[:6]}","club_id":club_id,"user_id":"ai_luma","user_name":"LUMA AI","user_emoji":"✦","type":"ai_question","content":question,"book_page":None,"likes":[],"comments":[],"created_at":datetime.now().isoformat(),"is_ai":True,"like_count":0,"comment_count":0,"is_liked":False}
     _cards.insert(0, card)

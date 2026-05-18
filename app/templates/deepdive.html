@@ -136,7 +136,7 @@ a{text-decoration:none;color:inherit;}
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;position:relative;flex-shrink:0;
 }
-.book-cover img{width:100%;height:100%;object-fit:cover;}
+.book-cover img{width:100%;height:100%;object-fit:contain;background:rgba(7,19,15,.72);}
 .book-cover-placeholder{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:6px;padding:12px;text-align:center;
@@ -554,6 +554,44 @@ function renderBookResults(books){
   section.style.display = '';
 }
 
+function cleanCoverUrl(url){
+  url=String(url||'').trim();
+  if(!url)return '';
+  if(url.startsWith('//'))url='https:'+url;
+  if(url.startsWith('http://'))url='https://'+url.slice(7);
+  return url;
+}
+function coverCandidates(book){
+  const b=book||{};
+  const raw=[
+    b.cover_url,b.thumbnail_url,b.thumbnail,b.cover_url_s,b.image,b.image_url,b.cover,b.bookCover
+  ].map(cleanCoverUrl).filter(Boolean);
+  const isbn=String(b.isbn||b.isbn13||b.isbn10||'').replace(/[^0-9Xx]/g,'');
+  if(isbn.length===10||isbn.length===13)raw.push(`https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`);
+  return [...new Set(raw)];
+}
+function coverDataAttr(covers){
+  return encodeURIComponent(JSON.stringify((covers||[]).filter(Boolean)));
+}
+function bookPlaceholderHTML(abbr){
+  return `<div class="book-cover-placeholder"><div class="bcp-icon">📖</div><div class="bcp-abbr">${abbr}</div></div>`;
+}
+function tryNextBookCover(img){
+  let covers=[];
+  try{covers=JSON.parse(decodeURIComponent(img.dataset.covers||'%5B%5D'));}catch(e){covers=[];}
+  const next=Number(img.dataset.coverIndex||0)+1;
+  if(covers[next]){
+    img.dataset.coverIndex=String(next);
+    img.src=covers[next];
+    return;
+  }
+  img.parentElement.innerHTML=bookPlaceholderHTML(img.dataset.abbr||'BOOK');
+}
+function validateBookCover(img){
+  const tooSmall=(img.naturalWidth&&img.naturalWidth<=2)||(img.naturalHeight&&img.naturalHeight<=2);
+  if(tooSmall)tryNextBookCover(img);
+}
+
 function bookCardHTML(b){
   const title  = escHtml(b.title || b.book_title || '제목 없음');
   const author = escHtml(b.author || '');
@@ -579,6 +617,33 @@ function bookCardHTML(b){
 }
 
 // ── RENDER VIDEOS ─────────────────────────────────────────
+function bookCardHTML(b){
+  const title  = escHtml(b.title || b.book_title || '제목 없음');
+  const author = escHtml(b.author || '');
+  const desc   = escHtml(b.description || b.summary || '');
+  const bookId = escHtml(b.book_id || b.id || title);
+  const abbr   = title.slice(0,8);
+  const covers = coverCandidates(b);
+  const firstCover = covers[0] || '';
+  const coversAttr = coverDataAttr(covers);
+
+  const cover = firstCover
+    ? `<img src="${escHtml(firstCover)}" alt="${title}" data-covers="${coversAttr}" data-cover-index="0" data-abbr="${abbr}" onload="validateBookCover(this)" onerror="tryNextBookCover(this)">`
+    : bookPlaceholderHTML(abbr);
+
+  return `
+  <div class="book-card">
+    <div class="book-cover">${cover}</div>
+    <div class="book-title">${title}</div>
+    ${author ? `<div class="book-author">${author}</div>` : ''}
+    ${desc ? `<div class="book-desc">${desc}</div>` : ''}
+    <div class="book-actions">
+      <button class="btn-xs btn-xs-gold" onclick="saveBook(${JSON.stringify(bookId).replace(/"/g,'&quot;')},${JSON.stringify(title).replace(/"/g,'&quot;')})">서재 담기</button>
+      <button class="btn-xs btn-xs-green" onclick="startSocratesFromDeepDive(${JSON.stringify(title).replace(/"/g,'&quot;')})">소크라테스와 질문</button>
+    </div>
+  </div>`;
+}
+
 function renderVideoResults(videos){
   const countBadge = document.getElementById('video-count-badge');
   countBadge.textContent = videos.length + '개';
@@ -796,6 +861,14 @@ function showToast(msg, type=''){
 // ── INIT ──────────────────────────────────────────────────
 function initDeepDivePage(){
   initNav();
+
+  // lounge에서 넘어온 경우 자동 검색
+  const autoQuery = sessionStorage.getItem('luma_deepdive_query');
+  if(autoQuery){
+    sessionStorage.removeItem('luma_deepdive_query');
+    const input = document.getElementById('search-input');
+    if(input){ input.value = autoQuery; searchDeepDive(); }
+  }
 
   // Rotating tagline
   const phrases=[

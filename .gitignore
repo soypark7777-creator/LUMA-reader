@@ -21,6 +21,8 @@ env/
 firebase-credentials.json
 *-credentials.json
 service-account*.json
+secrets/
+google-vision-key.json
 
 # ── IDE ─────────────────────────────────────────
 .vscode/

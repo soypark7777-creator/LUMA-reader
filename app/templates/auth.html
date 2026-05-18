@@ -1,127 +1,373 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LUMA - 로그인</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Orbitron:wght@500;600&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>LUMA — 당신의 생각 우주</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050815;--panel:rgba(9,14,32,.86);--line:rgba(160,184,255,.18);--text:#eef3ff;--muted:#9da9c7;--gold:#f5c86b;--cyan:#8fdcff;--violet:#b9a5ff}
-*{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;display:grid;place-items:center;padding:26px;color:var(--text);font-family:Pretendard,system-ui,sans-serif;background:radial-gradient(circle at 18% 20%,rgba(143,220,255,.2),transparent 28%),radial-gradient(circle at 82% 12%,rgba(185,165,255,.18),transparent 30%),linear-gradient(135deg,#03040b,#081022 48%,#050815)}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.75) 0 1px,transparent 1.8px);background-size:74px 74px;opacity:.18;animation:starDrift 18s linear infinite}
-@keyframes starDrift{to{transform:translate3d(-74px,74px,0)}}
-.wrap{width:min(440px,100%)}
-.logo-area{display:flex;align-items:center;justify-content:center;margin-bottom:26px}
-.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text);font-family:Cinzel,serif;font-size:1.25rem;letter-spacing:.08em}
-.logo img{width:50px;height:50px;object-fit:contain}
-.logo-sub,.luma-brand-text{display:block;margin-top:4px;color:var(--muted);font-size:.82rem;letter-spacing:0}
-.auth-card{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 28px 80px rgba(0,0,0,.46);backdrop-filter:blur(18px)}
-.auth-card:before{content:"";position:absolute;inset:-1px;background:linear-gradient(120deg,transparent,rgba(245,200,107,.14),transparent);pointer-events:none}
-.db-badge{position:relative;display:inline-flex;margin-bottom:16px;padding:5px 10px;border-radius:999px;font-size:.72rem;border:1px solid rgba(245,200,107,.22);color:var(--gold);background:rgba(245,200,107,.08)}
-.db-badge.ok{border-color:rgba(94,234,212,.28);color:#8fffe8;background:rgba(94,234,212,.08)}
-.auth-tabs{position:relative;display:flex;gap:6px;padding:5px;margin-bottom:20px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
-.auth-tab{flex:1;border:0;border-radius:10px;padding:10px 12px;background:transparent;color:var(--muted);font-family:Pretendard,sans-serif;font-weight:700;cursor:pointer}
-.auth-tab.active{color:#07101f;background:linear-gradient(135deg,var(--gold),#ffe8a1)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.form-group{margin-bottom:14px}
-.form-label{display:block;margin-bottom:6px;color:var(--muted);font-size:.75rem;font-weight:700}
-.form-input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(4,8,20,.72);color:var(--text);font:inherit;outline:none}
-.form-input:focus{border-color:rgba(143,220,255,.58);box-shadow:0 0 0 3px rgba(143,220,255,.1)}
-.btn-submit,.btn-social{width:100%;border-radius:13px;padding:13px 14px;font:700 .92rem Pretendard,sans-serif;cursor:pointer;transition:.18s}
-.btn-submit{border:1px solid rgba(245,200,107,.5);color:#07101f;background:linear-gradient(135deg,var(--gold),#ffe8a1)}
-.btn-submit:disabled{opacity:.55;cursor:not-allowed}
-.btn-social{border:1px solid var(--line);color:var(--text);background:rgba(255,255,255,.05)}
-.divider{display:flex;align-items:center;gap:12px;margin:16px 0}
-.divider-line{flex:1;height:1px;background:var(--line)}
-.divider-text{color:var(--muted);font-size:.72rem}
-.msg{display:none;margin-top:12px;padding:11px 13px;border-radius:12px;font-size:.8rem}
-.msg.success{display:block;color:#9fffe7;background:rgba(94,234,212,.09);border:1px solid rgba(94,234,212,.24)}
-.msg.error{display:block;color:#ffb4c2;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.24)}
-.genre-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.genre-chip{border:1px solid var(--line);border-radius:10px;padding:8px 6px;background:rgba(255,255,255,.04);color:var(--muted);font:700 .72rem Pretendard,sans-serif;cursor:pointer}
-.genre-chip.sel{border-color:rgba(245,200,107,.5);color:var(--gold);background:rgba(245,200,107,.1)}
+:root{
+  --bg:#060c14;--panel:rgba(8,14,26,.9);--line:rgba(200,147,62,.18);
+  --text:#EAE0CC;--muted:#8A9E92;--gold:#C8933E;--gold-lt:#E8B060;
+  --cyan:#8fdcff;--violet:#b9a5ff;--red:#f87171;--green:#6ee7b7;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  min-height:100vh;display:grid;place-items:center;
+  color:var(--text);font-family:'Pretendard',system-ui,sans-serif;
+  background:var(--bg);overflow-x:hidden;
+}
+
+/* ── Background ─────────────────────────────────────────── */
+.bg-video-wrap{
+  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+}
+.bg-video{width:100%;height:100%;object-fit:cover;opacity:.28;}
+.bg-fallback{
+  position:absolute;inset:0;
+  background-image:url('/asset/images/우주배경/SPACE (2).jpg');
+  background-size:cover;background-position:center;
+  opacity:.28;display:none;
+}
+.bg-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at 30% 40%,rgba(8,14,26,.55),rgba(6,12,20,.9) 70%);
+}
+.bg-stars{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(234,224,204,.7) 0 1px,transparent 1.6px);
+  background-size:66px 66px;opacity:.14;animation:starDrift 22s linear infinite;
+}
+@keyframes starDrift{to{transform:translate3d(-66px,66px,0)}}
+
+/* ── Layout ─────────────────────────────────────────────── */
+.auth-layout{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:1fr 420px;
+  min-height:100vh;width:100%;max-width:1100px;
+  padding:0 40px;gap:60px;align-items:center;
+}
+
+/* ── Brand Panel (left) ─────────────────────────────────── */
+.brand-panel{display:flex;flex-direction:column;gap:32px;padding:60px 0;}
+.brand-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.brand-logo img{width:48px;height:48px;object-fit:contain;}
+.brand-logo-text{
+  font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gold);
+}
+.brand-tagline{
+  font-family:'DM Serif Display',serif;font-style:italic;
+  font-size:clamp(1.6rem,2.8vw,2.4rem);line-height:1.35;color:var(--text);
+}
+.brand-tagline span{color:var(--gold);}
+.brand-sub{
+  font-family:'Noto Serif KR',serif;font-size:.92rem;
+  color:var(--muted);line-height:1.95;max-width:380px;
+}
+.brand-feats{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+.brand-feat{
+  display:flex;align-items:flex-start;gap:12px;padding:14px 16px;
+  background:rgba(200,147,62,.05);border:1px solid rgba(200,147,62,.12);
+  border-radius:12px;transition:.2s;
+}
+.brand-feat:hover{background:rgba(200,147,62,.08);border-color:rgba(200,147,62,.2);}
+.brand-feat-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px;}
+.brand-feat-text{}
+.brand-feat-title{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:2px;}
+.brand-feat-desc{font-size:.74rem;color:var(--muted);line-height:1.6;}
+.brand-back{
+  display:inline-flex;align-items:center;gap:6px;font-size:.76rem;color:var(--muted);
+  text-decoration:none;transition:.2s;margin-top:8px;
+}
+.brand-back:hover{color:var(--gold);}
+
+/* ── Auth Card (right) ──────────────────────────────────── */
+.auth-wrap{padding:40px 0;}
+.auth-card{
+  position:relative;overflow:hidden;background:var(--panel);
+  border:1px solid var(--line);border-radius:24px;padding:30px;
+  box-shadow:0 32px 80px rgba(0,0,0,.5);backdrop-filter:blur(22px);
+}
+.auth-card::before{
+  content:"";position:absolute;inset:-1px;pointer-events:none;
+  background:linear-gradient(120deg,transparent,rgba(200,147,62,.12),transparent);
+}
+.auth-card-header{
+  text-align:center;margin-bottom:20px;
+}
+.auth-headline{
+  font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--text);
+  line-height:1.3;margin-bottom:6px;
+}
+.auth-headline span{color:var(--gold);}
+.auth-subline{font-size:.78rem;color:var(--muted);line-height:1.6;}
+
+/* db badge */
+.db-badge{
+  display:inline-flex;margin-bottom:16px;padding:5px 11px;
+  border-radius:999px;font-size:.7rem;
+  border:1px solid rgba(200,147,62,.22);color:var(--gold);
+  background:rgba(200,147,62,.08);
+}
+.db-badge.ok{border-color:rgba(110,231,183,.28);color:var(--green);background:rgba(110,231,183,.07);}
+
+/* tabs */
+.auth-tabs{
+  display:flex;gap:6px;padding:5px;margin-bottom:20px;
+  border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+}
+.auth-tab{
+  flex:1;border:0;border-radius:10px;padding:10px 12px;background:transparent;
+  color:var(--muted);font-family:'Pretendard',sans-serif;font-weight:700;
+  cursor:pointer;font-size:.85rem;transition:.18s;
+}
+.auth-tab.active{color:#07101f;background:linear-gradient(135deg,var(--gold),var(--gold-lt));}
+
+/* form */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;margin-bottom:6px;color:var(--muted);font-size:.73rem;font-weight:700;}
+.form-input{
+  width:100%;padding:12px 14px;border-radius:12px;
+  border:1px solid rgba(200,147,62,.2);
+  background:rgba(4,8,22,.72);color:var(--text);
+  font:inherit;outline:none;transition:.18s;font-size:.88rem;
+}
+.form-input:focus{
+  border-color:rgba(143,220,255,.55);
+  box-shadow:0 0 0 3px rgba(143,220,255,.1);
+}
+.form-input::placeholder{color:rgba(138,158,146,.45);}
+.btn-submit{
+  width:100%;border-radius:13px;padding:13px 14px;
+  font:700 .92rem 'Pretendard',sans-serif;cursor:pointer;transition:.18s;
+  border:1px solid rgba(200,147,62,.5);color:#07101f;
+  background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+}
+.btn-submit:hover{box-shadow:0 6px 24px rgba(200,147,62,.35);transform:translateY(-1px);}
+.btn-submit:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-social{
+  width:100%;border-radius:13px;padding:13px 14px;
+  font:600 .88rem 'Pretendard',sans-serif;cursor:pointer;transition:.18s;
+  border:1px solid rgba(255,255,255,.1);color:var(--text);
+  background:rgba(255,255,255,.05);
+}
+.btn-social:hover{background:rgba(255,255,255,.09);border-color:rgba(200,147,62,.25);}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;}
+.divider-line{flex:1;height:1px;background:rgba(200,147,62,.14);}
+.divider-text{color:var(--muted);font-size:.7rem;}
+.msg{display:none;margin-top:12px;padding:11px 14px;border-radius:12px;font-size:.8rem;}
+.msg.success{
+  display:block;color:var(--green);
+  background:rgba(110,231,183,.08);border:1px solid rgba(110,231,183,.24);
+}
+.msg.error{
+  display:block;color:#ffb4c2;
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);
+}
+/* genre */
+.genre-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.genre-chip{
+  border:1px solid rgba(200,147,62,.2);border-radius:10px;padding:8px 6px;
+  background:rgba(255,255,255,.04);color:var(--muted);
+  font:700 .72rem 'Pretendard',sans-serif;cursor:pointer;transition:.16s;
+}
+.genre-chip:hover{background:rgba(200,147,62,.08);}
+.genre-chip.sel{border-color:rgba(200,147,62,.5);color:var(--gold);background:rgba(200,147,62,.1);}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media(max-width:820px){
+  .auth-layout{
+    grid-template-columns:1fr;padding:24px 20px;gap:0;
+    min-height:auto;padding-top:40px;
+  }
+  .brand-panel{
+    padding:20px 0 0;gap:18px;align-items:center;text-align:center;
+  }
+  .brand-sub{text-align:center;max-width:100%;}
+  .brand-feats{display:none;}
+  .brand-back{display:none;}
+  .auth-wrap{padding:20px 0 40px;}
+}
 </style>
 </head>
 <body>
-<main class="wrap">
-  <div class="logo-area">
-    <a href="/" class="logo">
+
+<!-- Background -->
+<div class="bg-video-wrap">
+  <video class="bg-video" id="bg-video"
+    src="/asset/videos/grory_light.mp4"
+    autoplay muted loop playsinline preload="auto">
+  </video>
+  <div class="bg-fallback" id="bg-fallback"></div>
+</div>
+<div class="bg-overlay"></div>
+<div class="bg-stars"></div>
+
+<!-- Layout -->
+<div class="auth-layout">
+
+  <!-- Brand Panel -->
+  <div class="brand-panel">
+    <a href="/landing" class="brand-logo">
       <img src="/asset/images/Luma_logo_1.png" alt="LUMA">
-      <span>LUMA</span>
-      <span class="logo-sub">생각은 빛이 된다</span>
+      <span class="brand-logo-text">LUMA</span>
     </a>
+    <h1 class="brand-tagline" id="brand-headline">
+      당신의 생각 우주로<br>
+      <span>돌아오세요</span>
+    </h1>
+    <p class="brand-sub">
+      책에서 만난 한 문장이 감정이 되고,<br>
+      그 감정이 다른 독자와 연결되어<br>
+      AI가 당신만의 별자리 지도를 그립니다.
+    </p>
+    <div class="brand-feats">
+      <div class="brand-feat">
+        <span class="brand-feat-icon">✦</span>
+        <div class="brand-feat-text">
+          <div class="brand-feat-title">문장 저장 & 별자리 지도</div>
+          <div class="brand-feat-desc">마음에 남은 구절을 감정과 함께 기록하면 AI가 당신의 독서 우주를 시각화합니다.</div>
+        </div>
+      </div>
+      <div class="brand-feat">
+        <span class="brand-feat-icon">💡</span>
+        <div class="brand-feat-text">
+          <div class="brand-feat-title">AI 질문 생성 (소크라테스)</div>
+          <div class="brand-feat-desc">책 페이지를 촬영하면 Gemini AI가 5가지 토론 질문을 즉시 만들어드립니다.</div>
+        </div>
+      </div>
+      <div class="brand-feat">
+        <span class="brand-feat-icon">🌐</span>
+        <div class="brand-feat-text">
+          <div class="brand-feat-title">독서 파드 & 생각 피드</div>
+          <div class="brand-feat-desc">같은 책을 읽는 독자들과 파드를 만들고 인사이트를 나누세요.</div>
+        </div>
+      </div>
+    </div>
+    <a href="/landing" class="brand-back">← 소개 페이지로 돌아가기</a>
   </div>
 
-  <section class="auth-card">
-    <div id="db-badge" class="db-badge mock">상태 확인 중</div>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" type="button" onclick="switchTab('login',this)">로그인</button>
-      <button class="auth-tab" type="button" onclick="switchTab('signup',this)">회원가입</button>
-    </div>
-
-    <div id="form-login">
-      <div class="form-group">
-        <label class="form-label" for="login-email">이메일</label>
-        <input class="form-input" type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+  <!-- Auth Card -->
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <div id="db-badge" class="db-badge">상태 확인 중</div>
+        <h2 class="auth-headline" id="auth-headline">
+          당신의 <span>생각 우주</span>로<br>돌아오세요
+        </h2>
+        <p class="auth-subline" id="auth-subline">이메일과 비밀번호로 계속하세요</p>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="login-pw">비밀번호</label>
-        <input class="form-input" type="password" id="login-pw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <button class="btn-submit" id="btn-login" type="button" onclick="doLogin()">로그인</button>
-      <div class="divider"><div class="divider-line"></div><div class="divider-text">또는</div><div class="divider-line"></div></div>
-      <button class="btn-social" type="button" onclick="demoLogin()">데모 계정으로 바로 시작</button>
-      <div class="msg" id="login-msg"></div>
-    </div>
 
-    <div id="form-signup" style="display:none">
-      <div class="form-row">
+      <div class="auth-tabs">
+        <button class="auth-tab active" type="button" onclick="switchTab('login',this)">로그인</button>
+        <button class="auth-tab" type="button" onclick="switchTab('signup',this)">회원가입</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="form-login">
         <div class="form-group">
-          <label class="form-label" for="su-name">이름 *</label>
-          <input class="form-input" type="text" id="su-name" placeholder="이름">
+          <label class="form-label" for="login-email">이메일</label>
+          <input class="form-input" type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
         </div>
         <div class="form-group">
-          <label class="form-label" for="su-age">나이</label>
-          <input class="form-input" type="number" id="su-age" placeholder="25" min="10" max="100">
+          <label class="form-label" for="login-pw">비밀번호</label>
+          <input class="form-input" type="password" id="login-pw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="su-email">이메일 *</label>
-        <input class="form-input" type="email" id="su-email" placeholder="your@email.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="su-pw">비밀번호 * (4자 이상)</label>
-        <input class="form-input" type="password" id="su-pw" placeholder="비밀번호">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="su-region">지역</label>
-        <input class="form-input" type="text" id="su-region" placeholder="서울, 부산, 제주...">
-      </div>
-      <div class="form-group">
-        <label class="form-label">선호 장르</label>
-        <div class="genre-grid" id="genre-grid">
-          {% for g in ['문학','철학','역사','과학','SF','경제','심리','자기계발','예술','여행'] %}
-          <button class="genre-chip" type="button" onclick="selGenre(this,'{{ g }}')">{{ g }}</button>
-          {% endfor %}
+        <button class="btn-submit" id="btn-login" type="button" onclick="doLogin()">로그인</button>
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-text">또는</div>
+          <div class="divider-line"></div>
         </div>
-        <input type="hidden" id="su-genre">
+        <button class="btn-social" type="button" onclick="demoLogin()">✦ 데모 계정으로 바로 시작</button>
+        <div class="msg" id="login-msg"></div>
       </div>
-      <button class="btn-submit" id="btn-signup" type="button" onclick="doSignup()">별자리 시작하기</button>
-      <div class="msg" id="signup-msg"></div>
-    </div>
-  </section>
-</main>
+
+      <!-- Signup Form -->
+      <div id="form-signup" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="su-name">이름 *</label>
+            <input class="form-input" type="text" id="su-name" placeholder="이름">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="su-age">나이</label>
+            <input class="form-input" type="number" id="su-age" placeholder="25" min="10" max="100">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="su-email">이메일 *</label>
+          <input class="form-input" type="email" id="su-email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="su-pw">비밀번호 * (4자 이상)</label>
+          <input class="form-input" type="password" id="su-pw" placeholder="비밀번호">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="su-region">지역</label>
+          <input class="form-input" type="text" id="su-region" placeholder="서울, 부산, 제주...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">선호 장르</label>
+          <div class="genre-grid" id="genre-grid">
+            {% for g in ['문학','철학','역사','과학','SF','경제','심리','자기계발','예술','여행'] %}
+            <button class="genre-chip" type="button" onclick="selGenre(this,'{{ g }}')">{{ g }}</button>
+            {% endfor %}
+          </div>
+          <input type="hidden" id="su-genre">
+        </div>
+        <button class="btn-submit" id="btn-signup" type="button" onclick="doSignup()">✦ 첫 문장이 당신의 별이 됩니다</button>
+        <div class="msg" id="signup-msg"></div>
+      </div>
+
+    </div><!-- /auth-card -->
+  </div><!-- /auth-wrap -->
+
+</div><!-- /auth-layout -->
 
 <script>
+// ── Background Video Fallback ────────────────────────────────
+(function () {
+  var vid = document.getElementById('bg-video');
+  var fallback = document.getElementById('bg-fallback');
+  if (!vid) return;
+  var t = setTimeout(function () {
+    vid.style.display = 'none';
+    fallback.style.display = 'block';
+  }, 2500);
+  vid.addEventListener('canplay', function () { clearTimeout(t); }, { once: true });
+  vid.addEventListener('error', function () {
+    clearTimeout(t);
+    vid.style.display = 'none';
+    fallback.style.display = 'block';
+  }, { once: true });
+})();
+
+// ── Tab Switch ───────────────────────────────────────────────
 function switchTab(tab, btn) {
-  document.querySelectorAll('.auth-tab').forEach((item) => item.classList.remove('active'));
+  document.querySelectorAll('.auth-tab').forEach(function (item) { item.classList.remove('active'); });
   btn.classList.add('active');
-  document.getElementById('form-login').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('form-login').style.display  = tab === 'login'  ? '' : 'none';
   document.getElementById('form-signup').style.display = tab === 'signup' ? '' : 'none';
+
+  var headline = document.getElementById('auth-headline');
+  var subline  = document.getElementById('auth-subline');
+  var brandHeadline = document.getElementById('brand-headline');
+  if (tab === 'signup') {
+    if (headline) headline.innerHTML = '첫 문장이<br><span>당신의 별</span>이 됩니다';
+    if (subline)  subline.textContent = '지금 LUMA에서 독서 여정을 시작하세요';
+    if (brandHeadline) brandHeadline.innerHTML = '첫 문장이<br><span>당신의 별</span>이 됩니다';
+  } else {
+    if (headline) headline.innerHTML = '당신의 <span>생각 우주</span>로<br>돌아오세요';
+    if (subline)  subline.textContent = '이메일과 비밀번호로 계속하세요';
+    if (brandHeadline) brandHeadline.innerHTML = '당신의 생각 우주로<br><span>돌아오세요</span>';
+  }
 }
 
+// ── DB Status ────────────────────────────────────────────────
 async function checkDBStatus() {
   try {
     const r = await fetch('/api/v2/system/status');
@@ -129,39 +375,38 @@ async function checkDBStatus() {
     const el = document.getElementById('db-badge');
     if ((d.mysql || '').includes('연결')) {
       el.className = 'db-badge ok';
-      el.textContent = 'MySQL 연결됨';
+      el.textContent = '✦ MySQL 연결됨';
     } else {
-      el.className = 'db-badge mock';
+      el.className = 'db-badge';
       el.textContent = 'Mock 모드';
     }
   } catch (e) {}
 }
 checkDBStatus();
 
+// ── Redirect if already logged in ───────────────────────────
 if (localStorage.getItem('luma_token')) {
   window.location.href = '/';
 }
 
-let selG = '';
+// ── Genre Selection ──────────────────────────────────────────
+var selG = '';
 function selGenre(btn, g) {
-  document.querySelectorAll('.genre-chip').forEach((item) => item.classList.remove('sel'));
+  document.querySelectorAll('.genre-chip').forEach(function (item) { item.classList.remove('sel'); });
   btn.classList.add('sel');
   selG = g;
   document.getElementById('su-genre').value = g;
 }
 
+// ── Login ────────────────────────────────────────────────────
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
-  const pw = document.getElementById('login-pw').value;
-  const msg = document.getElementById('login-msg');
-  const btn = document.getElementById('btn-login');
-  if (!email || !pw) {
-    showMsg(msg, 'error', '이메일과 비밀번호를 입력해주세요.');
-    return;
-  }
+  const pw    = document.getElementById('login-pw').value;
+  const msg   = document.getElementById('login-msg');
+  const btn   = document.getElementById('btn-login');
+  if (!email || !pw) { showMsg(msg, 'error', '이메일과 비밀번호를 입력해주세요.'); return; }
 
-  btn.disabled = true;
-  btn.textContent = '로그인 중...';
+  btn.disabled = true; btn.textContent = '로그인 중...';
   try {
     const r = await fetch('/api/v2/auth/login', {
       method: 'POST',
@@ -173,18 +418,18 @@ async function doLogin() {
       showMsg(msg, 'success', '로그인 성공! 별자리 지도로 이동합니다.');
       localStorage.setItem('luma_token', d.token);
       localStorage.setItem('luma_user', JSON.stringify(d.user));
-      setTimeout(() => window.location.href = '/', 700);
+      setTimeout(function () { window.location.href = '/'; }, 700);
     } else {
       showMsg(msg, 'error', d.error || '로그인에 실패했습니다.');
     }
   } catch (e) {
     showMsg(msg, 'error', '서버에 연결할 수 없습니다.');
   } finally {
-    btn.disabled = false;
-    btn.textContent = '로그인';
+    btn.disabled = false; btn.textContent = '로그인';
   }
 }
 
+// ── Demo Login ───────────────────────────────────────────────
 async function demoLogin() {
   const msg = document.getElementById('login-msg');
   try {
@@ -197,7 +442,7 @@ async function demoLogin() {
     if (d.ok) {
       localStorage.setItem('luma_token', d.token);
       localStorage.setItem('luma_user', JSON.stringify(d.user));
-      window.location.href = '/heart';
+      window.location.href = '/';
       return;
     }
   } catch (e) {}
@@ -209,25 +454,25 @@ async function demoLogin() {
     emoji: '✨'
   }));
   showMsg(msg, 'success', '데모 모드로 시작합니다.');
-  setTimeout(() => window.location.href = '/heart', 500);
+  setTimeout(function () { window.location.href = '/'; }, 500);
 }
 
+// ── Signup ───────────────────────────────────────────────────
 async function doSignup() {
-  const name = document.getElementById('su-name').value.trim();
-  const email = document.getElementById('su-email').value.trim();
-  const pw = document.getElementById('su-pw').value;
-  const age = document.getElementById('su-age').value;
+  const name   = document.getElementById('su-name').value.trim();
+  const email  = document.getElementById('su-email').value.trim();
+  const pw     = document.getElementById('su-pw').value;
+  const age    = document.getElementById('su-age').value;
   const region = document.getElementById('su-region').value.trim();
-  const genre = document.getElementById('su-genre').value;
-  const msg = document.getElementById('signup-msg');
-  const btn = document.getElementById('btn-signup');
+  const genre  = document.getElementById('su-genre').value;
+  const msg    = document.getElementById('signup-msg');
+  const btn    = document.getElementById('btn-signup');
 
-  if (!name) { showMsg(msg, 'error', '이름을 입력해주세요.'); return; }
-  if (!email) { showMsg(msg, 'error', '이메일을 입력해주세요.'); return; }
+  if (!name)              { showMsg(msg, 'error', '이름을 입력해주세요.'); return; }
+  if (!email)             { showMsg(msg, 'error', '이메일을 입력해주세요.'); return; }
   if (!pw || pw.length < 4) { showMsg(msg, 'error', '비밀번호는 4자 이상이어야 합니다.'); return; }
 
-  btn.disabled = true;
-  btn.textContent = '가입 중...';
+  btn.disabled = true; btn.textContent = '가입 중...';
   try {
     const r = await fetch('/api/v2/auth/register', {
       method: 'POST',
@@ -247,23 +492,23 @@ async function doSignup() {
       showMsg(msg, 'success', '회원가입 완료! 별자리 지도로 이동합니다.');
       localStorage.setItem('luma_token', d.token);
       localStorage.setItem('luma_user', JSON.stringify(d.user));
-      setTimeout(() => window.location.href = '/', 700);
+      setTimeout(function () { window.location.href = '/'; }, 700);
     } else {
       showMsg(msg, 'error', d.error || '회원가입에 실패했습니다.');
     }
   } catch (e) {
     showMsg(msg, 'error', '서버에 연결할 수 없습니다.');
   } finally {
-    btn.disabled = false;
-    btn.textContent = '별자리 시작하기';
+    btn.disabled = false; btn.textContent = '✦ 첫 문장이 당신의 별이 됩니다';
   }
 }
 
+// ── Show Message ─────────────────────────────────────────────
 function showMsg(el, type, text) {
   el.className = 'msg ' + type;
   el.textContent = text;
   el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 5000);
+  setTimeout(function () { el.style.display = 'none'; }, 5000);
 }
 </script>
 </body>

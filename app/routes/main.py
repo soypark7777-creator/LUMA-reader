@@ -54,45 +54,20 @@ def generate_mock_constellation():
 
 @main_bp.route('/')
 def index():
-    try:
-        from app.services.reading_service import get_constellation
-        constellation_data = get_constellation("user_demo")
-        for node in constellation_data.get("nodes", []):
-            node["title"] = node.get("title") or node.get("label", "")
-            node["memos"] = node.get("memos", 0)
-        for link in constellation_data.get("links", []):
-            link["insight"] = link.get("insight") or link.get("theme", "")
-    except Exception:
-        constellation_data = generate_mock_constellation()
-    try:
-        from app.services.shelf_service import get_shelf
-        from app.services.user_service import get_user_stats
-        shelf = get_shelf("user_demo")
-        shelf_stats = shelf.get("stats", {})
-        user_stats = get_user_stats("user_demo")
-        stats = {
-            "total_books": shelf_stats.get("total", 23),
-            "total_memos": user_stats.get("memos", 147),
-            "reading_streak": shelf_stats.get("reading_streak", 0),
-            "total_pages": shelf_stats.get("total_pages", 6840),
-            "this_month": shelf_stats.get("this_month", 3),
-            "connections": user_stats.get("connections", 18),
-        }
-    except Exception:
-        stats = {
-            "total_books": 23,
-            "total_memos": 147,
-            "reading_streak": 0,
-            "total_pages": 6840,
-            "this_month": 3,
-            "connections": 18,
-        }
-    recent_insights = [
-        {"book1": "사피엔스", "book2": "총균쇠", "text": "문명의 흥망성쇠는 지리적 조건과 집단 허구의 결합으로 설명된다."},
-        {"book1": "코스모스", "book2": "멋진 신세계", "text": "과학의 발전은 자유를 열어주기도, 새로운 통제의 도구가 되기도 한다."},
-        {"book1": "데미안", "book2": "어린왕자", "text": "진정한 성장은 타인의 시선이 아닌 내면의 목소리를 따를 때 시작된다."},
-    ]
-    return render_template('dashboard.html',
-                           constellation=json.dumps(constellation_data, ensure_ascii=False),
-                           stats=stats,
-                           insights=recent_insights)
+    # The browser reloads dashboard data through /api/v2 with the logged-in
+    # user's bearer token. Do not render user_demo data here, because it can
+    # briefly expose another reader's books before the client fetch finishes.
+    stats = {
+        "total_books": 0,
+        "total_memos": 0,
+        "reading_streak": 0,
+        "total_pages": 0,
+        "this_month": 0,
+        "connections": 0,
+    }
+    return render_template(
+        'dashboard.html',
+        constellation=json.dumps({"nodes": [], "links": []}, ensure_ascii=False),
+        stats=stats,
+        insights=[],
+    )

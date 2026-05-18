@@ -1,8 +1,7 @@
-"""
-Socrates discussion preparation helpers.
+"""Socrates discussion preparation helpers.
 
-These functions extend the existing 5-step Socrates flow into a book
-discussion preparation room while keeping API responses mock-safe.
+These helpers power both /api/socrates/* and /api/v2/socrates/* without
+changing the existing Socrates session flow.
 """
 from __future__ import annotations
 
@@ -19,7 +18,7 @@ DISCUSSION_MODES = {
 
 
 def normalize_discussion_mode(mode: str | None) -> str:
-    mode = (mode or "appreciation").strip()
+    mode = (mode or "appreciation").strip().lower()
     return mode if mode in DISCUSSION_MODES else "appreciation"
 
 
@@ -27,47 +26,19 @@ def get_mode_label(mode: str | None) -> str:
     return DISCUSSION_MODES[normalize_discussion_mode(mode)]
 
 
-def _compact_text(text: str, limit: int = 80) -> str:
-    text = re.sub(r"\s+", " ", (text or "")).strip()
-    return text[:limit] + ("..." if len(text) > limit else "")
-
-
-def _fallback_keywords(passage: str) -> list[str]:
-    words = re.findall(r"[가-힣A-Za-z]{2,}", passage or "")
-    stop = {"그리고", "하지만", "그래서", "이것은", "저것은", "나는", "우리는", "그들은"}
-    result = []
-    for word in words:
-        word = re.sub(r"(은|는|이|가|을|를|과|와|로|으로|에게|에서|부터|까지)$", "", word)
-        if word in stop or word in result:
-            continue
-        result.append(word)
-        if len(result) >= 3:
-            break
-    return result or ["이해", "질문", "토론"]
-
-
-def _json_from_gemini(prompt: str) -> dict | None:
-    try:
-        from app.services.gemini_service import _call_gemini, _parse_json_safe
-
-        raw = _call_gemini(prompt, expect_json=True)
-        parsed = _parse_json_safe(raw) if raw else None
-        return parsed if isinstance(parsed, dict) else None
-    except Exception:
-        return None
-
-
 def generate_book_brief(passage: str, book_title: str = "", user_id: str = "user_demo") -> dict:
-    prompt = f"""책 토론 전 이해 카드를 생성해주세요.
-책: 《{book_title}》
+    passage = _compact_text(passage, 900)
+    book_title = (book_title or "").strip()
+    prompt = f"""독서 토론을 위한 책/구절 브리프를 JSON으로 작성하세요.
+책: {book_title}
 구절: {passage}
 
-JSON 형식으로만 응답:
+응답 형식:
 {{
   "summary": ["핵심 요약 1", "핵심 요약 2", "핵심 요약 3"],
   "keywords": ["키워드1", "키워드2", "키워드3"],
-  "main_question": "이 구절이 독자에게 던지는 중심 질문",
-  "discussion_hint": "독서모임에서 토론하면 좋은 관점"
+  "main_question": "독자가 함께 이야기할 중심 질문",
+  "discussion_hint": "독서모임에서 대화를 여는 짧은 힌트"
 }}"""
     parsed = _json_from_gemini(prompt)
     if parsed and isinstance(parsed.get("summary"), list) and parsed.get("main_question"):
@@ -79,18 +50,19 @@ JSON 형식으로만 응답:
             "source": "gemini",
         }
 
-    preview = _compact_text(passage, 64)
     keywords = _fallback_keywords(passage)
+    preview = _compact_text(passage, 70)
+    title = book_title or "이 책"
     return {
         "summary": [
-            f"《{book_title or '이 책'}》의 구절은 독자가 붙잡은 핵심 생각을 드러냅니다.",
-            f"중심 문장은 '{preview}'로 요약할 수 있습니다.",
-            "토론에서는 이 생각이 왜 마음에 남았는지부터 시작하면 좋습니다.",
+            f"{title}의 이 구절은 독자가 붙잡을 만한 중심 생각을 드러냅니다.",
+            f"핵심 문장은 '{preview}'로 요약할 수 있습니다.",
+            "토론에서는 문장의 의미와 각자의 경험을 연결하는 방식으로 시작하기 좋습니다.",
         ],
         "keywords": keywords,
         "main_question": f"이 구절은 우리에게 어떤 {keywords[0]}의 의미를 묻고 있나요?",
-        "discussion_hint": f"{', '.join(keywords[:3])}의 관계를 중심으로 이야기해볼 수 있습니다.",
-        "source": "mock",
+        "discussion_hint": f"{', '.join(keywords[:3])}를 중심으로 서로 다른 해석을 나눠보세요.",
+        "source": "fallback",
     }
 
 
@@ -103,18 +75,14 @@ def generate_discussion_questions(
     user_id: str = "user_demo",
 ) -> list[dict]:
     mode = normalize_discussion_mode(discussion_mode)
-    if isinstance(insight, dict):
-        insight_text = insight.get("refined_thought") or insight.get("my_sentence") or str(insight)
-    else:
-        insight_text = insight or ""
-
-    prompt = f"""독서모임 질문 3~5개를 생성해주세요.
-대화 모드: {get_mode_label(mode)}({mode})
-책: 《{book_title}》
+    insight_text = _insight_text(insight)
+    prompt = f"""독서모임 질문 3~5개를 JSON으로 작성하세요.
+토론 모드: {get_mode_label(mode)}({mode})
+책: {book_title}
 구절: {passage}
-최종 인사이트: {insight_text}
+인사이트: {insight_text}
 
-JSON 형식으로만 응답:
+응답 형식:
 {{
   "questions": [
     {{"type":"understanding","label":"이해 질문","question":"질문"}},
@@ -125,39 +93,29 @@ JSON 형식으로만 응답:
     parsed = _json_from_gemini(prompt)
     questions = parsed.get("questions") if parsed else None
     if isinstance(questions, list) and questions:
-        return [
+        shaped = [
             {
-                "type": str(q.get("type", "discussion")),
-                "label": str(q.get("label", "토론 질문")),
-                "question": str(q.get("question", "")),
+                "type": str(item.get("type", "discussion")),
+                "label": str(item.get("label", "토론 질문")),
+                "question": str(item.get("question", "")),
             }
-            for q in questions[:5]
-            if isinstance(q, dict) and q.get("question")
+            for item in questions[:5]
+            if isinstance(item, dict) and item.get("question")
         ]
+        if shaped:
+            return shaped
 
     mode_question = {
         "appreciation": "이 구절에서 가장 오래 마음에 남는 표현은 무엇인가요?",
         "analysis": "이 구절의 핵심 주장과 근거를 나누면 어떻게 정리할 수 있나요?",
         "debate": "당신은 이 구절의 주장에 동의하나요, 반대하나요?",
-        "life": "이 생각을 지금의 삶에 적용하면 무엇이 달라질까요?",
+        "life": "이 생각을 지금의 삶에 적용한다면 무엇이 달라질까요?",
         "character": "이 구절 속 인물은 어떤 욕망이나 두려움으로 움직이고 있나요?",
     }
     return [
-        {
-            "type": "understanding",
-            "label": "이해 질문",
-            "question": "이 구절에서 가장 중요한 단어는 무엇인가요?",
-        },
-        {
-            "type": "emotion",
-            "label": "감정 질문",
-            "question": "이 문장을 읽었을 때 어떤 감정이 먼저 들었나요?",
-        },
-        {
-            "type": mode if mode in ("debate", "life", "analysis", "character") else "appreciation",
-            "label": get_mode_label(mode),
-            "question": mode_question[mode],
-        },
+        {"type": "understanding", "label": "이해 질문", "question": "이 구절에서 가장 중요한 단어는 무엇인가요?"},
+        {"type": "emotion", "label": "감정 질문", "question": "이 문장을 읽었을 때 어떤 감정이 먼저 들었나요?"},
+        {"type": mode, "label": get_mode_label(mode), "question": mode_question[mode]},
     ]
 
 
@@ -167,12 +125,13 @@ def generate_debate_topic(
     insight: str | dict = "",
     user_id: str = "user_demo",
 ) -> dict:
-    prompt = f"""책 구절에서 찬반 토론이 가능한 주제를 생성해주세요.
-책: 《{book_title}》
+    insight_text = _insight_text(insight)
+    prompt = f"""책 구절에서 찬반 토론이 가능한 주제를 JSON으로 작성하세요.
+책: {book_title}
 구절: {passage}
-인사이트: {insight}
+인사이트: {insight_text}
 
-JSON 형식으로만 응답:
+응답 형식:
 {{
   "topic": "찬반으로 나눌 수 있는 토론 명제",
   "pros": ["찬성 근거 1", "찬성 근거 2"],
@@ -189,20 +148,20 @@ JSON 형식으로만 응답:
             "source": "gemini",
         }
 
-    keywords = _fallback_keywords(passage)
-    topic_key = next((kw for kw in keywords if kw not in ("인간", "사람", "우리")), keywords[0])
+    keywords = _fallback_keywords(passage + " " + insight_text)
+    key = keywords[0]
     return {
-        "topic": f"삶에서 '{topic_key}'을 추구하는 일은 우리를 더 나은 방향으로 이끄는가?",
+        "topic": f"삶에서 '{key}'을 추구하는 일은 우리를 더 자유롭게 만드는가?",
         "pros": [
-            f"'{topic_key}'은 자기 삶을 선택하고 해석하게 합니다.",
-            "선택과 해석의 힘은 인간의 존엄과 연결됩니다.",
+            f"'{key}'은 자기 삶을 선택하고 해석하게 합니다.",
+            "가치 있는 선택은 불안보다 더 큰 의미를 만들 수 있습니다.",
         ],
         "cons": [
-            f"'{topic_key}'은 때로 책임과 불안을 함께 가져옵니다.",
-            "가치가 커질수록 현실의 복잡함을 더 크게 마주할 수 있습니다.",
+            f"'{key}'을 지나치게 추구하면 책임과 현실을 놓칠 수 있습니다.",
+            "개인의 해석만으로는 공동체의 복잡한 문제를 충분히 다루기 어렵습니다.",
         ],
-        "neutral_question": f"'{topic_key}'과 안정 중 지금 당신에게 더 중요한 것은 무엇인가요?",
-        "source": "mock",
+        "neutral_question": f"'{key}'과 안정 중 지금 우리에게 더 중요한 것은 무엇인가요?",
+        "source": "fallback",
     }
 
 
@@ -214,46 +173,91 @@ def build_lounge_card(
     debate: dict | None = None,
     user_id: str = "user_demo",
 ) -> dict:
-    if isinstance(insight, dict):
-        insight_text = (
-            insight.get("my_sentence")
-            or insight.get("refined_thought")
-            or insight.get("personal_meaning")
-            or ""
-        )
-        tags = insight.get("tags") or []
-    else:
-        insight_text = insight or ""
-        tags = []
-
-    questions = []
-    for item in discussion_questions or []:
-        if isinstance(item, dict) and item.get("question"):
-            questions.append(item["question"])
-        elif isinstance(item, str):
-            questions.append(item)
-
+    insight_text = _insight_text(insight)
+    tags = _insight_tags(insight) or _fallback_keywords((passage or "") + " " + insight_text)
+    questions = _question_strings(discussion_questions)
     if not questions:
         questions = [
             "이 문장에 동의하나요?",
             "이 생각과 연결되는 개인적 경험이 있나요?",
-            "이 구절을 지금 삶에 적용하면 무엇이 달라질까요?",
+            "이 구절을 지금 삶에 적용한다면 무엇이 달라질까요?",
         ]
-
-    if not tags:
-        tags = _fallback_keywords((passage or "") + " " + insight_text)
 
     main_question = (
         (debate or {}).get("neutral_question")
-        or (questions[0] if questions else "")
-        or f"《{book_title or '이 책'}》의 이 구절은 우리에게 무엇을 묻고 있나요?"
+        or questions[0]
+        or f"{book_title or '이 책'}의 이 구절은 우리에게 무엇을 묻고 있나요?"
     )
     title_keyword = tags[0] if tags else "책의 질문"
     return {
         "title": f"{title_keyword}에 대한 질문",
         "book_title": book_title,
-        "passage_preview": _compact_text(passage, 72),
+        "passage_preview": _compact_text(passage, 90),
+        "insight": insight_text,
         "main_question": main_question,
         "tags": tags[:5],
         "discussion_questions": questions[:5],
+        "debate": debate or {},
+        "source": "socrates",
     }
+
+
+def _json_from_gemini(prompt: str) -> dict | None:
+    try:
+        from app.services.gemini_service import _call_gemini, _parse_json_safe
+
+        raw = _call_gemini(prompt, expect_json=True)
+        parsed = _parse_json_safe(raw) if raw else None
+        return parsed if isinstance(parsed, dict) else None
+    except Exception:
+        return None
+
+
+def _compact_text(text: str, limit: int = 80) -> str:
+    text = re.sub(r"\s+", " ", str(text or "")).strip()
+    return text if len(text) <= limit else text[: limit - 3].rstrip() + "..."
+
+
+def _fallback_keywords(text: str) -> list[str]:
+    words = re.findall(r"[가-힣A-Za-z]{2,}", text or "")
+    stop = {"그리고", "하지만", "그래서", "나는", "우리는", "그들은", "것이다", "있는", "없는"}
+    result = []
+    for word in words:
+        word = re.sub(r"(은|는|이|가|을|를|과|와|으로|에게|에서|처럼|까지|만큼)$", "", word)
+        if len(word) < 2 or word in stop or word in result:
+            continue
+        result.append(word)
+        if len(result) >= 5:
+            break
+    return result[:5] or ["이해", "질문", "토론"]
+
+
+def _insight_text(insight: str | dict) -> str:
+    if isinstance(insight, dict):
+        return (
+            insight.get("my_sentence")
+            or insight.get("refined_thought")
+            or insight.get("personal_meaning")
+            or insight.get("summary")
+            or ""
+        )
+    return str(insight or "")
+
+
+def _insight_tags(insight: str | dict) -> list[str]:
+    if not isinstance(insight, dict):
+        return []
+    tags = insight.get("tags") or insight.get("keywords") or []
+    if isinstance(tags, str):
+        tags = [item.strip().strip("#") for item in tags.split(",")]
+    return [str(item).strip().strip("#") for item in tags if str(item).strip()][:5]
+
+
+def _question_strings(items: list | None) -> list[str]:
+    questions = []
+    for item in items or []:
+        if isinstance(item, dict) and item.get("question"):
+            questions.append(str(item["question"]))
+        elif isinstance(item, str) and item.strip():
+            questions.append(item.strip())
+    return questions

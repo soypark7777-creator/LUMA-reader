@@ -19,6 +19,8 @@ import time
 from contextlib import contextmanager
 from typing import Optional
 
+import requests
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -30,6 +32,11 @@ _gemini_ok  = False
 _gemini_model = None
 _API_KEY = os.getenv("GEMINI_API_KEY", "")
 _MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+_API_VERSION = os.getenv("GEMINI_API_VERSION", "v1")
+_FALLBACK_MODELS = os.getenv(
+    "GEMINI_FALLBACK_MODELS",
+    "gemini-1.5-flash-002,gemini-2.5-flash,gemini-2.0-flash",
+)
 _TIMEOUT = float(os.getenv("GEMINI_TIMEOUT", "4"))
 _cooldown_until = 0.0
 
@@ -70,6 +77,97 @@ def _without_dead_local_proxy():
         os.environ.update(removed)
 
 
+def _candidate_models() -> list[str]:
+    """Return preferred Gemini models without duplicates."""
+    models = [_MODEL_NAME, "gemini-1.5-flash"]
+    models.extend(part.strip() for part in _FALLBACK_MODELS.split(","))
+
+    seen = set()
+    unique = []
+    for model in models:
+        if model and model not in seen:
+            unique.append(model)
+            seen.add(model)
+    return unique
+
+
+def _extract_rest_text(payload: dict) -> str:
+    candidates = payload.get("candidates") or []
+    if not candidates:
+        return ""
+
+    parts = (candidates[0].get("content") or {}).get("parts") or []
+    return "\n".join(str(part.get("text", "")) for part in parts if part.get("text")).strip()
+
+
+def _clean_gemini_text(text: str, expect_json: bool = False) -> str:
+    text = (text or "").strip()
+    if expect_json:
+        text = re.sub(r"```(?:json)?\s*", "", text)
+        text = re.sub(r"```\s*$", "", text).strip()
+    return text
+
+
+def _call_gemini_rest(prompt: str, expect_json: bool = False) -> Optional[str]:
+    """Use the stable Gemini REST API first so gemini-1.5-flash does not fall into SDK v1beta."""
+    global _MODEL_NAME, _cooldown_until
+
+    if not _API_KEY or _API_KEY == "여기에_발급받은_키_입력":
+        return None
+
+    headers = {"Content-Type": "application/json"}
+    body = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt}],
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.7,
+        },
+    }
+    if expect_json:
+        body["generationConfig"]["responseMimeType"] = "application/json"
+
+    last_error = ""
+    for model in _candidate_models():
+        url = f"https://generativelanguage.googleapis.com/{_API_VERSION}/models/{model}:generateContent"
+        try:
+            with _without_dead_local_proxy():
+                response = requests.post(
+                    url,
+                    params={"key": _API_KEY},
+                    headers=headers,
+                    json=body,
+                    timeout=_TIMEOUT,
+                )
+
+            if response.status_code == 200:
+                text = _extract_rest_text(response.json())
+                if text:
+                    _MODEL_NAME = model
+                    return _clean_gemini_text(text, expect_json=expect_json)
+
+            last_error = response.text[:300]
+            if response.status_code in (400, 404):
+                continue
+            if response.status_code == 429:
+                _cooldown_until = time.time() + int(os.getenv("GEMINI_QUOTA_COOLDOWN_SECONDS", "60"))
+                break
+            if response.status_code in (401, 403):
+                _cooldown_until = time.time() + int(os.getenv("GEMINI_QUOTA_COOLDOWN_SECONDS", "60"))
+                break
+            break
+        except Exception as exc:
+            last_error = str(exc)
+            continue
+
+    if last_error:
+        print(f"[Gemini REST error] {last_error}")
+    return None
+
+
 # ══════════════════════════════════════════════════════════════
 #  내부 헬퍼
 # ══════════════════════════════════════════════════════════════
@@ -84,17 +182,16 @@ def _call_gemini(prompt: str, expect_json: bool = False) -> str:
     if time.time() < _cooldown_until:
         return None
 
+    rest_text = _call_gemini_rest(prompt, expect_json=expect_json)
+    if rest_text:
+        return rest_text
+    if _API_KEY and _API_VERSION:
+        return None
+
     try:
         with _without_dead_local_proxy():
             resp = _gemini_model.generate_content(prompt, request_options={"timeout": _TIMEOUT})
-        text = resp.text.strip()
-
-        if expect_json:
-            # 마크다운 코드펜스 제거
-            text = re.sub(r"```(?:json)?\s*", "", text)
-            text = re.sub(r"```\s*$", "", text).strip()
-
-        return text
+        return _clean_gemini_text(resp.text, expect_json=expect_json)
     except Exception as e:
         msg = str(e)
         if "429" in msg or "Quota exceeded" in msg or "RESOURCE_EXHAUSTED" in msg:

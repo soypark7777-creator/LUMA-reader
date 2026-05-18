@@ -3,11 +3,14 @@
 The frontend at /ocr uses this module as its single OCR contract:
 scan image, improve text, draft a memo, save the memo, and run analysis.
 """
+from __future__ import annotations
+
 import base64
 from typing import Any
 
 from flask import Blueprint, jsonify, request
 
+from app.services.google_vision_ocr import extract_text_google_vision, get_google_vision_status
 from app.services.ocr_service import (
     analyze_page,
     detect_book_info,
@@ -44,10 +47,11 @@ def _uid(data: dict[str, Any] | None = None) -> str:
 
 def _get_image_bytes() -> tuple[bytes | None, str | None]:
     """Read an image from multipart form-data or JSON image_base64."""
-    if "image" in request.files:
-        data = request.files["image"].read()
+    uploaded = request.files.get("image") or request.files.get("file")
+    if uploaded:
+        data = uploaded.read()
         if not data:
-            return None, "빈 이미지 파일입니다."
+            return None, "비어 있는 이미지 파일입니다."
         if len(data) > MAX_IMAGE_SIZE:
             return None, "이미지 크기는 10MB 이하여야 합니다."
         return data, None
@@ -87,11 +91,7 @@ def _normalize_resources(resources: dict[str, Any]) -> dict[str, Any]:
 
 
 def _analyze_text(content: str, book_title: str = "") -> dict[str, Any]:
-    from app.services.gemini_service import (
-        analyze_memo_theme,
-        extract_keywords,
-        generate_reframe_question,
-    )
+    from app.services.gemini_service import analyze_memo_theme, extract_keywords, generate_reframe_question
 
     theme_info = analyze_memo_theme(content)
     reframe = generate_reframe_question(content, book_title)
@@ -108,16 +108,81 @@ def _analyze_text(content: str, book_title: str = "") -> dict[str, Any]:
     }
 
 
+def _ensure_book_for_ocr_memo(user_id: str, data: dict[str, Any]) -> dict[str, Any] | None:
+    """Ensure OCR memos with a typed/detected title are attached to the user's shelf."""
+    if (data.get("book_id") or "").strip():
+        return None
+    title = (data.get("book_title") or "").strip()
+    if not title:
+        return None
+    try:
+        from app.services.shelf_service import add_book
+
+        created = add_book(
+            user_id,
+            {
+                "title": title,
+                "author": (data.get("book_author") or "").strip(),
+                "publisher": (data.get("publisher") or "").strip(),
+                "status": "reading",
+                "progress": 0,
+                "cover_emoji": "\U0001f4da",
+            },
+        )
+        if created.get("ok") and created.get("book", {}).get("book_id"):
+            return created["book"]
+    except Exception:
+        return None
+    return None
+
+
 @ocr_bp.route("/status", methods=["GET"])
 def ocr_status():
     return jsonify({"ok": True, **get_ocr_status()})
+
+
+@ocr_bp.route("/health", methods=["GET"])
+def ocr_health():
+    return jsonify({"ok": True, "success": True, **get_google_vision_status()})
+
+
+@ocr_bp.route("", methods=["POST"])
+def ocr_google_upload():
+    uploaded = request.files.get("file") or request.files.get("image")
+    if not uploaded:
+        return jsonify({
+            "ok": False,
+            "success": False,
+            "engine": "google_vision",
+            "source": "google_vision_upload",
+            "error": "form-data file 필드가 필요합니다.",
+        }), 400
+    if not (uploaded.mimetype or "").startswith("image/"):
+        return jsonify({
+            "ok": False,
+            "success": False,
+            "engine": "google_vision",
+            "source": "google_vision_upload",
+            "error": "이미지 파일만 업로드할 수 있습니다.",
+        }), 400
+
+    try:
+        return jsonify({"ok": True, **extract_text_google_vision(uploaded.read(), uploaded.filename or "upload")})
+    except Exception as exc:
+        return jsonify({
+            "ok": False,
+            "success": False,
+            "engine": "google_vision",
+            "source": "google_vision_upload",
+            "error": str(exc),
+        }), 500
 
 
 @ocr_bp.route("/scan", methods=["POST"])
 def ocr_scan():
     image_bytes, err = _get_image_bytes()
     if err:
-        return jsonify({"ok": False, "error": err}), 400
+        return jsonify({"ok": False, "error": err, "source": "ocr_scan"}), 400
 
     body = _json_body()
     language = request.form.get("language") or body.get("language", "ko")
@@ -130,7 +195,7 @@ def ocr_enhance():
     data = _json_body()
     text = (data.get("text") or "").strip()
     if not text:
-        return jsonify({"ok": False, "error": "text 값이 필요합니다."}), 400
+        return jsonify({"ok": False, "error": "text 값이 필요합니다.", "source": "ocr_enhance"}), 400
 
     result = enhance_text(text)
     corrected = result.get("corrected") or result.get("enhanced") or text
@@ -141,7 +206,7 @@ def ocr_enhance():
 def ocr_book_cover():
     image_bytes, err = _get_image_bytes()
     if err:
-        return jsonify({"ok": False, "error": err}), 400
+        return jsonify({"ok": False, "error": err, "source": "ocr_book_cover"}), 400
     return jsonify({"ok": True, **detect_book_info(image_bytes)})
 
 
@@ -149,7 +214,7 @@ def ocr_book_cover():
 def ocr_analyze_page():
     image_bytes, err = _get_image_bytes()
     if err:
-        return jsonify({"ok": False, "error": err}), 400
+        return jsonify({"ok": False, "error": err, "source": "ocr_analyze_page"}), 400
     return jsonify({"ok": True, **analyze_page(image_bytes)})
 
 
@@ -159,7 +224,7 @@ def ocr_generate_memo():
     text = (data.get("text") or data.get("content") or "").strip()
     book_title = data.get("book_title", "")
     if not text:
-        return jsonify({"ok": False, "error": "text 값이 필요합니다."}), 400
+        return jsonify({"ok": False, "error": "text 값이 필요합니다.", "source": "ocr_generate_memo"}), 400
 
     result = _normalize_memo_result(generate_memo_from_text(text, book_title))
     analysis = _analyze_text(result["memo_draft"] or text, book_title)
@@ -177,11 +242,13 @@ def ocr_save_memo():
         or ""
     ).strip()
     if not content:
-        return jsonify({"ok": False, "error": "저장할 메모 내용이 필요합니다."}), 400
+        return jsonify({"ok": False, "error": "저장할 메모 내용이 필요합니다.", "source": "ocr_save_memo"}), 400
 
+    user_id = _uid(data)
+    linked_book = _ensure_book_for_ocr_memo(user_id, data)
     payload = {
         "content": content,
-        "book_id": data.get("book_id", ""),
+        "book_id": data.get("book_id", "") or ((linked_book or {}).get("book_id") or ""),
         "book_title": data.get("book_title", ""),
         "page_num": data.get("page_num", data.get("page_number")),
         "tags": data.get("tags", []),
@@ -192,28 +259,38 @@ def ocr_save_memo():
 
     from app.services.reading_service import save_memo
 
-    saved = save_memo(_uid(data), payload)
+    saved = save_memo(user_id, payload)
     if not saved.get("ok"):
-        return jsonify(saved), 400
+        return jsonify({**saved, "source": saved.get("source", "ocr_save_memo")}), 400
 
     analysis = _analyze_text(content, payload["book_title"])
-    return jsonify({"ok": True, **saved, "analysis": analysis})
+    return jsonify({"ok": True, **saved, "book": linked_book, "analysis": analysis, "source": "ocr_save_memo"})
 
 
 @ocr_bp.route("/full-pipeline", methods=["POST"])
 def ocr_full_pipeline():
     body = _json_body()
     book_title = request.form.get("book_title") or body.get("book_title", "")
+    book_author = request.form.get("book_author") or body.get("book_author", "")
     language = request.form.get("language") or body.get("language", "ko")
-    text = (body.get("text") or body.get("content") or "").strip()
+    text = (request.form.get("text") or body.get("text") or body.get("content") or "").strip()
     ocr_result = None
+    book_info: dict[str, Any] = {}
 
     if not text:
         image_bytes, err = _get_image_bytes()
         if err:
-            return jsonify({"ok": False, "error": "분석할 text 또는 image가 필요합니다."}), 400
+            return jsonify({"ok": False, "error": "분석할 text 또는 image가 필요합니다.", "source": "ocr_full_pipeline"}), 400
         ocr_result = extract_text(image_bytes, language=language)
         text = ocr_result.get("text", "")
+        try:
+            book_info = detect_book_info(image_bytes)
+            book_title = book_title or book_info.get("title", "")
+            book_author = book_author or book_info.get("author", "")
+        except Exception:
+            book_info = {}
+    elif book_title or book_author:
+        book_info = {"title": book_title, "author": book_author, "source": "provided_text"}
 
     memo_result = _normalize_memo_result(generate_memo_from_text(text, book_title))
     resources = _normalize_resources(get_all_resources(text, book_title))
@@ -222,16 +299,21 @@ def ocr_full_pipeline():
     return jsonify({
         "ok": True,
         "ocr": ocr_result or {
+            "ok": True,
             "text": text,
             "source": "provided_text",
+            "engine": "provided_text",
             "language": language,
             "char_count": len(text),
             "word_count": len(text.split()),
         },
+        "book_info": {**book_info, "title": book_title, "author": book_author},
         "memo": memo_result,
         "resources": resources,
         "analysis": analysis,
         "youtube": resources["youtube"],
         "papers": resources["papers"],
-        "pipeline": "text -> memo -> analysis -> resources",
+        "pipeline": "text -> book_info -> memo -> analysis -> resources",
+        "source": "ocr_full_pipeline",
+        "engine": (ocr_result or {}).get("engine") or (ocr_result or {}).get("source") or "provided_text",
     })

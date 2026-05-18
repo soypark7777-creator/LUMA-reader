@@ -60,7 +60,7 @@ button,input,textarea,select{font-family:inherit;}
 .nav-login-btn:hover{background:rgba(245,200,107,.2);}
 
 /* MAIN GRID */
-.main-area{display:grid;grid-template-columns:260px 1fr;overflow:hidden;position:relative;z-index:1;}
+.main-area{display:grid;grid-template-columns:260px 1fr;overflow:hidden;position:relative;z-index:1;height:calc(100vh - 60px);}
 
 /* SIDEBAR */
 .sidebar{
@@ -106,7 +106,7 @@ button,input,textarea,select{font-family:inherit;}
 .sidebar-empty{padding:24px 14px;text-align:center;color:var(--sub);font-size:.82rem;}
 
 /* CONTENT AREA */
-.content-area{display:flex;flex-direction:column;overflow:hidden;}
+.content-area{display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - 60px);}
 
 /* WELCOME HERO */
 .welcome-hero{
@@ -177,6 +177,7 @@ button,input,textarea,select{font-family:inherit;}
 .ctab:hover{color:var(--text);}
 .ctab.active{color:var(--gold);border-bottom-color:var(--gold);}
 .tab-body{flex:1;overflow-y:auto;padding:20px 22px;}
+#tab-places{padding:0;overflow:hidden;}
 
 /* COMPOSE */
 .compose-area{
@@ -239,8 +240,9 @@ button,input,textarea,select{font-family:inherit;}
 
 /* PLACES TAB */
 .map-explorer{
-  height:100%;min-height:620px;display:grid;grid-template-columns:360px minmax(420px,1fr) 300px;
-  gap:12px;overflow:hidden;
+  height:100%;display:grid;grid-template-columns:300px 1fr 270px;
+  grid-template-rows:minmax(0,1fr);
+  gap:10px;overflow:hidden;
   --map-green:#36d07f;--map-green-soft:rgba(54,208,127,.14);--map-green-border:rgba(54,208,127,.32);
 }
 .map-panel{
@@ -281,6 +283,11 @@ button,input,textarea,select{font-family:inherit;}
 .filter-control:focus{border-color:var(--map-green-border);}
 .filter-control option{background:#0b1024;color:var(--text);}
 .quick-filters{display:flex;gap:5px;flex-wrap:wrap;}
+.quick-chip[data-filter="capacity"],
+.quick-chip[data-filter="reservation"],
+.quick-chip[data-filter="evening"],
+.quick-chip[data-filter="outlet"]{display:none!important;}
+.map-search-stack .saved-places-block{display:none!important;}
 .quick-chip{border:1px solid rgba(54,208,127,.12);background:rgba(255,255,255,.035);color:var(--sub);border-radius:999px;padding:4px 7px;font-size:.64rem;cursor:pointer;transition:.18s;}
 .quick-chip:hover,.quick-chip.active{border-color:var(--map-green-border);color:var(--map-green);background:var(--map-green-soft);}
 .result-tools{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;}
@@ -290,6 +297,8 @@ button,input,textarea,select{font-family:inherit;}
 .saved-mini:hover{border-color:var(--map-green-border);background:rgba(54,208,127,.12);}
 .saved-mini-name{font-size:.68rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .saved-mini-meta{font-size:.6rem;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.saved-delete-btn{margin-top:6px;border:1px solid rgba(248,113,113,.24);background:rgba(248,113,113,.08);color:var(--red);border-radius:7px;padding:4px 6px;font-size:.58rem;cursor:pointer;width:100%;}
+.saved-delete-btn:hover{background:rgba(248,113,113,.16);}
 .place-results{flex:1 1 360px;overflow-y:auto;overflow-x:hidden;padding:10px;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.08);min-height:0;scrollbar-gutter:stable;}
 .place-results::-webkit-scrollbar{width:8px;}
 .place-results::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
@@ -304,8 +313,8 @@ button,input,textarea,select{font-family:inherit;}
 .place-metrics span{font-size:.62rem;color:var(--sub);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:3px 6px;background:rgba(255,255,255,.035);}
 .place-metrics .gold{color:var(--gold);border-color:rgba(245,200,107,.18);}
 .place-metrics .good{color:var(--green);border-color:rgba(74,222,128,.18);}
-.map-shell{position:relative;min-height:0;}
-#map-container{width:100%;height:100%;min-height:620px;border-radius:14px;border:1px solid rgba(54,208,127,.14);overflow:hidden;background:linear-gradient(135deg,rgba(21,83,54,.22),rgba(5,13,21,.92));display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:.84rem;}
+.map-shell{position:relative;min-height:0;height:100%;}
+#map-container{width:100%;height:100%;min-height:0;border-radius:14px;border:1px solid rgba(54,208,127,.14);overflow:hidden;background:linear-gradient(135deg,rgba(21,83,54,.22),rgba(5,13,21,.92));display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:.84rem;}
 #map{width:100%;height:100%;}
 .map-status{position:absolute;left:14px;bottom:14px;z-index:5;max-width:calc(100% - 28px);background:rgba(5,18,16,.88);border:1px solid rgba(54,208,127,.18);border-radius:12px;padding:8px 11px;color:rgba(238,243,255,.7);font-size:.7rem;backdrop-filter:blur(10px);}
 .my-location-legend{position:absolute;right:14px;bottom:14px;z-index:5;background:rgba(5,8,21,.86);border:1px solid rgba(147,197,253,.35);border-radius:999px;padding:7px 10px;color:#bfdbfe;font-size:.68rem;display:flex;align-items:center;gap:7px;backdrop-filter:blur(10px);}
@@ -314,6 +323,7 @@ button,input,textarea,select{font-family:inherit;}
 .user-location-pin::after{content:'나';transform:rotate(45deg);color:#07101f;font-size:.72rem;font-weight:800;}
 .btn-map-research{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(9,14,32,.92);display:none;}
 .btn-map-research.show{display:block;}
+
 .place-detail{flex:1;overflow:auto;}
 .detail-photo{height:170px;background:linear-gradient(135deg,rgba(245,200,107,.12),rgba(147,197,253,.08));display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:2rem;overflow:hidden;}
 .detail-photo img{width:100%;height:100%;object-fit:cover;}
@@ -377,6 +387,12 @@ button,input,textarea,select{font-family:inherit;}
   padding:8px 11px;font-size:.82rem;color:var(--text);outline:none;margin-bottom:10px;
 }
 .field-input:focus{border-color:var(--gold-border);}
+.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+.btn-danger{
+  padding:10px 14px;border-radius:10px;border:1px solid rgba(248,113,113,.34);
+  background:rgba(248,113,113,.08);color:var(--red);font-size:.78rem;font-weight:700;cursor:pointer;
+}
+.btn-danger:hover{background:rgba(248,113,113,.16);}
 .schedule-row{
   background:var(--card);border:1px solid var(--border);border-radius:11px;
   padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
@@ -436,14 +452,17 @@ button,input,textarea,select{font-family:inherit;}
 .empty-state p{font-size:.84rem;line-height:1.7;}
 
 @media(max-width:760px){
-  .main-area{grid-template-columns:1fr;}
+  .main-area{grid-template-columns:1fr;height:auto;}
   .sidebar{display:none;}
   .feature-cards{grid-template-columns:1fr;}
   .club-header-top{flex-direction:column;gap:10px;}
   .cards-grid{grid-template-columns:1fr;}
   .map-explorer{grid-template-columns:1fr;height:auto;overflow:visible;}
+  .map-shell{height:auto;}
   #map-container{height:360px;min-height:360px;}
   body{overflow:auto;height:auto;min-height:100vh;}
+  .content-area{height:auto;}
+  #tab-places{overflow:visible;}
 }
 </style>
 </head>
@@ -669,12 +688,13 @@ button,input,textarea,select{font-family:inherit;}
                 <span class="result-count" id="places-result-count">0곳</span>
               </div>
               <div class="filter-block saved-places-block">
-                <div class="filter-title"><strong>저장한 곳</strong><span id="saved-places-count">0곳</span></div>
+                <div class="filter-title"><strong>&#51200;&#51109;&#54620; &#44275;</strong><span id="saved-places-count">0&#44275;</span></div>
                 <div class="saved-strip" id="saved-places-strip">
-                  <div class="saved-mini"><div class="saved-mini-name">저장한 장소 없음</div><div class="saved-mini-meta">마음에 드는 곳을 저장해보세요</div></div>
+                  <div class="saved-mini"><div class="saved-mini-name">&#51200;&#51109;&#54620; &#51109;&#49548; &#50630;&#51020;</div><div class="saved-mini-meta">&#47560;&#51020;&#50640; &#46300;&#45716; &#44275;&#51012; &#51200;&#51109;&#54644;&#48372;&#49464;&#50836;</div></div>
                 </div>
               </div>
-            </div>
+
+              </div>
             <div class="place-results" id="places-results">
               <div class="loading-card">장소를 불러오는 중...</div>
             </div>
@@ -705,6 +725,22 @@ button,input,textarea,select{font-family:inherit;}
 
       <!-- TAB: 모임 설정 -->
       <div class="tab-body" id="tab-settings" style="display:none;">
+
+        <div class="settings-section">
+          <h3>모임방 정보</h3>
+          <div class="book-setting-card">
+            <div class="book-info-fields">
+              <div class="field-label">모임방 이름</div>
+              <input class="field-input" id="setting-club-name" value="{{ active_club.name or '' }}" placeholder="모임방 이름">
+              <div class="field-label">소개</div>
+              <input class="field-input" id="setting-club-description" value="{{ active_club.description or '' }}" placeholder="모임방 소개">
+              <div class="settings-actions">
+                <button class="btn-primary" style="width:auto;margin-top:0;padding:10px 16px;" onclick="saveClubProfile('{{ active_club.club_id or active_club.id }}')">수정 저장</button>
+                <button class="btn-danger" onclick="deleteClub('{{ active_club.club_id or active_club.id }}')">모임방 삭제</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="settings-section">
           <h3>현재 읽는 책</h3>
@@ -769,7 +805,7 @@ button,input,textarea,select{font-family:inherit;}
 
     {% else %}
     <!-- MAP VIEW (no club selected) -->
-    <div class="tab-body" style="height:100%;padding:14px;">
+    <div class="tab-body" style="height:100%;padding:0;overflow:hidden;">
       <section class="map-explorer view-map" id="view-map">
         <aside class="map-panel">
           <div class="map-panel-head">
@@ -819,12 +855,13 @@ button,input,textarea,select{font-family:inherit;}
               <span class="result-count" id="places-result-count">0곳</span>
             </div>
             <div class="filter-block saved-places-block">
-              <div class="filter-title"><strong>저장한 곳</strong><span id="saved-places-count">0곳</span></div>
+              <div class="filter-title"><strong>&#51200;&#51109;&#54620; &#44275;</strong><span id="saved-places-count">0&#44275;</span></div>
               <div class="saved-strip" id="saved-places-strip">
-                <div class="saved-mini"><div class="saved-mini-name">저장한 장소 없음</div><div class="saved-mini-meta">마음에 드는 곳을 저장해보세요</div></div>
+                <div class="saved-mini"><div class="saved-mini-name">&#51200;&#51109;&#54620; &#51109;&#49548; &#50630;&#51020;</div><div class="saved-mini-meta">&#47560;&#51020;&#50640; &#46300;&#45716; &#44275;&#51012; &#51200;&#51109;&#54644;&#48372;&#49464;&#50836;</div></div>
               </div>
             </div>
-          </div>
+
+            </div>
           <div class="place-results" id="places-results">
             <div class="loading-card">장소를 불러오는 중...</div>
           </div>
@@ -1067,7 +1104,7 @@ async function submitCreateClub(e){
   if(!name){msg.textContent='모임방 이름을 입력해주세요.';return;}
   msg.textContent='생성 중...';
   try{
-    const r=await fetch('/community/api/create',{method:'POST',headers:hdr(),body:JSON.stringify({name,emoji:selectedEmoji,max_members:Number(max)})});
+    const r=await fetch('/api/v2/community/clubs',{method:'POST',headers:hdr(),body:JSON.stringify({name,emoji:selectedEmoji,max_members:Number(max)})});
     const d=await r.json();
     if(d.ok){const cid=d.club_id||d.club?.id;msg.textContent='모임방이 생성되었습니다!';setTimeout(()=>{window.location=cid?'/community/?club='+cid:'/community/';},800);}
     else{msg.textContent=d.error||'생성 실패. 다시 시도해주세요.';}
@@ -1079,7 +1116,7 @@ async function joinClub(event,clubId){
   event.preventDefault();event.stopPropagation();
   if(!clubId){alert('모임 정보를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');return;}
   try{
-    const r=await fetch(`/community/api/${encodeURIComponent(clubId)}/join`,{method:'POST',headers:hdr(),body:JSON.stringify({user_id:userId()})});
+    const r=await fetch(`/api/v2/community/clubs/${encodeURIComponent(clubId)}/join`,{method:'POST',headers:hdr(),body:JSON.stringify({user_id:userId()})});
     const d=await r.json();
     if(d.ok)window.location='/community/?club='+clubId;
     else alert(d.error||'입장 실패');
@@ -1091,7 +1128,7 @@ async function postCard(clubId){
   const text=document.getElementById('compose-text').value.trim();
   if(!text)return;
   try{
-    const r=await fetch(`/community/api/${encodeURIComponent(clubId)}/cards`,{method:'POST',headers:hdr(),body:JSON.stringify({content:text,user_id:userId(),user_name:_cu.display_name||'나',user_emoji:_cu.emoji||'⭐'})});
+    const r=await fetch(`/api/v2/community/clubs/${encodeURIComponent(clubId)}/cards`,{method:'POST',headers:hdr(),body:JSON.stringify({content:text,user_id:userId(),user_name:_cu.display_name||'나',user_emoji:_cu.emoji||'⭐'})});
     const d=await r.json();
     if(d.ok){
       const cardId=d.card_id||d.card?.card_id||d.card?.id;
@@ -1125,7 +1162,7 @@ async function toggleLike(btn,cardId){
   btn.classList.toggle('liked',!liked);
   const cnt=btn.querySelector('.like-count');
   cnt.textContent=Number(cnt.textContent)+(liked?-1:1);
-  try{await fetch(`/community/api/cards/${cardId}/like`,{method:'POST',headers:hdr(),body:JSON.stringify({liked:!liked})});}
+  try{await fetch(`/api/v2/community/cards/${cardId}/like`,{method:'POST',headers:hdr(),body:JSON.stringify({liked:!liked})});}
   catch(e){}
 }
 
@@ -1139,7 +1176,7 @@ async function submitComment(cardId){
   if(!inp||!inp.value.trim())return;
   const text=inp.value.trim();
   try{
-    const r=await fetch(`/community/api/cards/${cardId}/comment`,{method:'POST',headers:hdr(),body:JSON.stringify({content:text})});
+    const r=await fetch(`/api/v2/community/cards/${cardId}/comment`,{method:'POST',headers:hdr(),body:JSON.stringify({content:text})});
     const d=await r.json();
     if(d.ok){
       inp.value='';
@@ -1377,25 +1414,26 @@ function renderPlaceList(places=placeState.searchResults){
 function renderSavedStrip(){
   const strip=mapEl('saved-places-strip');
   const count=mapEl('saved-places-count');
-  const places=(placeState.savedPlaces||[]).slice(0,8);
+  const places=(placeState.savedPlaces||[]).slice(0,12);
   renderSidebarSavedPlaces();
   if(!strip)return;
-  if(count)count.textContent=`${placeState.savedPlaces.length}곳`;
+  if(count)count.textContent=`${placeState.savedPlaces.length}?`;
   if(!places.length){
-    strip.innerHTML='<div class="saved-mini"><div class="saved-mini-name">저장한 장소 없음</div><div class="saved-mini-meta">마음에 드는 곳을 저장해보세요</div></div>';
+    strip.innerHTML='<div class="saved-mini"><div class="saved-mini-name">??? ?? ??</div><div class="saved-mini-meta">??? ?? ?? ??????</div></div>';
     return;
   }
   strip.innerHTML=places.map((p,i)=>`
     <button class="saved-mini" type="button" onclick="selectSavedPlace(${i})">
       <div class="saved-mini-name">${esc(p.name)}</div>
-      <div class="saved-mini-meta">${esc(placeTypeLabel(p))} · ${p.reading_score?p.reading_score.toFixed(1):'검토중'}</div>
+      <div class="saved-mini-meta">${esc(placeTypeLabel(p))} ? ${p.reading_score?p.reading_score.toFixed(1):'???'}</div>
+      ${p.place_id?`<span class="saved-delete-btn" onclick="deleteSavedPlace(event,${i})">??</span>`:''}
     </button>
   `).join('');
 }
 function renderSidebarSavedPlaces(){
   const el=document.getElementById('sidebar-saved-places');
   if(!el)return;
-  const places=(placeState.savedPlaces||[]).slice(0,5);
+  const places=(placeState.savedPlaces||[]).slice(0,8);
   if(!places.length){
     el.innerHTML=`<button class="sidebar-saved-item" type="button" onclick="switchToPlacesTab()">
       <span class="sidebar-saved-name">아직 저장한 곳이 없어요</span>
@@ -1407,12 +1445,33 @@ function renderSidebarSavedPlaces(){
     <button class="sidebar-saved-item" type="button" onclick="selectSavedPlace(${i});switchToPlacesTab()">
       <span class="sidebar-saved-name">${esc(p.name)}</span>
       <span class="sidebar-saved-meta">${p.distance_km?Number(p.distance_km).toFixed(1)+'km · ':''}${esc(placeTypeLabel(p))}</span>
+      ${p.place_id?`<span class="saved-delete-btn" onclick="deleteSavedPlace(event,${i})">삭제</span>`:''}
     </button>
   `).join('');
 }
 function selectSavedPlace(i){
   const p=placeState.savedPlaces[i];
   if(p)selectPlace(p);
+}
+async function deleteSavedPlace(event,i){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const p=placeState.savedPlaces[i];
+  if(!p?.place_id)return;
+  if(!confirm('저장한 장소를 삭제할까요?'))return;
+  try{
+    const r=await fetch(`/api/places/${encodeURIComponent(p.place_id)}?user_id=${encodeURIComponent(userId())}`,{method:'DELETE',headers:hdr()});
+    const d=await r.json().catch(()=>({}));
+    if(!d.ok){alert(d.error||'삭제하지 못했습니다.');return;}
+    placeState.savedPlaces=placeState.savedPlaces.filter(x=>x.place_id!==p.place_id);
+    placeState.searchResults=placeState.searchResults.map(x=>x.place_id===p.place_id?{...x,saved:false}:x).filter(x=>placeState.mode!=='saved'||x.place_id!==p.place_id);
+    placeState.rawResults=placeState.rawResults.map(x=>x.place_id===p.place_id?{...x,saved:false}:x).filter(x=>placeState.mode!=='saved'||x.place_id!==p.place_id);
+    if(placeState.selectedPlace?.place_id===p.place_id)placeState.selectedPlace=placeState.searchResults[0]||null;
+    applyPlaceFilters();renderSavedStrip();renderDetail();updateMarkers();
+    setMapStatus('저장한 장소를 삭제했습니다.');
+  }catch(e){
+    alert('삭제 중 오류가 발생했습니다.');
+  }
 }
 function renderDetail(){
   const p=placeState.selectedPlace;
@@ -1543,7 +1602,7 @@ function loadPlacesIfActive(){
   if(tab&&tab.style.display!=='none')loadPlaces();
 }
 async function fetchPlaceBatch(query,radius){
-  const params=new URLSearchParams({q:query,limit:'40',radius:String(radius),strict_google:'1'});
+  const params=new URLSearchParams({q:query,limit:'40',radius:String(radius)});
   if(placeState.center?.lat&&placeState.center?.lng){
     params.set('lat',placeState.center.lat);
     params.set('lng',placeState.center.lng);
@@ -1553,7 +1612,7 @@ async function fetchPlaceBatch(query,radius){
   return {
     source:d.source||'unknown',
     radius,
-    places:(d.places||[]).map(normalizePlace).filter(p=>p.source!=='mock')
+    places:(d.places||[]).map(normalizePlace)
   };
 }
 async function findGooglePlaces(query){
@@ -1567,14 +1626,25 @@ async function findGooglePlaces(query){
     {q:'독서모임하기 좋은 카페 도서관 북카페',r:Math.max(radius,8000)}
   ];
   const seen=new Set();
+  const ids=new Set();
+  const merged=[];
+  let source='google_unavailable';
   for(const item of candidates){
     const key=`${item.q}|${item.r}`;
     if(seen.has(key))continue;
     seen.add(key);
     const result=await fetchPlaceBatch(item.q,item.r);
-    if(result.places.length)return result;
+    if(result.source&&result.source!=='google_unavailable')source=result.source;
+    result.places.forEach(p=>{
+      const id=p.google_place_id||p.place_id||`${p.name}|${p.address}`;
+      if(id&&!ids.has(id)){
+        ids.add(id);
+        merged.push(p);
+      }
+    });
+    if(merged.length>=60)break;
   }
-  return {source:'google_unavailable',radius,places:[]};
+  return {source,radius,places:merged};
 }
 async function loadPlaces(query=placeState.query){
   const list=mapEl('places-results');
@@ -1752,8 +1822,8 @@ function bootPlacesMap(){
   if(!document.getElementById('view-map')||placeState.loaded)return;
   placeState.loaded=true;
   refreshSavedPlaces();
-  loadPlaces();
   if(navigator.geolocation)setTimeout(()=>useMyLocation(),250);
+  else loadPlaces();
 }
 window.__pendingMapInit=bootPlacesMap;
 
@@ -1763,7 +1833,7 @@ async function requestAIGuide(clubId){
   document.getElementById('ai-guide-modal').classList.add('open');
   document.getElementById('ai-guide-content').textContent='AI 토론 가이드를 생성하는 중...';
   try{
-    const r=await fetch(`/community/api/${clubId}/ai-guide`,{method:'POST',headers:hdr()});
+    const r=await fetch(`/api/v2/community/clubs/${clubId}/ai-guide`,{method:'POST',headers:hdr()});
     const d=await r.json();
     const el=document.getElementById('ai-guide-content');
     if(d.ok&&d.guide){el.innerHTML=d.guide.split('\n').map(line=>line?`<p style="margin-bottom:10px;">${esc(line)}</p>`:'').join('');}
@@ -1774,7 +1844,7 @@ async function requestReport(clubId){
   document.getElementById('report-modal').classList.add('open');
   document.getElementById('report-content').textContent='회의 리포트를 생성하는 중...';
   try{
-    const r=await fetch(`/community/api/${clubId}/report`,{method:'POST',headers:hdr()});
+    const r=await fetch(`/api/v2/community/clubs/${clubId}/report`,{method:'POST',headers:hdr()});
     const d=await r.json();
     const el=document.getElementById('report-content');
     if(d.ok&&d.report){el.innerHTML=d.report.split('\n').map(line=>line?`<p style="margin-bottom:10px;">${esc(line)}</p>`:'').join('');}
@@ -1787,7 +1857,7 @@ async function saveBookSetting(clubId){
   const title=document.getElementById('setting-book-title').value.trim();
   const author=document.getElementById('setting-book-author').value.trim();
   try{
-    const r=await fetch(`/community/api/${clubId}/settings`,{method:'POST',headers:hdr(),body:JSON.stringify({current_book:title,current_book_author:author})});
+    const r=await fetch(`/api/v2/community/clubs/${clubId}/settings`,{method:'POST',headers:hdr(),body:JSON.stringify({current_book:title,current_book_author:author})});
     const d=await r.json();
     if(d.ok){const cover=document.getElementById('book-cover-preview');if(cover)cover.textContent=title?'📖':'+';}
     else{alert(d.error||'저장 실패');}
