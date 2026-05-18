@@ -40,10 +40,11 @@ button,input,textarea,select{font-family:inherit;}
 .logo-text{display:flex;flex-direction:column;gap:1px;}
 .logo-brand{font-size:1.1rem;line-height:1;}
 #luma-tagline{font-size:.58rem;color:var(--sub);letter-spacing:.09em;font-style:italic;transition:opacity .5s,transform .5s;}
-.nav-links{display:flex;gap:2px;}
+.nav-links{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.nav-links::-webkit-scrollbar{display:none;}
 .nav-link{
-  padding:7px 12px;border-radius:18px;font-size:.76rem;color:var(--sub);
-  transition:.2s;cursor:pointer;display:flex;align-items:center;gap:5px;
+  padding:7px 8px;border-radius:18px;font-size:.68rem;color:var(--sub);
+  transition:.2s;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;
 }
 .nav-link:hover{background:var(--card);color:var(--text);}
 .nav-link.active{background:rgba(245,200,107,.12);color:var(--gold);}
@@ -75,6 +76,14 @@ button,input,textarea,select{font-family:inherit;}
   display:flex;align-items:center;justify-content:center;gap:7px;
 }
 .btn-create-club:hover{background:linear-gradient(135deg,rgba(245,200,107,.32),rgba(245,200,107,.15));box-shadow:0 0 18px var(--glow);}
+.sidebar-saved-places{margin-top:10px;border:1px solid rgba(245,200,107,.12);border-radius:11px;background:rgba(255,255,255,.025);padding:10px;}
+.sidebar-saved-list{display:flex;flex-direction:column;gap:6px;max-height:178px;overflow-y:auto;}
+.sidebar-saved-list::-webkit-scrollbar{width:6px;}
+.sidebar-saved-list::-webkit-scrollbar-thumb{background:rgba(245,200,107,.22);border-radius:999px;}
+.sidebar-saved-item{width:100%;text-align:left;border:1px solid rgba(245,200,107,.12);border-radius:9px;background:rgba(245,200,107,.055);padding:8px;cursor:pointer;transition:.18s;}
+.sidebar-saved-item:hover{border-color:rgba(245,200,107,.28);background:rgba(245,200,107,.1);}
+.sidebar-saved-name{display:block;color:var(--text);font-size:.7rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-saved-meta{display:block;color:var(--sub);font-size:.62rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sidebar-label{font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);margin:14px 14px 8px;}
 .clubs-list{flex:1;overflow-y:auto;padding:0 10px 14px;}
 .club-item{
@@ -230,7 +239,7 @@ button,input,textarea,select{font-family:inherit;}
 
 /* PLACES TAB */
 .map-explorer{
-  height:100%;min-height:620px;display:grid;grid-template-columns:310px minmax(380px,1fr) 330px;
+  height:100%;min-height:620px;display:grid;grid-template-columns:360px minmax(420px,1fr) 300px;
   gap:12px;overflow:hidden;
   --map-green:#36d07f;--map-green-soft:rgba(54,208,127,.14);--map-green-border:rgba(54,208,127,.32);
 }
@@ -267,6 +276,7 @@ button,input,textarea,select{font-family:inherit;}
 .filter-title{font-size:.58rem;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
 .filter-title strong{font-size:.7rem;color:var(--text);letter-spacing:0;text-transform:none;}
 .filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.filter-grid.wide{grid-template-columns:1fr;}
 .filter-control{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(54,208,127,.12);border-radius:8px;color:var(--text);font-size:.68rem;padding:7px;outline:none;}
 .filter-control:focus{border-color:var(--map-green-border);}
 .filter-control option{background:#0b1024;color:var(--text);}
@@ -280,7 +290,10 @@ button,input,textarea,select{font-family:inherit;}
 .saved-mini:hover{border-color:var(--map-green-border);background:rgba(54,208,127,.12);}
 .saved-mini-name{font-size:.68rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .saved-mini-meta{font-size:.6rem;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.place-results{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.08);min-height:220px;}
+.place-results{flex:1 1 360px;overflow-y:auto;overflow-x:hidden;padding:10px;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.08);min-height:0;scrollbar-gutter:stable;}
+.place-results::-webkit-scrollbar{width:8px;}
+.place-results::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
+.place-results::-webkit-scrollbar-thumb{background:rgba(54,208,127,.24);border-radius:999px;}
 .place-result-card{border:1px solid rgba(54,208,127,.12);background:rgba(255,255,255,.035);border-radius:11px;padding:10px;cursor:pointer;transition:.18s;}
 .place-result-card:hover,.place-result-card.active{border-color:var(--map-green-border);background:rgba(54,208,127,.08);}
 .place-result-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px;}
@@ -297,6 +310,8 @@ button,input,textarea,select{font-family:inherit;}
 .map-status{position:absolute;left:14px;bottom:14px;z-index:5;max-width:calc(100% - 28px);background:rgba(5,18,16,.88);border:1px solid rgba(54,208,127,.18);border-radius:12px;padding:8px 11px;color:rgba(238,243,255,.7);font-size:.7rem;backdrop-filter:blur(10px);}
 .my-location-legend{position:absolute;right:14px;bottom:14px;z-index:5;background:rgba(5,8,21,.86);border:1px solid rgba(147,197,253,.35);border-radius:999px;padding:7px 10px;color:#bfdbfe;font-size:.68rem;display:flex;align-items:center;gap:7px;backdrop-filter:blur(10px);}
 .my-location-dot{width:12px;height:12px;border-radius:50%;background:#60a5fa;box-shadow:0 0 0 4px rgba(96,165,250,.18),0 0 16px rgba(96,165,250,.6);}
+.user-location-pin{width:34px;height:34px;border-radius:50% 50% 50% 8px;background:#60a5fa;border:3px solid #dbeafe;box-shadow:0 0 0 8px rgba(96,165,250,.16),0 8px 26px rgba(15,23,42,.45);transform:rotate(-45deg);display:grid;place-items:center;}
+.user-location-pin::after{content:'나';transform:rotate(45deg);color:#07101f;font-size:.72rem;font-weight:800;}
 .btn-map-research{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(9,14,32,.92);display:none;}
 .btn-map-research.show{display:block;}
 .place-detail{flex:1;overflow:auto;}
@@ -449,15 +464,17 @@ button,input,textarea,select{font-family:inherit;}
     <a href="/" class="nav-link">별자리 지도</a>
     <a href="/heart" class="nav-link">마음 행성계</a>
     <a href="/lounge" class="nav-link">탐사 성운</a>
-    <a href="/social" class="nav-link">독자 광장</a>
-    <a href="/live" class="nav-link">라이브</a>
-    <a href="/socrates" class="nav-link">소크라테스</a>
-    <a href="/profile" class="nav-link">프로필</a>
-    <a href="/community" class="nav-link active">모임방</a>
+    <a href="/community/" class="nav-link active">은하 공동체</a>
+    <a href="/live" class="nav-link">궤도 정거장</a>
+    <a href="/socrates" class="nav-link">지성의 위성</a>
+    <a href="/social" class="nav-link">독자 피드</a>
+    <a href="/deepdive" class="nav-link">심층 관측소</a>
+    <a href="/ocr" class="nav-link">광학 스캐너</a>
+    <a href="/profile" class="nav-link">나의 조종석</a>
   </div>
   <div class="nav-right">
     <div id="nav-user-area">
-      <a href="/auth" class="nav-login-btn">로그인</a>
+      <a href="/auth/login" class="nav-login-btn">로그인</a>
     </div>
   </div>
 </nav>
@@ -471,6 +488,15 @@ button,input,textarea,select{font-family:inherit;}
       <button class="btn-create-club" onclick="openCreateModal()">
         ✦ 모임방 만들기
       </button>
+      <div class="sidebar-saved-places">
+        <div class="sidebar-label" style="padding:0;margin:12px 0 8px">저장한 장소</div>
+        <div class="sidebar-saved-list" id="sidebar-saved-places">
+          <button class="sidebar-saved-item" type="button" onclick="switchToPlacesTab()">
+            <span class="sidebar-saved-name">아직 저장한 곳이 없어요</span>
+            <span class="sidebar-saved-meta">장소를 고른 뒤 LUMA에 저장해보세요</span>
+          </button>
+        </div>
+      </div>
     </div>
     <div class="sidebar-label">참여 중인 모임방</div>
     <div class="clubs-list" id="clubs-list">
@@ -597,9 +623,9 @@ button,input,textarea,select{font-family:inherit;}
         <section class="map-explorer view-map" id="view-map">
           <aside class="map-panel">
             <div class="map-panel-head">
-              <div class="map-kicker">offline reading map</div>
-              <div class="map-title">오프라인 독서모임 장소 찾기</div>
-              <p class="map-copy">지역, 분위기, 모임 인원을 자연어로 검색하고 LUMA 장소로 저장하세요.</p>
+              <div class="map-kicker">meeting places</div>
+              <div class="map-title">모임 장소</div>
+              <p class="map-copy">이 모임방과 이어질 카페, 도서관, 서점 공간을 내 위치 기준으로 찾으세요.</p>
             </div>
             <div class="map-search-stack">
               <div class="filter-block">
@@ -612,33 +638,20 @@ button,input,textarea,select{font-family:inherit;}
               <div class="map-search-row" style="margin-bottom:0">
                 <button class="btn-locate" onclick="useMyLocation()">내 위치로 찾기</button>
                 <button class="btn-locate" onclick="loadSavedPlaces()">저장 장소</button>
+                <button class="btn-locate" onclick="openCreateModal()">모임방 만들기</button>
               </div>
               <div class="filter-block">
-                <div class="filter-title"><strong>거리와 품질</strong><span>주변 탐색</span></div>
+                <div class="filter-title"><strong>독서모임하기 좋은 곳</strong><span>거리와 취향 조건</span></div>
                 <div class="filter-grid">
                   <select class="filter-control" id="places-radius" onchange="searchPlaces()">
-                    <option value="1000">1km 이내</option>
+                    <option value="1000" selected>1km 이내</option>
                     <option value="3000">3km 이내</option>
-                    <option value="5000" selected>5km 이내</option>
+                    <option value="5000">5km 이내</option>
                     <option value="8000">8km 이내</option>
                     <option value="15000">15km 이내</option>
                   </select>
-                  <select class="filter-control" id="places-min-rating" onchange="applyPlaceFilters()">
-                    <option value="0">평점 전체</option>
-                    <option value="4">4.0 이상</option>
-                    <option value="4.3">4.3 이상</option>
-                    <option value="4.5">4.5 이상</option>
-                  </select>
-                  <select class="filter-control" id="places-sort" onchange="applyPlaceFilters()">
-                    <option value="distance">거리 가까운순</option>
-                    <option value="rating">평점 높은순</option>
-                    <option value="reading">독서점수 높은순</option>
-                  </select>
-                  <input class="filter-control" id="places-result-filter" placeholder="결과 내 검색" oninput="applyPlaceFilters()">
+                  <input class="filter-control" id="places-result-filter" placeholder="결과 안에서 이름·지역 검색" oninput="applyPlaceFilters()">
                 </div>
-              </div>
-              <div class="filter-block">
-                <div class="filter-title"><strong>취향 조건</strong><span>중복 선택 가능</span></div>
                 <div class="quick-filters">
                   <button class="quick-chip" data-filter="quiet" onclick="togglePlaceFilter(this,'quiet')">조용한 곳</button>
                   <button class="quick-chip" data-filter="capacity" onclick="togglePlaceFilter(this,'capacity')">4명 이상</button>
@@ -681,7 +694,7 @@ button,input,textarea,select{font-family:inherit;}
           <aside class="map-panel">
             <div class="map-panel-head">
               <div class="map-kicker">place detail</div>
-              <div class="map-title">장소 판단 노트</div>
+              <div class="map-title">장소 노트</div>
             </div>
             <div class="place-detail" id="place-detail">
               <div class="empty-state"><div class="es-icon">🗺️</div><p>왼쪽에서 장소를 선택하면 사진, 영업정보, 저장과 후기 작성이 열립니다.</p></div>
@@ -760,9 +773,9 @@ button,input,textarea,select{font-family:inherit;}
       <section class="map-explorer view-map" id="view-map">
         <aside class="map-panel">
           <div class="map-panel-head">
-            <div class="map-kicker">LUMA community</div>
-            <div class="map-title">공독의 장 · 독서 지도</div>
-            <p class="map-copy">오프라인 독서모임을 열기 좋은 카페, 도서관, 서점 공간을 검색하고 저장하세요.</p>
+            <div class="map-kicker">meeting places</div>
+            <div class="map-title">모임 장소</div>
+            <p class="map-copy">내 위치와 취향 조건에 맞는 독서모임 장소를 찾고 바로 모임방으로 이어가세요.</p>
           </div>
           <div class="map-search-stack">
             <div class="filter-block">
@@ -777,34 +790,20 @@ button,input,textarea,select{font-family:inherit;}
               <button class="btn-locate" onclick="loadSavedPlaces()">저장 장소</button>
               <button class="btn-locate" onclick="openCreateModal()">모임방 만들기</button>
             </div>
-            <div class="filter-block">
-              <div class="filter-title"><strong>거리와 품질</strong><span>주변 탐색</span></div>
-              <div class="filter-grid">
-                <select class="filter-control" id="places-radius" onchange="searchPlaces()">
-                  <option value="1000">1km 이내</option>
-                  <option value="3000">3km 이내</option>
-                  <option value="5000" selected>5km 이내</option>
-                  <option value="8000">8km 이내</option>
-                  <option value="15000">15km 이내</option>
-                </select>
-                <select class="filter-control" id="places-min-rating" onchange="applyPlaceFilters()">
-                  <option value="0">평점 전체</option>
-                  <option value="4">4.0 이상</option>
-                  <option value="4.3">4.3 이상</option>
-                  <option value="4.5">4.5 이상</option>
-                </select>
-                <select class="filter-control" id="places-sort" onchange="applyPlaceFilters()">
-                  <option value="distance">거리 가까운순</option>
-                  <option value="rating">평점 높은순</option>
-                  <option value="reading">독서점수 높은순</option>
-                </select>
-                <input class="filter-control" id="places-result-filter" placeholder="결과 내 검색" oninput="applyPlaceFilters()">
-              </div>
-            </div>
-            <div class="filter-block">
-              <div class="filter-title"><strong>취향 조건</strong><span>중복 선택 가능</span></div>
-              <div class="quick-filters">
-                <button class="quick-chip" data-filter="quiet" onclick="togglePlaceFilter(this,'quiet')">조용한 곳</button>
+              <div class="filter-block">
+                <div class="filter-title"><strong>독서모임하기 좋은 곳</strong><span>거리와 취향 조건</span></div>
+                <div class="filter-grid">
+                  <select class="filter-control" id="places-radius" onchange="searchPlaces()">
+                    <option value="1000" selected>1km 이내</option>
+                    <option value="3000">3km 이내</option>
+                    <option value="5000">5km 이내</option>
+                    <option value="8000">8km 이내</option>
+                    <option value="15000">15km 이내</option>
+                  </select>
+                  <input class="filter-control" id="places-result-filter" placeholder="결과 안에서 이름·지역 검색" oninput="applyPlaceFilters()">
+                </div>
+                <div class="quick-filters">
+                  <button class="quick-chip" data-filter="quiet" onclick="togglePlaceFilter(this,'quiet')">조용한 곳</button>
                 <button class="quick-chip" data-filter="capacity" onclick="togglePlaceFilter(this,'capacity')">4명 이상</button>
                 <button class="quick-chip" data-filter="reservation" onclick="togglePlaceFilter(this,'reservation')">예약 가능</button>
                 <button class="quick-chip" data-filter="evening" onclick="togglePlaceFilter(this,'evening')">저녁 영업</button>
@@ -845,7 +844,7 @@ button,input,textarea,select{font-family:inherit;}
         <aside class="map-panel">
           <div class="map-panel-head">
             <div class="map-kicker">place detail</div>
-            <div class="map-title">장소 판단 노트</div>
+            <div class="map-title">장소 노트</div>
           </div>
           <div class="place-detail" id="place-detail">
             <div class="empty-state"><div class="es-icon">🗺️</div><p>왼쪽에서 장소를 선택하면 사진, 영업정보, 저장과 후기 작성이 열립니다.</p></div>
@@ -1031,6 +1030,11 @@ function switchTab(name,btn){
     loadPlaces();
   }
 }
+function switchToPlacesTab(){
+  const tabBtn=[...document.querySelectorAll('.ctab')].find(b=>b.textContent.includes('장소'));
+  if(tabBtn)switchTab('places',tabBtn);
+  else document.getElementById('view-map')?.scrollIntoView({block:'start',behavior:'smooth'});
+}
 
 /* ── CREATE CLUB MODAL ── */
 let selectedEmoji='📚';
@@ -1149,8 +1153,9 @@ async function submitComment(cardId){
 
 /* ── PLACES ── */
 const DEFAULT_CENTER={lat:37.5665,lng:126.9780};
+const DEFAULT_PLACE_QUERY='독서모임하기 좋은 카페 도서관 북카페';
 const placeState={
-  query:'독서모임 카페 도서관',
+  query:DEFAULT_PLACE_QUERY,
   center:{...DEFAULT_CENTER},
   userLocation:null,
   rawResults:[],
@@ -1167,14 +1172,27 @@ const placeState={
 };
 function setMapStatus(text){const el=document.getElementById('map-status');if(el)el.textContent=text;}
 function mapEl(id){return document.getElementById(id);}
+function distanceBetweenKm(a,b){
+  if(!a?.lat||!a?.lng||!b?.lat||!b?.lng)return null;
+  const R=6371;
+  const dLat=(Number(b.lat)-Number(a.lat))*Math.PI/180;
+  const dLng=(Number(b.lng)-Number(a.lng))*Math.PI/180;
+  const lat1=Number(a.lat)*Math.PI/180;
+  const lat2=Number(b.lat)*Math.PI/180;
+  const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+  return Math.round((R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h)))*100)/100;
+}
 function normalizePlace(p){
+  const lat=Number(p.lat||p.latitude||0);
+  const lng=Number(p.lng||p.longitude||0);
+  const distance=p.distance_km??distanceBetweenKm(placeState.userLocation||placeState.center,{lat,lng});
   return {
     place_id:p.place_id||p.id||p.google_place_id||'',
     google_place_id:p.google_place_id||p.place_id||'',
     name:p.name||'이름 없는 장소',
     address:p.address||p.vicinity||p.formatted_address||'주소 정보 없음',
-    lat:Number(p.lat||p.latitude||0),
-    lng:Number(p.lng||p.longitude||0),
+    lat,
+    lng,
     phone:p.phone||p.formatted_phone_number||'',
     website:p.website||'',
     google_maps_url:p.google_maps_url||'',
@@ -1184,10 +1202,14 @@ function normalizePlace(p){
     open_now:p.open_now,
     opening_hours:p.opening_hours||[],
     photo_url:p.photo_url||'',
+    photo_reference:p.photo_reference||'',
+    photos:Array.isArray(p.photos)?p.photos:[],
+    description:p.description||p.editorial_summary||'',
+    google_reviews:Array.isArray(p.google_reviews)?p.google_reviews:[],
     place_types:Array.isArray(p.place_types)?p.place_types:(p.place_types?[p.place_types]:[]),
     saved:!!p.saved,
     reading_score:Number(p.reading_score||0),
-    distance_km:p.distance_km,
+    distance_km:distance,
     meeting_capacity:p.meeting_capacity||'',
     noise_level:p.noise_level||'unknown',
     outlet_score:p.outlet_score||'',
@@ -1229,23 +1251,18 @@ function filterQueryText(){
   return String(mapEl('places-result-filter')?.value||'').trim().toLowerCase();
 }
 function filteredPlaces(){
-  const minRating=Number(mapEl('places-min-rating')?.value||0);
-  const sort=mapEl('places-sort')?.value||'distance';
   const q=filterQueryText();
   let places=[...(placeState.searchResults||[])];
   if(q){
     places=places.filter(p=>`${p.name} ${p.address} ${placeTypeLabel(p)} ${p.memo||''}`.toLowerCase().includes(q));
   }
-  if(minRating>0){
-    places=places.filter(p=>Number(p.google_rating||0)>=minRating);
-  }
   placeState.activeFilters.forEach(f=>{
     places=places.filter(p=>hasAmenity(p,f));
   });
   places.sort((a,b)=>{
-    if(sort==='rating')return Number(b.google_rating||0)-Number(a.google_rating||0)||Number(a.distance_km||999)-Number(b.distance_km||999);
-    if(sort==='reading')return Number(b.reading_score||0)-Number(a.reading_score||0)||Number(a.distance_km||999)-Number(b.distance_km||999);
-    return Number(a.distance_km||999)-Number(b.distance_km||999)||Number(b.google_rating||0)-Number(a.google_rating||0);
+    const da=Number(a.distance_km??999);
+    const db=Number(b.distance_km??999);
+    return da-db||Number(b.reading_score||0)-Number(a.reading_score||0)||Number(b.google_rating||0)-Number(a.google_rating||0);
   });
   return places;
 }
@@ -1265,8 +1282,6 @@ function togglePlaceFilter(btn,key){
 function clearPlaceFilters(){
   placeState.activeFilters.clear();
   document.querySelectorAll('.quick-chip').forEach(c=>c.classList.remove('active'));
-  const rating=mapEl('places-min-rating');if(rating)rating.value='0';
-  const sort=mapEl('places-sort');if(sort)sort.value='distance';
   const result=mapEl('places-result-filter');if(result)result.value='';
   applyPlaceFilters();
 }
@@ -1280,6 +1295,29 @@ function markerIcon(active=false,saved=false){
     strokeColor:'#050815',
     strokeWeight:2,
   };
+}
+function userMarkerIcon(){
+  if(!window.google)return undefined;
+  return {
+    path:google.maps.SymbolPath.CIRCLE,
+    scale:13,
+    fillColor:'#60a5fa',
+    fillOpacity:1,
+    strokeColor:'#dbeafe',
+    strokeWeight:4,
+  };
+}
+function renderUserLocationMarker(){
+  if(!window._map||!window.google||!placeState.userLocation)return;
+  if(placeState.userMarker)placeState.userMarker.setMap(null);
+  placeState.userMarker=new google.maps.Marker({
+    position:placeState.userLocation,
+    map:window._map,
+    title:'내 위치',
+    label:{text:'나',color:'#07101f',fontSize:'12px',fontWeight:'800'},
+    icon:userMarkerIcon(),
+    zIndex:999
+  });
 }
 function clearMarkers(){
   placeState.markers.forEach(m=>m.setMap(null));
@@ -1300,12 +1338,7 @@ function updateMarkers(){
     bounds.extend(marker.getPosition());hasBounds=true;
   });
   if(placeState.userLocation){
-    if(placeState.userMarker)placeState.userMarker.setMap(null);
-    placeState.userMarker=new google.maps.Marker({
-      position:placeState.userLocation,map:window._map,title:'내 위치',
-      label:{text:'내 위치',color:'#dbeafe',fontSize:'12px',fontWeight:'700'},
-      icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:'#60a5fa',fillOpacity:1,strokeColor:'#dbeafe',strokeWeight:3}
-    });
+    renderUserLocationMarker();
     bounds.extend(placeState.userMarker.getPosition());hasBounds=true;
   }
   if(hasBounds)window._map.fitBounds(bounds,{top:60,right:60,bottom:60,left:60});
@@ -1344,8 +1377,9 @@ function renderPlaceList(places=placeState.searchResults){
 function renderSavedStrip(){
   const strip=mapEl('saved-places-strip');
   const count=mapEl('saved-places-count');
-  if(!strip)return;
   const places=(placeState.savedPlaces||[]).slice(0,8);
+  renderSidebarSavedPlaces();
+  if(!strip)return;
   if(count)count.textContent=`${placeState.savedPlaces.length}곳`;
   if(!places.length){
     strip.innerHTML='<div class="saved-mini"><div class="saved-mini-name">저장한 장소 없음</div><div class="saved-mini-meta">마음에 드는 곳을 저장해보세요</div></div>';
@@ -1355,6 +1389,24 @@ function renderSavedStrip(){
     <button class="saved-mini" type="button" onclick="selectSavedPlace(${i})">
       <div class="saved-mini-name">${esc(p.name)}</div>
       <div class="saved-mini-meta">${esc(placeTypeLabel(p))} · ${p.reading_score?p.reading_score.toFixed(1):'검토중'}</div>
+    </button>
+  `).join('');
+}
+function renderSidebarSavedPlaces(){
+  const el=document.getElementById('sidebar-saved-places');
+  if(!el)return;
+  const places=(placeState.savedPlaces||[]).slice(0,5);
+  if(!places.length){
+    el.innerHTML=`<button class="sidebar-saved-item" type="button" onclick="switchToPlacesTab()">
+      <span class="sidebar-saved-name">아직 저장한 곳이 없어요</span>
+      <span class="sidebar-saved-meta">장소를 고른 뒤 LUMA에 저장해보세요</span>
+    </button>`;
+    return;
+  }
+  el.innerHTML=places.map((p,i)=>`
+    <button class="sidebar-saved-item" type="button" onclick="selectSavedPlace(${i});switchToPlacesTab()">
+      <span class="sidebar-saved-name">${esc(p.name)}</span>
+      <span class="sidebar-saved-meta">${p.distance_km?Number(p.distance_km).toFixed(1)+'km · ':''}${esc(placeTypeLabel(p))}</span>
     </button>
   `).join('');
 }
@@ -1372,12 +1424,19 @@ function renderDetail(){
   }
   const summary=placeState.selectedSummary||{};
   const hours=(p.opening_hours||[]).slice(0,4).map(h=>`<div>${esc(h)}</div>`).join('');
-  const reviews=(p.reviews||[]).map(r=>`<div class="review-item">
+  const photoUrl=p.photo_url||(p.photos&&p.photos[0]?.photo_url)||'';
+  const googleReviews=(p.google_reviews||[]).filter(r=>r.content).slice(0,4);
+  const savedReviews=(p.reviews||[]).map(r=>`<div class="review-item">
     <div class="review-head"><span>${esc(r.emoji||'⭐')} ${esc(r.display_name||'익명')} · ★ ${esc(r.rating||'-')}</span><span>${esc(r.group_size?`${r.group_size}명`:'')}</span></div>
     <div class="review-content">${esc(r.content||r.text||'')}</div>
-  </div>`).join('')||'<div class="empty-state" style="padding:18px 8px;"><p>아직 후기가 없습니다. 첫 독서모임 경험을 남겨주세요.</p></div>';
+  </div>`).join('');
+  const googleReviewHtml=googleReviews.map(r=>`<div class="review-item">
+    <div class="review-head"><span>Google · ${esc(r.display_name||'사용자')} · ★ ${esc(r.rating||'-')}</span><span>${esc(r.relative_time||'')}</span></div>
+    <div class="review-content">${esc(r.content.length>180?r.content.slice(0,177)+'...':r.content)}</div>
+  </div>`).join('');
+  const reviews=googleReviewHtml||savedReviews||'<div class="empty-state" style="padding:18px 8px;"><p>아직 후기가 없습니다. 첫 독서모임 경험을 남겨주세요.</p></div>';
   el.innerHTML=`
-    <div class="detail-photo">${p.photo_url?`<img src="${esc(p.photo_url)}" alt="${esc(p.name)}" onerror="this.parentElement.textContent='🗺️'">`:'🗺️'}</div>
+    <div class="detail-photo">${photoUrl?`<img src="${esc(photoUrl)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:1.8rem;">🗺️</div>`:'🗺️'}</div>
     <div class="detail-body">
       <div class="detail-name">${esc(p.name)}</div>
       <div class="detail-address">${esc(p.address)}</div>
@@ -1388,6 +1447,7 @@ function renderDetail(){
         <span>${esc(placeTypeLabel(p))}</span>
       </div>
       ${summary.summary?`<div class="detail-summary"><strong>${esc(summary.best_for||'독서모임 적합도')}</strong><br>${esc(summary.summary)}${summary.caution?`<br><span style="color:var(--sub)">${esc(summary.caution)}</span>`:''}</div>`:''}
+      ${p.description?`<div class="detail-summary"><strong>Google 장소 소개</strong><br>${esc(p.description)}</div>`:''}
       <div class="meta-grid">
         <div class="meta-item"><div class="meta-label">독서모임 점수</div><div class="meta-value">${p.reading_score?p.reading_score.toFixed(1):'검토중'}</div></div>
         <div class="meta-item"><div class="meta-label">추천 인원</div><div class="meta-value">${esc(p.meeting_capacity||'미정')}</div></div>
@@ -1458,7 +1518,8 @@ async function selectPlace(place){
   const base=normalizePlace(place);
   placeState.selectedPlace=base;
   renderPlaceList();renderDetail();updateMarkers();
-  if(window._map&&base.lat&&base.lng)window._map.panTo({lat:base.lat,lng:base.lng});
+  const shouldPan=arguments[1]?.pan!==false;
+  if(shouldPan&&window._map&&base.lat&&base.lng)window._map.panTo({lat:base.lat,lng:base.lng});
   try{
     const detail=await fetchPlaceDetail(base);
     const reviews=await fetchReviews(detail.place_id||detail.google_place_id);
@@ -1481,27 +1542,60 @@ function loadPlacesIfActive(){
   const tab=document.getElementById('tab-places');
   if(tab&&tab.style.display!=='none')loadPlaces();
 }
-async function loadPlaces(query=placeState.query){
-  const list=mapEl('places-results');
-  if(!list)return;
-  placeState.query=query||'독서모임 카페 도서관';
-  list.innerHTML='<div class="loading-card">장소를 검색하는 중...</div>';
-  const params=new URLSearchParams({q:placeState.query,limit:'20',radius:String(selectedRadius())});
+async function fetchPlaceBatch(query,radius){
+  const params=new URLSearchParams({q:query,limit:'40',radius:String(radius),strict_google:'1'});
   if(placeState.center?.lat&&placeState.center?.lng){
     params.set('lat',placeState.center.lat);
     params.set('lng',placeState.center.lng);
   }
+  const r=await fetch(`/api/places/search?${params}`);
+  const d=await r.json();
+  return {
+    source:d.source||'unknown',
+    radius,
+    places:(d.places||[]).map(normalizePlace).filter(p=>p.source!=='mock')
+  };
+}
+async function findGooglePlaces(query){
+  const base=query||DEFAULT_PLACE_QUERY;
+  const radius=selectedRadius();
+  const candidates=[
+    {q:base,r:radius},
+    {q:`${base} 카페 도서관 북카페`,r:Math.max(radius,3000)},
+    {q:'주변 조용한 카페 독서',r:Math.max(radius,3000)},
+    {q:'주변 도서관 북카페 서점',r:Math.max(radius,5000)},
+    {q:'독서모임하기 좋은 카페 도서관 북카페',r:Math.max(radius,8000)}
+  ];
+  const seen=new Set();
+  for(const item of candidates){
+    const key=`${item.q}|${item.r}`;
+    if(seen.has(key))continue;
+    seen.add(key);
+    const result=await fetchPlaceBatch(item.q,item.r);
+    if(result.places.length)return result;
+  }
+  return {source:'google_unavailable',radius,places:[]};
+}
+async function loadPlaces(query=placeState.query){
+  const list=mapEl('places-results');
+  if(!list)return;
+  placeState.query=query||DEFAULT_PLACE_QUERY;
+  list.innerHTML='<div class="loading-card">장소를 검색하는 중...</div>';
   try{
-    const r=await fetch(`/api/places/search?${params}`);
-    const d=await r.json();
-    placeState.rawResults=(d.places||[]).map(normalizePlace);
+    const result=await findGooglePlaces(placeState.query);
+    placeState.rawResults=result.places;
     placeState.searchResults=[...placeState.rawResults];
     placeState.mode='search';
     applyPlaceFilters();
     renderSavedStrip();
-    setMapStatus(`${d.source||'mock'} 기반으로 ${placeState.searchResults.length}곳을 찾았습니다. 거리 ${selectedRadius()/1000}km, 조건 ${placeState.activeFilters.size}개 적용 중.`);
+    const basis=placeState.userLocation?'내 위치':'지도 중심';
+    if(result.source==='google_unavailable'||!result.places.length){
+      setMapStatus('이 주변 Google 장소를 찾지 못했습니다. 위치 권한, GOOGLE_MAPS_API_KEY, 서버 재시작 상태를 확인해주세요.');
+    }else{
+      setMapStatus(`${basis} 기준 약 ${result.radius/1000}km 안에서 카페·도서관·북카페 ${placeState.searchResults.length}곳을 찾았습니다.`);
+    }
     mapEl('map-research-btn')?.classList.remove('show');
-    if(placeState.visibleResults[0])selectPlace(placeState.visibleResults[0]);
+    if(placeState.visibleResults[0])selectPlace(placeState.visibleResults[0],{pan:false});
   }catch(err){
     list.innerHTML='<div class="empty-state"><p>장소 정보를 불러올 수 없습니다.</p></div>';
     setMapStatus('장소 검색에 실패했습니다. 잠시 후 다시 시도해주세요.');
@@ -1509,7 +1603,7 @@ async function loadPlaces(query=placeState.query){
 }
 function searchPlaces(){
   const q=mapEl('places-search-input')?.value.trim()||'';
-  loadPlaces(q||'독서모임 카페 도서관');
+  loadPlaces(q||DEFAULT_PLACE_QUERY);
 }
 function quickSearch(q){
   const input=mapEl('places-search-input');
@@ -1526,7 +1620,7 @@ function searchHere(){
 function useMyLocation(){
   if(!navigator.geolocation){
     setMapStatus('브라우저가 현재 위치를 지원하지 않아 서울 중심으로 검색합니다.');
-    return loadPlaces('내 주변 독서모임 카페');
+    return loadPlaces(DEFAULT_PLACE_QUERY);
   }
   setMapStatus('현재 위치를 확인하는 중입니다...');
   navigator.geolocation.getCurrentPosition(pos=>{
@@ -1534,15 +1628,18 @@ function useMyLocation(){
       placeState.center={...placeState.userLocation};
       const legend=mapEl('my-location-legend');if(legend)legend.style.display='flex';
       const input=mapEl('places-search-input');
-      if(input&&!input.value.trim())input.value='내 주변 독서모임 카페 도서관';
-      const radius=mapEl('places-radius');if(radius&&Number(radius.value)<5000)radius.value='5000';
-      if(window._map)window._map.setCenter(placeState.center);
+      if(input&&!input.value.trim())input.value=DEFAULT_PLACE_QUERY;
+      if(window._map){
+        window._map.setCenter(placeState.center);
+        window._map.setZoom(15);
+        renderUserLocationMarker();
+      }
       setMapStatus(`현재 위치 기준 검색 · 정확도 약 ${Math.round(pos.coords.accuracy)}m`);
-    loadPlaces(input?.value?.trim()||'내 주변 독서모임 카페 도서관');
+    loadPlaces(input?.value?.trim()||DEFAULT_PLACE_QUERY);
   },()=>{
     placeState.center={...DEFAULT_CENTER};
     setMapStatus('위치 권한이 없어 서울 중심으로 검색합니다.');
-    loadPlaces('서울 독서모임 카페 도서관');
+    loadPlaces('서울 독서모임하기 좋은 카페 도서관 북카페');
   },{enableHighAccuracy:true,timeout:7000});
 }
 async function loadSavedPlaces(){
@@ -1656,6 +1753,7 @@ function bootPlacesMap(){
   placeState.loaded=true;
   refreshSavedPlaces();
   loadPlaces();
+  if(navigator.geolocation)setTimeout(()=>useMyLocation(),250);
 }
 window.__pendingMapInit=bootPlacesMap;
 

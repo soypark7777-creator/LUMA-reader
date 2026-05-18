@@ -72,12 +72,13 @@ button,input,select,textarea{font-family:inherit;}
   0%,100%{box-shadow:0 0 0 0 var(--gold-glow)}
   50%{box-shadow:0 0 0 8px transparent}
 }
-.nav-links{display:flex;gap:3px;}
+.nav-links{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.nav-links::-webkit-scrollbar{display:none;}
 .nav-link{
   display:flex;align-items:center;gap:5px;
-  padding:7px 13px;border-radius:18px;
-  font-size:.76rem;color:var(--muted);
-  transition:.2s;cursor:pointer;
+  padding:7px 9px;border-radius:18px;
+  font-size:.7rem;color:var(--muted);
+  transition:.2s;cursor:pointer;white-space:nowrap;
 }
 .nav-link:hover{background:var(--card);color:var(--text);}
 .nav-link.active{
@@ -696,10 +697,13 @@ button,input,select,textarea{font-family:inherit;}
     <a href="/"         class="nav-link">별자리 지도</a>
     <a href="/heart"    class="nav-link">마음 행성계</a>
     <a href="/lounge"   class="nav-link">탐사 성운</a>
-    <a href="/social"   class="nav-link">독자 광장</a>
-    <a href="/live"     class="nav-link active">라이브</a>
-    <a href="/socrates" class="nav-link">소크라테스</a>
-    <a href="/profile"  class="nav-link">프로필</a>
+    <a href="/community/" class="nav-link">은하 공동체</a>
+    <a href="/live"     class="nav-link active">궤도 정거장</a>
+    <a href="/socrates" class="nav-link">지성의 위성</a>
+    <a href="/social"   class="nav-link">독자 피드</a>
+    <a href="/deepdive" class="nav-link">심층 관측소</a>
+    <a href="/ocr"      class="nav-link">광학 스캐너</a>
+    <a href="/profile"  class="nav-link">나의 조종석</a>
   </div>
   <div class="nav-right">
     <div id="nav-user-area">

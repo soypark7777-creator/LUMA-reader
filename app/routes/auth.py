@@ -25,6 +25,11 @@ def _get_token() -> str:
 
 
 # ── 페이지 라우트 ──────────────────────────────────────────────
+@auth_bp.route('/')
+def auth_index():
+    return redirect('/auth/login')
+
+
 @auth_bp.route('/login')
 def login_page():
     if get_current_user(_get_token()):

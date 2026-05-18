@@ -389,7 +389,7 @@ def get_google_photo_url(photo_reference, max_width=640) -> str:
 
 def search_google_places(query, lat=None, lng=None, radius=3000, limit=12) -> dict:
     key = _load_maps_key()
-    limit = max(1, min(_safe_int(limit, 12) or 12, 20))
+    limit = max(1, min(_safe_int(limit, 12) or 12, 40))
     lat_f = _safe_float(lat)
     lng_f = _safe_float(lng)
     radius_i = max(100, min(_safe_int(radius, 3000) or 3000, 50000))
@@ -401,7 +401,7 @@ def search_google_places(query, lat=None, lng=None, radius=3000, limit=12) -> di
     try:
         import requests
         items = []
-        items.extend(_google_places_text_search(requests, key, query or "독서모임 카페 도서관", lat_f, lng_f, radius_i))
+        items.extend(_google_places_text_search(requests, key, query or "독서모임하기 좋은 카페 도서관 북카페", lat_f, lng_f, radius_i))
         if lat_f is not None and lng_f is not None:
             items.extend(_google_places_nearby_search(requests, key, lat_f, lng_f, radius_i))
 
@@ -437,7 +437,7 @@ def get_google_place_detail(google_place_id) -> dict:
         fields = ",".join([
             "place_id", "name", "formatted_address", "geometry", "formatted_phone_number",
             "website", "rating", "user_ratings_total", "price_level", "opening_hours",
-            "photos", "types", "url",
+            "photos", "types", "url", "editorial_summary", "reviews",
         ])
         resp = requests.get(
             "https://maps.googleapis.com/maps/api/place/details/json",
@@ -474,6 +474,7 @@ def get_google_place_detail(google_place_id) -> dict:
             "website": item.get("website"),
             "google_rating": item.get("rating"),
             "user_ratings_total": item.get("user_ratings_total"),
+            "description": (item.get("editorial_summary") or {}).get("overview") or "",
             "price_level": item.get("price_level"),
             "open_now": item.get("opening_hours", {}).get("open_now"),
             "opening_hours": item.get("opening_hours", {}).get("weekday_text") or [],
@@ -485,6 +486,15 @@ def get_google_place_detail(google_place_id) -> dict:
             "saved": bool(saved),
             "reading_score": saved.get("reading_score") if saved else round(min(10, float(item.get("rating") or 4.0) * 1.8), 1),
             "source": "google",
+            "google_reviews": [
+                {
+                    "display_name": r.get("author_name") or "Google 사용자",
+                    "rating": r.get("rating"),
+                    "content": r.get("text") or "",
+                    "relative_time": r.get("relative_time_description") or "",
+                }
+                for r in (item.get("reviews") or [])[:5]
+            ],
         }
         if saved:
             place.update({k: saved.get(k) for k in (

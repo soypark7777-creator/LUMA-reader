@@ -38,8 +38,9 @@ a{text-decoration:none;color:inherit;}
 .logo{display:flex;align-items:center;gap:9px;}
 .logo-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2.4s infinite;}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,200,107,.4)}50%{box-shadow:0 0 0 7px transparent}}
-.nav-links{display:flex;gap:2px;}
-.npill{padding:5px 12px;border-radius:14px;font-size:.72rem;color:var(--sub);transition:.2s;}
+.nav-links{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.nav-links::-webkit-scrollbar{display:none;}
+.npill{padding:5px 8px;border-radius:14px;font-size:.68rem;color:var(--sub);transition:.2s;white-space:nowrap;}
 .npill:hover{background:rgba(80,180,120,.1);color:var(--mint);}
 .npill.active{background:rgba(80,180,120,.15);color:var(--mint);}
 .nav-user{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--sub);}
@@ -338,11 +339,13 @@ a{text-decoration:none;color:inherit;}
     <a href="/" class="npill">별자리 지도</a>
     <a href="/heart" class="npill">마음 행성계</a>
     <a href="/lounge" class="npill">탐사 성운</a>
-    <a href="/social" class="npill">독자 광장</a>
-    <a href="/live" class="npill">라이브</a>
-    <a href="/socrates" class="npill">소크라테스</a>
-    <a href="/profile" class="npill">프로필</a>
-    <a href="/deepdive" class="npill active">딥다이브</a>
+    <a href="/community/" class="npill">은하 공동체</a>
+    <a href="/live" class="npill">궤도 정거장</a>
+    <a href="/socrates" class="npill">지성의 위성</a>
+    <a href="/social" class="npill">독자 피드</a>
+    <a href="/deepdive" class="npill active">심층 관측소</a>
+    <a href="/ocr" class="npill">광학 스캐너</a>
+    <a href="/profile" class="npill">나의 조종석</a>
   </div>
   <div class="nav-user" id="nav-user">
     <a href="/auth/login" class="nav-login-btn">로그인</a>

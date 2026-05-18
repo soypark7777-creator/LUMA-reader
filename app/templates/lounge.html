@@ -7,11 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Cinzel:wght@400;500&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#07130f;--bg2:rgba(7,20,14,.96);--bg3:rgba(10,28,18,.86);
-  --line:rgba(125,232,168,.12);--card:rgba(255,255,255,.04);
-  --text:#e8f5ee;--muted:#7da88e;--sub:#4d7a5e;
+  --bg:#0B1612;--bg2:rgba(15,30,24,.96);--bg3:rgba(17,31,24,.88);
+  --line:rgba(255,255,255,.07);--card:rgba(255,255,255,.045);
+  --text:#E8DCC8;--muted:#8FA89A;--sub:#6F8579;
   --mint:#7de8a8;--sage:#4a9e6d;--emerald:#2e7d52;
-  --gold:#f5c86b;--gold-lt:#ffe8a1;
+  --gold:#C17F3B;--gold-lt:#E8A85A;--amber:#C17F3B;--amber-lt:#E8A85A;--star:#F4CD89;
   --green:#4ade80;--red:#f87171;
   --glow-mint:rgba(125,232,168,.18);--glow-gold:rgba(245,200,107,.18);
 }
@@ -24,36 +24,38 @@ button,input,select{font-family:inherit}
 ::-webkit-scrollbar-thumb{background:rgba(125,232,168,.18);border-radius:2px}
 
 /* TOPBAR */
-.topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:rgba(7,19,15,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}
+.topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:58px;background:rgba(11,22,18,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}
 .logo{display:flex;align-items:center;gap:10px;color:var(--text)}
-.nav{display:flex;gap:3px}
-.npill{padding:6px 14px;border-radius:18px;font-size:.76rem;color:var(--muted);transition:.18s;font-weight:500;border:1px solid transparent}
-.npill:hover{color:var(--text);background:var(--card)}
-.npill.active{color:#07130f;background:linear-gradient(135deg,var(--mint),var(--green));border-color:transparent}
-.nav-user{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--muted)}
-.nav-login-btn{background:rgba(125,232,168,.1);border:1px solid rgba(125,232,168,.3);color:var(--mint);padding:6px 14px;border-radius:18px;font-size:.76rem}
-.nav-logout{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);color:var(--red);padding:5px 11px;border-radius:8px;font-size:.72rem;cursor:pointer}
+.logo img{filter:drop-shadow(0 0 8px rgba(193,127,59,.4))}
+.nav{display:flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.npill{padding:5px 9px;border-radius:999px;font-size:.72rem;color:var(--muted);transition:.18s;font-weight:500;border:1px solid transparent;letter-spacing:.04em;white-space:nowrap}
+.npill:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.npill.active{color:var(--amber);background:rgba(193,127,59,.12);border-color:rgba(193,127,59,.25)}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--muted)}
+.nav-login-btn{background:rgba(193,127,59,.08);border:1px solid rgba(193,127,59,.3);color:var(--amber);padding:4px 11px;border-radius:14px;font-size:.72rem}
+.nav-logout{background:rgba(193,127,59,.08);border:1px solid rgba(193,127,59,.3);color:var(--amber);padding:4px 11px;border-radius:14px;font-size:.72rem;cursor:pointer}
 
 /* HERO */
-.hero{min-height:460px;display:flex;align-items:center;padding:52px 0 44px;background:linear-gradient(160deg,rgba(20,50,32,.45) 0%,transparent 65%)}
-.hero-inner{max-width:1080px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:1fr 310px;gap:44px;align-items:center;width:100%}
-.hero-copy .eyebrow{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(125,232,168,.1);border:1px solid rgba(125,232,168,.25);color:var(--mint);font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
-.hero-copy h1{font-family:'Noto Serif KR',serif;font-size:clamp(1.8rem,3.2vw,2.6rem);line-height:1.28;color:var(--text);margin-bottom:14px}
+.hero{min-height:560px;display:flex;align-items:center;padding:58px 0 52px;background:radial-gradient(circle at 72% 18%,rgba(193,127,59,.18),transparent 24rem),linear-gradient(160deg,rgba(20,50,32,.45) 0%,transparent 65%)}
+.hero-inner{max-width:1180px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,440px);gap:54px;align-items:center;width:100%}
+.hero-copy .eyebrow{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(193,127,59,.1);border:1px solid rgba(193,127,59,.25);color:var(--amber);font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+.hero-copy h1{font-family:'Noto Serif KR',serif;font-size:clamp(2rem,3.7vw,3.35rem);line-height:1.2;color:var(--text);margin-bottom:16px}
 .hero-copy p{font-size:.88rem;color:var(--muted);line-height:1.78;margin-bottom:28px;max-width:440px}
 .hero-btns{display:flex;gap:10px;flex-wrap:wrap}
 
 /* Hero book card */
-.hero-book{background:var(--bg2);border:1px solid rgba(125,232,168,.15);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(125,232,168,.06);transition:.3s}
-.hero-book:hover{transform:translateY(-4px);box-shadow:0 28px 80px rgba(0,0,0,.55),0 0 40px var(--glow-mint)}
-.hero-book-cover{height:220px;position:relative;background:linear-gradient(135deg,rgba(125,232,168,.1),rgba(46,125,82,.14));display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-book{background:var(--bg2);border:1px solid rgba(193,127,59,.22);border-radius:22px;overflow:hidden;box-shadow:0 26px 80px rgba(0,0,0,.56),0 0 0 1px rgba(244,205,137,.08);transition:.3s;cursor:pointer}
+.hero-book:hover{transform:translateY(-5px);box-shadow:0 34px 96px rgba(0,0,0,.6),0 0 34px rgba(244,205,137,.18)}
+.hero-book-cover{height:420px;position:relative;background:linear-gradient(135deg,rgba(193,127,59,.12),rgba(46,125,82,.14));display:flex;align-items:center;justify-content:center;overflow:hidden}
 .hero-book-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero-cover-fallback{z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px}
 .hero-cover-fallback-char{font-family:'Pretendard','Noto Sans KR',sans-serif;font-weight:700;font-size:2.6rem;color:var(--mint);line-height:1}
 .hero-book-cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(7,20,14,.88) 0%,transparent 50%);z-index:2}
 .hero-book-meta{padding:14px 18px 0}
-.hero-book-badge{display:inline-block;padding:2px 10px;border-radius:20px;background:rgba(125,232,168,.1);border:1px solid rgba(125,232,168,.2);color:var(--mint);font-size:.62rem;font-weight:700;letter-spacing:.08em;margin-bottom:8px}
-.hero-book-title{font-family:'Noto Serif KR',serif;font-size:1.05rem;color:var(--text);margin-bottom:3px;line-height:1.35}
-.hero-book-author{font-size:.74rem;color:var(--muted);margin-bottom:6px}
+.hero-book-badge{display:inline-block;padding:3px 11px;border-radius:20px;background:rgba(193,127,59,.1);border:1px solid rgba(193,127,59,.24);color:var(--amber);font-size:.64rem;font-weight:700;letter-spacing:.08em;margin-bottom:9px}
+.hero-book-title{font-family:'Noto Serif KR',serif;font-size:1.3rem;color:var(--text);margin-bottom:4px;line-height:1.35}
+.hero-book-author{font-size:.82rem;color:var(--muted);margin-bottom:8px}
 .hero-book-extra{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
 .hero-book-extra span{font-size:.62rem;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
 .hero-book-extra .genre-tag{color:var(--mint);border-color:rgba(125,232,168,.2);background:rgba(125,232,168,.06)}
@@ -165,9 +167,9 @@ button,input,select{font-family:inherit}
 
 /* Buttons */
 .btn{border:none;border-radius:11px;padding:10px 20px;font:600 .82rem 'Pretendard',sans-serif;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px}
-.btn-mint{background:linear-gradient(135deg,var(--mint),var(--green));color:#07130f}
+.btn-mint{background:linear-gradient(135deg,#1a3528,var(--amber));color:#f7ead7}
 .btn-mint:hover{transform:translateY(-1px);box-shadow:0 6px 22px var(--glow-mint)}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#07130f}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0B1612}
 .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 22px var(--glow-gold)}
 .btn-outline{background:transparent;border:1px solid var(--line);color:var(--muted)}
 .btn-outline:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
@@ -180,15 +182,18 @@ button,input,select{font-family:inherit}
 .toast.error{border-color:rgba(248,113,113,.35);color:var(--red)}
 
 /* Detail modal */
-.modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:22px}
+.modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(3,10,8,.78);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:22px}
 .modal.open{display:flex}
-.modal-box{width:min(760px,96vw);max-height:90vh;overflow-y:auto;background:var(--bg2);border:1px solid rgba(125,232,168,.18);border-radius:20px;box-shadow:0 24px 90px rgba(0,0,0,.55)}
+.modal-box{width:min(820px,96vw);max-height:90vh;overflow-y:auto;background:linear-gradient(150deg,rgba(17,35,28,.98),rgba(8,19,15,.98));border:1px solid rgba(125,232,168,.2);border-radius:20px;box-shadow:0 28px 100px rgba(0,0,0,.62),0 0 0 1px rgba(244,205,137,.08)}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);color:var(--mint);font-family:'Noto Serif KR',serif;font-size:1rem}
-.modal-close{border:0;background:transparent;color:var(--muted);font-size:1.1rem;cursor:pointer}
-.book-detail-body{display:grid;grid-template-columns:150px 1fr;gap:22px;padding:22px}
-.detail-cover{width:150px;aspect-ratio:2/3;border-radius:12px;background:linear-gradient(135deg,rgba(125,232,168,.1),rgba(46,125,82,.14));overflow:hidden;display:grid;place-items:center;flex-shrink:0}
+.modal-close{width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:rgba(255,255,255,.04);color:var(--muted);font-size:1rem;cursor:pointer;transition:.18s}
+.modal-close:hover{color:var(--text);border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.08)}
+.book-detail-body{display:grid;grid-template-columns:176px 1fr;gap:26px;padding:26px}
+.detail-cover{width:176px;aspect-ratio:2/3;border-radius:14px;background:linear-gradient(135deg,rgba(125,232,168,.1),rgba(193,127,59,.14));overflow:hidden;display:grid;place-items:center;flex-shrink:0;box-shadow:0 18px 42px rgba(0,0,0,.38)}
 .detail-cover img{width:100%;height:100%;object-fit:cover}
 .detail-cover-fallback{font-family:'Pretendard',sans-serif;font-weight:700;font-size:2.4rem;color:var(--mint);text-align:center;padding:10px}
+.detail-content{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.detail-kicker{display:inline-flex;align-self:flex-start;margin-bottom:10px;padding:4px 10px;border:1px solid rgba(193,127,59,.26);border-radius:999px;background:rgba(193,127,59,.1);color:var(--amber);font-size:.62rem;font-weight:700;letter-spacing:.08em}
 .detail-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;line-height:1.25;margin-bottom:5px}
 .detail-author{color:var(--muted);font-size:.83rem;margin-bottom:10px}
 .detail-meta{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
@@ -200,13 +205,17 @@ button,input,select{font-family:inherit}
 .detail-section-label{font-size:.64rem;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;font-weight:700}
 .detail-desc{font-size:.85rem;line-height:1.75;color:var(--muted)}
 .detail-reason{font-size:.85rem;line-height:1.75;color:var(--mint)}
+.detail-overview{font-size:.86rem;line-height:1.75;color:var(--muted);background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .detail-question{font-size:.85rem;line-height:1.65;color:var(--text);background:rgba(125,232,168,.06);border:1px solid rgba(125,232,168,.14);border-radius:10px;padding:12px 14px;font-style:italic}
+.detail-reviews{display:grid;gap:7px}
+.detail-review{font-size:.78rem;line-height:1.55;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
 .detail-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 
 /* Mobile */
 @media(max-width:768px){
   .hero-inner{grid-template-columns:1fr;padding:0 20px}
-  .hero-book{max-width:280px;margin:0 auto}
+  .hero-book{max-width:360px;margin:0 auto}
+  .hero-book-cover{height:360px}
   .hero{min-height:auto;padding:36px 0 32px}
   .topbar{padding:0 14px;height:52px}
   .topbar .nav{display:none}
@@ -217,7 +226,8 @@ button,input,select{font-family:inherit}
   .book-grid{grid-template-columns:repeat(2,1fr)}
   .hero-copy h1{font-size:1.7rem}
   .book-detail-body{grid-template-columns:1fr}
-  .detail-cover{width:120px;margin:0 auto}
+  .detail-cover{width:128px;margin:0 auto}
+  .detail-content{justify-content:flex-start}
   .explore-top{align-items:flex-start;flex-direction:column}
   .section-tools,.control-row{width:100%}
   .select-control{flex:1;min-width:130px}
@@ -238,10 +248,13 @@ button,input,select{font-family:inherit}
     <a href="/" class="npill">별자리 지도</a>
     <a href="/heart" class="npill">마음 행성계</a>
     <a href="/lounge" class="npill active">탐사 성운</a>
-    <a href="/social" class="npill">독자 광장</a>
-    <a href="/live" class="npill">라이브</a>
-    <a href="/socrates" class="npill">소크라테스</a>
-    <a href="/profile" class="npill">프로필</a>
+    <a href="/community/" class="npill">은하 공동체</a>
+    <a href="/live" class="npill">궤도 정거장</a>
+    <a href="/socrates" class="npill">지성의 위성</a>
+    <a href="/social" class="npill">독자 피드</a>
+    <a href="/deepdive" class="npill">심층 관측소</a>
+    <a href="/ocr" class="npill">광학 스캐너</a>
+    <a href="/profile" class="npill">나의 조종석</a>
   </nav>
   <div class="nav-user" id="nav-user"></div>
 </header>
@@ -262,7 +275,7 @@ button,input,select{font-family:inherit}
       </div>
 
       <!-- Hero book card -->
-      <div class="hero-book" id="hero-book-card" style="display:none">
+      <div class="hero-book" id="hero-book-card" style="display:none" onclick="openHeroDetail()" role="button" tabindex="0" aria-label="오늘의 책 상세 보기">
         <div class="hero-book-cover">
           <img id="hero-img" src="" alt="" style="display:none"
             onerror="this.style.display='none';document.getElementById('hero-fallback').style.display='flex'">
@@ -279,8 +292,8 @@ button,input,select{font-family:inherit}
           <div class="hero-book-reason" id="hero-reason"></div>
         </div>
         <div class="hero-book-actions">
-          <button class="book-add-btn" id="hero-add-btn" style="width:auto;flex:1" onclick="plantHeroBook()">씨앗 심기</button>
-          <button class="btn btn-ghost" style="padding:7px 14px;font-size:.72rem" onclick="openHeroDetail()">자세히</button>
+          <button class="book-add-btn" id="hero-add-btn" style="width:auto;flex:1" onclick="event.stopPropagation();plantHeroBook()">씨앗 심기</button>
+          <button class="btn btn-ghost" style="padding:7px 14px;font-size:.72rem" onclick="event.stopPropagation();openHeroDetail()">책 상세 보기</button>
         </div>
       </div>
 
@@ -319,6 +332,21 @@ button,input,select{font-family:inherit}
           <div class="explore-sub">지금의 기분과 취향을 선택하면, 그에 맞는 책을 찾아드립니다.</div>
         </div>
         <div class="control-row">
+          <select class="select-control" id="genre-filter" onchange="refreshAllDiscovery()">
+            <option value="">전체 장르</option>
+            <option value="문학">문학</option>
+            <option value="철학">철학</option>
+            <option value="과학">과학</option>
+            <option value="인문">인문</option>
+            <option value="자기계발">자기계발</option>
+            <option value="역사">역사</option>
+            <option value="SF">SF</option>
+            <option value="예술">예술</option>
+            <option value="경제경영">경제경영</option>
+            <option value="심리">심리</option>
+            <option value="시·에세이">시/에세이</option>
+            <option value="미스터리">미스터리</option>
+          </select>
           <select class="select-control" id="explore-sort" onchange="reloadExplore()">
             <option value="recent">출간일 가까운순</option>
             <option value="rating">평판 높은순</option>
@@ -562,8 +590,8 @@ function getStrategy(type,value){
 }
 
 const QUERY_VARIANTS={
-  new:['신간 도서 새로나온 책','2026 신간 소설 에세이','최근 출간 도서 추천','새 책 한국 문학'],
-  popular:['베스트셀러 도서','인기 도서 추천','화제의 책','많이 읽는 한국 책']
+  new:['신간 도서 새로나온 책','2026 신간 소설 에세이','최근 출간 도서 추천','새 책 한국 문학','오늘의 신간 인문 과학','새로나온 경제경영 심리 책','신간 미스터리 SF 소설'],
+  popular:['베스트셀러 도서','인기 도서 추천','화제의 책','많이 읽는 한국 책','스테디셀러 추천','독자 리뷰 많은 책','분야별 베스트셀러']
 };
 
 /* ─── Auth ───────────────────────────────────────── */
@@ -603,6 +631,76 @@ function normalizeBook(b){
 }
 function bookKey(b){return String(b.isbn||b.book_id||`${b.title}|${b.author}`);}
 function rememberBook(book){const b=normalizeBook(book);const key=bookKey(b);bookCache.set(key,b);return {book:b,key};}
+function findCachedBook(rawKey){
+  if(bookCache.has(rawKey))return bookCache.get(rawKey);
+  const decoded=decodeURIComponent(String(rawKey||''));
+  if(bookCache.has(decoded))return bookCache.get(decoded);
+  if(heroBook&&bookKey(heroBook)===decoded)return heroBook;
+  return null;
+}
+
+function selectedGenre(){return document.getElementById('genre-filter')?.value||'';}
+function cleanBookTitle(title){
+  return String(title||'').replace(/\s+/g,' ').replace(/[『』「」〈〉《》]/g,'').trim();
+}
+function dedupeBookList(books){
+  const seen=new Set(), out=[];
+  (books||[]).map(normalizeBook).forEach(book=>{
+    const title=cleanBookTitle(book.title);
+    if(!title||title==='제목 없음')return;
+    book.title=title;
+    const isbn=String(book.isbn||'').replace(/[^0-9xX]/g,'').toLowerCase();
+    const key=isbn||`${title.toLowerCase()}|${String(book.author||'').toLowerCase().replace(/\s+/g,'')}`;
+    if(seen.has(key))return;
+    seen.add(key);
+    out.push(book);
+  });
+  return out;
+}
+function rotateUniqueBooks(section, books, count=12){
+  const clean=dedupeBookList(books);
+  if(!clean.length)return [];
+  const offset=(SECTION_STATE[section]?.seed||0)*count;
+  return Array.from({length:Math.min(count,clean.length)},(_,i)=>clean[(offset+i)%clean.length]);
+}
+async function fetchBooksForQueries(queries, limit=12, sort='recent'){
+  const uniqueQueries=[...new Set((queries||[]).filter(Boolean))].slice(0,5);
+  const results=await Promise.all(uniqueQueries.map(async q=>{
+    try{
+      const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(q)}&source=all&limit=${limit}&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
+      const d=await r.json();
+      return d.books||d||[];
+    }catch(e){return [];}
+  }));
+  return dedupeBookList(results.flat());
+}
+function genreQueries(baseQueries){
+  const genre=selectedGenre();
+  if(!genre)return baseQueries;
+  return [
+    `${genre} ${baseQueries[0]||'추천 도서'}`,
+    `${genre} 신간 추천`,
+    `${genre} 베스트셀러`,
+    ...baseQueries.map(q=>`${q} ${genre}`)
+  ];
+}
+function buildReviewSnippets(book){
+  const b=normalizeBook(book);
+  const title=b.title||'이 책';
+  const genre=b.genre||'독서';
+  const author=b.author||'저자';
+  const source=b.source&&b.source!=='local'?`${b.source} 데이터`:'독자 반응';
+  const desc=bookSentence(b)||b.description||b.reason||'';
+  const candidates=[
+    `${genre} 독자가 ${title}에서 가장 먼저 발견하는 지점은 ${desc?`"${desc.slice(0,42)}"`:'선명한 문제의식'}입니다.`,
+    `${author}의 문장은 읽는 속도를 늦추고, 생각을 조금 더 오래 붙잡게 합니다.`,
+    `${source} 기준으로 표지, 소개, 독자 관심도가 함께 살아 있는 편이라 탐색 가치가 높습니다.`,
+    `처음 읽는 독자에게는 전체 분위기를 따라가며 한두 문장을 기록해두기 좋은 책입니다.`,
+    `비슷한 주제의 책과 나란히 읽으면 감정과 질문의 차이가 더 분명해집니다.`
+  ];
+  const n=3+(stableHash(`${title}|reviews`)%3);
+  return candidates.slice(0,n);
+}
 
 function stableHash(s){
   let h=0;String(s||'').split('').forEach(ch=>{h=((h<<5)-h)+ch.charCodeAt(0);h|=0;});
@@ -636,7 +734,7 @@ function reviewCount(book){
   return b.review_count>0?b.review_count:80+(stableHash(`${b.title}|${b.publisher}`)%920);
 }
 function sortedBooks(books,sort='recent',seed=0){
-  const arr=(books||[]).map(normalizeBook).filter(b=>b.title);
+  const arr=dedupeBookList(books).filter(b=>b.title);
   const decorated=arr.map((b,i)=>({b,i,h:stableHash(`${b.title}|${b.author}|${seed}`),date:parseBookDate(b.published_date),score:lumaScore(b),reviews:reviewCount(b),hasCover:b.cover_url?1:0}));
   if(sort==='shuffle')decorated.sort((a,b)=>a.h-b.h);
   else if(sort==='rating')decorated.sort((a,b)=>b.score-a.score||b.reviews-a.reviews||b.hasCover-a.hasCover);
@@ -646,7 +744,12 @@ function sortedBooks(books,sort='recent',seed=0){
     const db=b.date?Math.abs(TODAY_TS-b.date):Number.MAX_SAFE_INTEGER;
     return da-db||b.score-a.score||b.hasCover-a.hasCover;
   });
-  return decorated.map(x=>x.b);
+  const sorted=decorated.map(x=>x.b);
+  if(seed>0&&sorted.length>1){
+    const offset=(seed*5)%sorted.length;
+    return sorted.slice(offset).concat(sorted.slice(0,offset));
+  }
+  return sorted;
 }
 function sectionSort(name){return document.getElementById(`${name}-sort`)?.value||SECTION_STATE[name]?.sort||'recent';}
 function renderSorted(containerId,books,isGrid=false,sort='recent',seed=0){render(containerId,sortedBooks(books,sort,seed),isGrid);}
@@ -710,7 +813,7 @@ function render(containerId,books,isGrid=false){
     <div class="book-card${isGrid?' grid-card':''}" onclick="openBookDetail('${safeKey}')">
       <div class="book-cover">
         ${b.cover_url
-          ?`<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+          ?`<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
           :''}
         <div class="book-cover-fallback" style="${b.cover_url?'display:none':'display:flex'}">
           <div class="book-cover-fallback-initial">${esc(shortTitle)}</div>
@@ -787,6 +890,7 @@ function setHero(book){
   rememberBook(heroBook);
   document.getElementById('hero-skel').style.display='none';
   const card=document.getElementById('hero-book-card');card.style.display='block';
+  card.onkeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openHeroDetail();}};
   document.getElementById('hero-title').textContent=heroBook.title||'';
   document.getElementById('hero-author').textContent=heroBook.author||'';
 
@@ -812,7 +916,9 @@ function setHero(book){
 }
 
 function openHeroDetail(){
-  if(heroBook)openBookDetail(encodeURIComponent(bookKey(heroBook)));
+  if(!heroBook)return;
+  const remembered=rememberBook(heroBook);
+  openBookDetail(encodeURIComponent(remembered.key));
 }
 
 /* ─── Search ─────────────────────────────────────── */
@@ -878,11 +984,10 @@ async function loadExploreResults(){
   try{
     const sort=document.getElementById('filter-sort')?.value||state.sort||'recent';
     state.sort=sort;
-    const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(state.query)}&source=all&limit=18&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
-    const d=await r.json();
-    const books=d.books||d||[];
+    const queries=genreQueries([state.query,...(state.queries||[])]).slice(state.queryIndex,state.queryIndex+4);
+    const books=await fetchBooksForQueries(queries.length?queries:genreQueries([state.query]),18,sort);
     state.base=books.length?books:FALLBACK_BOOKS;
-    renderSorted('filter-books',state.base.slice(0,14),false,sort,state.seed);
+    renderSorted('filter-books',rotateUniqueBooks('explore',state.base,14),false,sort,state.seed);
   }catch(e){
     state.base=FALLBACK_BOOKS;
     renderSorted('filter-books',FALLBACK_BOOKS.slice(0,6),false,state.sort,state.seed);
@@ -931,42 +1036,50 @@ async function loadPersonaRecommendations(){
     const sort=sectionSort('persona');
     const r=await fetch(`/api/v2/books/recommendations?user_id=${encodeURIComponent(UID)}&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
     const d=await r.json();
-    const books=d.books||[];
-    if(books.length){SECTION_STATE.persona.base=books;renderSorted('recommended-books',books.slice(0,12),false,sort,SECTION_STATE.persona.seed);}
+    const base=d.books||[];
+    const genre=selectedGenre();
+    const queries=genreQueries([
+      '독서가 추천 도서',
+      '인생 책 추천',
+      '깊이 읽기 좋은 책',
+      '요즘 읽기 좋은 책',
+      ...(genre?[`${genre} 추천 책`]:[])
+    ]);
+    const more=await fetchBooksForQueries(queries.slice(SECTION_STATE.persona.seed%queries.length).concat(queries),14,sort);
+    const books=dedupeBookList([...base,...more]);
+    if(books.length){SECTION_STATE.persona.base=books;renderSorted('recommended-books',rotateUniqueBooks('persona',books,12),false,sort,SECTION_STATE.persona.seed);}
     else throw new Error('empty');
   }catch(e){
     SECTION_STATE.persona.base=FALLBACK_BOOKS;
-    renderSorted('recommended-books',FALLBACK_BOOKS,false,sectionSort('persona'),SECTION_STATE.persona.seed);
+    renderSorted('recommended-books',rotateUniqueBooks('persona',FALLBACK_BOOKS,6),false,sectionSort('persona'),SECTION_STATE.persona.seed);
   }
 }
 
 async function loadNewBooks(){
   try{
     const sort=sectionSort('new');
-    const q=QUERY_VARIANTS.new[SECTION_STATE.new.seed%QUERY_VARIANTS.new.length];
-    const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(q)}&source=all&limit=18&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
-    const d=await r.json();
-    const books=d.books||d||[];
-    if(books.length){SECTION_STATE.new.base=books;renderSorted('new-books',books,false,sort,SECTION_STATE.new.seed);}
+    const queries=genreQueries(QUERY_VARIANTS.new);
+    const start=SECTION_STATE.new.seed%queries.length;
+    const books=await fetchBooksForQueries(queries.slice(start).concat(queries.slice(0,start)),18,sort);
+    if(books.length){SECTION_STATE.new.base=books;renderSorted('new-books',rotateUniqueBooks('new',books,12),false,sort,SECTION_STATE.new.seed);}
     else throw new Error('empty');
   }catch(e){
     SECTION_STATE.new.base=NEW_RELEASE_FALLBACK;
-    renderSorted('new-books',NEW_RELEASE_FALLBACK,false,sectionSort('new'),SECTION_STATE.new.seed);
+    renderSorted('new-books',rotateUniqueBooks('new',NEW_RELEASE_FALLBACK,4),false,sectionSort('new'),SECTION_STATE.new.seed);
   }
 }
 
 async function loadPopularBooks(){
   try{
     const sort=sectionSort('popular');
-    const q=QUERY_VARIANTS.popular[SECTION_STATE.popular.seed%QUERY_VARIANTS.popular.length];
-    const r=await fetch(`/api/v2/books/search?q=${encodeURIComponent(q)}&source=all&limit=18&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
-    const d=await r.json();
-    const books=d.books||d||[];
-    if(books.length){SECTION_STATE.popular.base=books;renderSorted('popular-books',books,true,sort,SECTION_STATE.popular.seed);}
+    const queries=genreQueries(QUERY_VARIANTS.popular);
+    const start=SECTION_STATE.popular.seed%queries.length;
+    const books=await fetchBooksForQueries(queries.slice(start).concat(queries.slice(0,start)),18,sort);
+    if(books.length){SECTION_STATE.popular.base=books;renderSorted('popular-books',rotateUniqueBooks('popular',books,18),true,sort,SECTION_STATE.popular.seed);}
     else throw new Error('empty');
   }catch(e){
     SECTION_STATE.popular.base=BESTSELLER_FALLBACK;
-    renderSorted('popular-books',BESTSELLER_FALLBACK,true,sectionSort('popular'),SECTION_STATE.popular.seed);
+    renderSorted('popular-books',rotateUniqueBooks('popular',BESTSELLER_FALLBACK,6),true,sectionSort('popular'),SECTION_STATE.popular.seed);
   }
 }
 
@@ -980,9 +1093,21 @@ function reloadSection(name){
 async function refreshSection(name){
   if(!SECTION_STATE[name])return;
   SECTION_STATE[name].seed+=1;
+  const container=name==='persona'?'recommended-books':name==='new'?'new-books':'popular-books';
+  document.getElementById(container).innerHTML='<div class="skel-card"><div class="skel-cover skeleton"></div></div>'.repeat(name==='popular'?6:5);
+  if(name==='persona')return loadPersonaRecommendations();
   if(name==='new')return loadNewBooks();
   if(name==='popular')return loadPopularBooks();
   reloadSection(name);
+}
+
+async function refreshAllDiscovery(){
+  SECTION_STATE.explore.seed+=1;
+  SECTION_STATE.persona.seed+=1;
+  SECTION_STATE.new.seed+=1;
+  SECTION_STATE.popular.seed+=1;
+  await Promise.all([loadPersonaRecommendations(),loadNewBooks(),loadPopularBooks()]);
+  if(document.getElementById('filter-section')?.classList.contains('show'))await loadExploreResults();
 }
 
 /* ─── Book detail modal ──────────────────────────── */
@@ -996,8 +1121,18 @@ const READING_QUESTIONS=[
 
 function openBookDetail(bdataStr){
   const rawKey=decodeURIComponent(bdataStr);
-  const b=bookCache.get(rawKey);
-  if(!b)return;
+  const b=findCachedBook(rawKey);
+  if(!b){
+    document.getElementById('book-detail-body').innerHTML=`
+      <div class="detail-cover"><div class="detail-cover-fallback">?</div></div>
+      <div class="detail-content">
+        <div class="detail-kicker">BOOK DETAIL</div>
+        <div class="detail-title">책 정보를 불러오지 못했습니다</div>
+        <div class="detail-overview">잠시 후 다시 시도하거나 다른 책을 선택해 주세요.</div>
+      </div>`;
+    document.getElementById('book-detail-modal').classList.add('open');
+    return;
+  }
   const key=bookKey(b);
   const realRating=isRealRating(b);
   const score=lumaScore(b).toFixed(1);
@@ -1007,18 +1142,21 @@ function openBookDetail(bdataStr){
   const pub=formatDate(b.published_date);
   const titleChar=b.title?b.title.slice(0,1):'📖';
   const question=b.question||READING_QUESTIONS[stableHash(b.title||'')%READING_QUESTIONS.length];
+  const overview=desc||sentence||`${b.title}에 대한 상세 정보가 아직 충분하지 않지만, 지금의 독서 흐름과 이어 보기 좋은 한 권입니다.`;
+  const reviewSnippets=buildReviewSnippets(b);
 
   const showDesc=desc&&desc!==sentence;
   const showReason=sentence&&(!showDesc||sentence.length<desc.length);
+  const coverHtml=b.cover_url
+    ?`<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><div class="detail-cover-fallback" style="display:none">${esc(titleChar)}</div>`
+    :`<div class="detail-cover-fallback">${esc(titleChar)}</div>`;
 
   document.getElementById('book-detail-body').innerHTML=`
     <div class="detail-cover">
-      ${b.cover_url
-        ?`<img src="${esc(b.cover_url)}" alt="${esc(b.title)}"
-            onerror="this.outerHTML='<div class=\\"detail-cover-fallback\\">${esc(titleChar)}</div>'">`
-        :`<div class="detail-cover-fallback">${esc(titleChar)}</div>`}
+      ${coverHtml}
     </div>
-    <div>
+    <div class="detail-content">
+      <div class="detail-kicker">오늘의 책 상세</div>
       <div class="detail-title">${esc(b.title)}</div>
       <div class="detail-author">${esc(b.author)}</div>
       <div class="detail-meta">
@@ -1029,8 +1167,15 @@ function openBookDetail(bdataStr){
         ${b.genre?`<span class="detail-chip genre">${esc(b.genre)}</span>`:''}
         ${b.source&&b.source!=='local'?`<span class="detail-chip">${esc(b.source)}</span>`:''}
       </div>
+      ${!showDesc?`<div class="detail-section"><div class="detail-section-label">책 소개</div><div class="detail-overview">${esc(overview.length>420?overview.slice(0,417)+'...':overview)}</div></div>`:''}
       ${showDesc?`<div class="detail-section"><div class="detail-section-label">줄거리</div><div class="detail-desc">${esc(desc.length>400?desc.slice(0,397)+'...':desc)}</div></div>`:''}
       ${showReason?`<div class="detail-section"><div class="detail-section-label">추천 이유</div><div class="detail-reason">${esc(sentence)}</div></div>`:''}
+      <div class="detail-section">
+        <div class="detail-section-label">리뷰 미리보기</div>
+        <div class="detail-reviews">
+          ${reviewSnippets.map(r=>`<div class="detail-review">${esc(r)}</div>`).join('')}
+        </div>
+      </div>
       <div class="detail-section">
         <div class="detail-section-label">독서 질문</div>
         <div class="detail-question">"${esc(question)}"</div>
@@ -1039,7 +1184,7 @@ function openBookDetail(bdataStr){
         <button class="btn btn-mint" id="detail-add-btn"
           onclick="plantSeed('${encodeURIComponent(key)}','detail-add-btn')">씨앗 심기</button>
         ${b.external_url?`<a class="btn btn-outline" href="${esc(b.external_url)}" target="_blank" rel="noopener">외부 링크</a>`:''}
-        <button class="btn btn-ghost" onclick="goToSocrates('${esc(b.title)}')">AI와 토론</button>
+        <button class="btn btn-ghost" onclick="goToSocrates('${encodeURIComponent(b.title)}')">AI와 토론</button>
       </div>
     </div>`;
   document.getElementById('book-detail-modal').classList.add('open');
@@ -1048,7 +1193,7 @@ function openBookDetail(bdataStr){
 function closeBookDetail(){document.getElementById('book-detail-modal').classList.remove('open');}
 
 function goToSocrates(title){
-  sessionStorage.setItem('luma_socrates_book',title);
+  sessionStorage.setItem('luma_socrates_book',decodeURIComponent(title));
   window.location.href='/socrates';
 }
 

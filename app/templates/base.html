@@ -29,12 +29,13 @@ a{text-decoration:none;color:inherit;}
 .luma-nav .logo{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--amber);display:flex;align-items:center;gap:9px;text-decoration:none;}
 .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 0 8px transparent}}
-.nav-links{display:flex;gap:3px;}
+.nav-links{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.nav-links::-webkit-scrollbar{display:none;}
 .nav-link{
   display:flex;align-items:center;gap:5px;
-  padding:7px 13px;border-radius:18px;
-  font-size:.76rem;color:var(--sub);
-  transition:.2s;cursor:pointer;
+  padding:7px 8px;border-radius:18px;
+  font-size:.68rem;color:var(--sub);
+  transition:.2s;cursor:pointer;white-space:nowrap;
 }
 .nav-link:hover{background:var(--card);color:var(--text);}
 .nav-link.active{background:rgba(193,127,59,.15);color:var(--amber);}
@@ -72,10 +73,13 @@ a{text-decoration:none;color:inherit;}
     <a href="/" class="nav-link {% if active_page=='dashboard' %}active{% endif %}">별자리 지도</a>
     <a href="/heart" class="nav-link {% if active_page=='heart' %}active{% endif %}">마음 행성계</a>
     <a href="/lounge" class="nav-link {% if active_page=='lounge' %}active{% endif %}">탐사 성운</a>
-    <a href="/social" class="nav-link {% if active_page=='social' %}active{% endif %}">독자 광장</a>
-    <a href="/live" class="nav-link {% if active_page=='live' %}active{% endif %}">라이브</a>
-    <a href="/socrates" class="nav-link {% if active_page=='socrates' %}active{% endif %}">소크라테스</a>
-    <a href="/profile" class="nav-link {% if active_page=='profile' %}active{% endif %}">프로필</a>
+    <a href="/community/" class="nav-link {% if active_page=='community' %}active{% endif %}">은하 공동체</a>
+    <a href="/live" class="nav-link {% if active_page=='live' %}active{% endif %}">궤도 정거장</a>
+    <a href="/socrates" class="nav-link {% if active_page=='socrates' %}active{% endif %}">지성의 위성</a>
+    <a href="/social" class="nav-link {% if active_page=='social' %}active{% endif %}">독자 피드</a>
+    <a href="/deepdive" class="nav-link {% if active_page=='deepdive' %}active{% endif %}">심층 관측소</a>
+    <a href="/ocr" class="nav-link {% if active_page=='ocr' %}active{% endif %}">광학 스캐너</a>
+    <a href="/profile" class="nav-link {% if active_page=='profile' %}active{% endif %}">나의 조종석</a>
   </div>
   <div class="nav-right">
     <div id="nav-user-area">
@@ -127,12 +131,13 @@ a{text-decoration:none;color:inherit;}
 .luma-nav .logo{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--amber);display:flex;align-items:center;gap:9px;text-decoration:none;}
 .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 0 8px transparent}}
-.nav-links{display:flex;gap:3px;}
+.nav-links{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.nav-links::-webkit-scrollbar{display:none;}
 .nav-link{
   display:flex;align-items:center;gap:5px;
-  padding:7px 13px;border-radius:18px;
-  font-size:.76rem;color:var(--sub);
-  transition:.2s;cursor:pointer;
+  padding:7px 8px;border-radius:18px;
+  font-size:.68rem;color:var(--sub);
+  transition:.2s;cursor:pointer;white-space:nowrap;
 }
 .nav-link:hover{background:var(--card);color:var(--text);}
 .nav-link.active{background:rgba(193,127,59,.15);color:var(--amber);}
@@ -170,10 +175,13 @@ a{text-decoration:none;color:inherit;}
     <a href="/" class="nav-link {% if active_page=='dashboard' %}active{% endif %}">별자리 지도</a>
     <a href="/heart" class="nav-link {% if active_page=='heart' %}active{% endif %}">마음 행성계</a>
     <a href="/lounge" class="nav-link {% if active_page=='lounge' %}active{% endif %}">탐사 성운</a>
-    <a href="/social" class="nav-link {% if active_page=='social' %}active{% endif %}">독자 광장</a>
-    <a href="/live" class="nav-link {% if active_page=='live' %}active{% endif %}">라이브</a>
-    <a href="/socrates" class="nav-link {% if active_page=='socrates' %}active{% endif %}">소크라테스</a>
-    <a href="/profile" class="nav-link {% if active_page=='profile' %}active{% endif %}">프로필</a>
+    <a href="/community/" class="nav-link {% if active_page=='community' %}active{% endif %}">은하 공동체</a>
+    <a href="/live" class="nav-link {% if active_page=='live' %}active{% endif %}">궤도 정거장</a>
+    <a href="/socrates" class="nav-link {% if active_page=='socrates' %}active{% endif %}">지성의 위성</a>
+    <a href="/social" class="nav-link {% if active_page=='social' %}active{% endif %}">독자 피드</a>
+    <a href="/deepdive" class="nav-link {% if active_page=='deepdive' %}active{% endif %}">심층 관측소</a>
+    <a href="/ocr" class="nav-link {% if active_page=='ocr' %}active{% endif %}">광학 스캐너</a>
+    <a href="/profile" class="nav-link {% if active_page=='profile' %}active{% endif %}">나의 조종석</a>
   </div>
   <div class="nav-right">
     <div id="nav-user-area">

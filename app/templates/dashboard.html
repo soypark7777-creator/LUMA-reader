@@ -164,6 +164,10 @@ header{
 #memo-modal .public-row{display:flex;align-items:center;gap:10px;font-size:.76rem;color:var(--sub);line-height:1.45;margin:0;}
 #memo-modal .public-row input{width:auto;accent-color:var(--amber);}
 #memo-modal .btn-save{margin-top:2px;}
+.manual-book-fields{display:none;gap:10px;grid-template-columns:minmax(0,1fr) minmax(0,.8fr);margin-top:8px;}
+.manual-book-fields.show{display:grid;}
+.manual-book-actions{grid-column:1/-1;display:flex;align-items:center;gap:10px;}
+.inline-help{font-size:.68rem;color:var(--sub);line-height:1.5;}
 .detail-box{width:min(820px,96vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;background:var(--panel2);border:1px solid rgba(193,127,59,.28);border-radius:18px;}
 .modal-head,.panel-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:16px 22px;color:var(--amber);font-family:'Noto Serif KR',serif;}
 .btn-close{background:0;border:0;color:var(--sub);font-size:1.1rem;cursor:pointer;padding:0;}
@@ -360,13 +364,17 @@ textarea{min-height:110px;resize:vertical;}
       <input type="hidden" id="modal-book-id">
       <div class="field">
         <label>어떤 책에서 온 생각인가요?</label>
-        <select id="modal-book-title">
-          <option value="소피의 세계">소피의 세계</option>
-          <option value="코스모스">코스모스</option>
-          <option value="어린 왕자">어린 왕자</option>
-          <option value="1984">1984</option>
-          <option value="직접 입력">직접 입력</option>
+        <select id="modal-book-title" onchange="handleMemoBookSelectChange()">
+          <option value="">읽는 책을 불러오는 중...</option>
         </select>
+        <div class="manual-book-fields" id="manual-book-fields">
+          <input id="manual-book-title" placeholder="책 제목">
+          <input id="manual-book-author" placeholder="저자 (선택)">
+          <div class="manual-book-actions">
+            <button class="btn-add" type="button" onclick="addManualMemoBook()">책 등록</button>
+            <span class="inline-help" id="manual-book-help">등록하면 마음 행성계 서재에도 읽는 중 책으로 추가됩니다.</span>
+          </div>
+        </div>
       </div>
       <div class="field">
         <label>메모 내용 <span><span id="char-count">0</span>/2000</span></label>
@@ -450,6 +458,7 @@ const ORBIT_IMGS = [
 ];
 const MOODS = {inspired:'영감',emotional:'감동',curious:'궁금',neutral:'기록'};
 let selectedMood='inspired', currentTags=[], _detailBook=null, constellationSparkleTimer=null;
+let dashboardShelfBooks=[], currentReadingBook=null;
 
 function hdr(x={}){ return TOKEN?{...x,'Content-Type':'application/json',Authorization:`Bearer ${TOKEN}`}:{...x,'Content-Type':'application/json'}; }
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -612,14 +621,89 @@ function renderConstellation(){
   window.triggerRandomLink=sparkle;
   window.highlightConnection=sparkle;
   window.burstStarEffect=()=>ne.selectAll('.planet-glow').transition().attr('opacity',.44).transition().attr('opacity',d=>pG(d));
-  window.openMemoModal=(title='',id='')=>{
-    const s=document.getElementById('modal-book-title');
-    if(title&&![...s.options].some(o=>o.value===title))s.add(new Option(title,title));
-    s.value=title||s.value;
-    document.getElementById('modal-book-id').value=id;
-    document.getElementById('memo-modal').classList.add('open');
-    document.getElementById('memo-content').focus();
-  };
+  window.openMemoModal=openMemoModal;
+}
+
+function populateMemoBookOptions(books=[]){
+  dashboardShelfBooks=(books||[]).map(b=>({
+    book_id:b.book_id||b.id||'',
+    title:b.title||'',
+    author:b.author||'',
+    status:b.status||b.reading_status||'want'
+  })).filter(b=>b.title);
+  currentReadingBook=dashboardShelfBooks.find(b=>b.status==='reading')||dashboardShelfBooks[0]||null;
+  const select=document.getElementById('modal-book-title');
+  if(!select)return;
+  select.innerHTML='';
+  dashboardShelfBooks.forEach(book=>{
+    const opt=new Option(book.status==='reading'?`${book.title} (읽는 중)`:book.title,book.title);
+    opt.dataset.bookId=book.book_id||'';
+    opt.dataset.author=book.author||'';
+    select.add(opt);
+  });
+  select.add(new Option('직접 입력해서 새 책 등록','__manual__'));
+  if(currentReadingBook){
+    select.value=currentReadingBook.title;
+    document.getElementById('modal-book-id').value=currentReadingBook.book_id||'';
+  }else{
+    select.value='__manual__';
+  }
+  handleMemoBookSelectChange();
+}
+
+function handleMemoBookSelectChange(){
+  const select=document.getElementById('modal-book-title');
+  const manual=document.getElementById('manual-book-fields');
+  const isManual=select?.value==='__manual__';
+  if(manual)manual.classList.toggle('show',isManual);
+  if(!isManual&&select){
+    document.getElementById('modal-book-id').value=select.selectedOptions[0]?.dataset.bookId||'';
+  }
+}
+
+async function addManualMemoBook(){
+  const title=document.getElementById('manual-book-title').value.trim();
+  const author=document.getElementById('manual-book-author').value.trim();
+  const help=document.getElementById('manual-book-help');
+  if(!title){help.textContent='책 제목을 입력해주세요.';return null;}
+  help.textContent='서재에 책을 등록하는 중...';
+  try{
+    const data=await fetch('/api/v2/shelf/books',{method:'POST',headers:hdr(),body:JSON.stringify({
+      user_id:UID,title,author,status:'reading',progress:0
+    })}).then(r=>r.json());
+    if(!data.ok)throw new Error(data.error||'책 등록 실패');
+    const book=data.book||{title,author,book_id:data.book_id||''};
+    dashboardShelfBooks.push({book_id:book.book_id||book.id||'',title:book.title||title,author:book.author||author,status:'reading'});
+    populateMemoBookOptions(dashboardShelfBooks);
+    const select=document.getElementById('modal-book-title');
+    select.value=book.title||title;
+    document.getElementById('modal-book-id').value=book.book_id||book.id||'';
+    handleMemoBookSelectChange();
+    help.textContent='등록되었습니다. 이제 이 책의 생각으로 저장할 수 있어요.';
+    initDashboard();
+    initConstellation();
+    return book;
+  }catch(e){
+    help.textContent=e.message||'책 등록에 실패했습니다.';
+    return null;
+  }
+}
+
+function openMemoModal(title='',id=''){
+  const s=document.getElementById('modal-book-title');
+  const fallback=currentReadingBook||dashboardShelfBooks.find(b=>b.title);
+  const targetTitle=title||(fallback&&fallback.title)||'';
+  const targetId=id||(fallback&&fallback.book_id)||'';
+  if(targetTitle&&![...s.options].some(o=>o.value===targetTitle)){
+    const opt=new Option(targetTitle,targetTitle);
+    opt.dataset.bookId=targetId||'';
+    s.add(opt,s.options.length?Math.max(0,s.options.length-1):undefined);
+  }
+  if(targetTitle)s.value=targetTitle;
+  document.getElementById('modal-book-id').value=targetId||s.selectedOptions[0]?.dataset.bookId||'';
+  handleMemoBookSelectChange();
+  document.getElementById('memo-modal').classList.add('open');
+  document.getElementById('memo-content').focus();
 }
 
 /* ④ 메모 폼 */
@@ -635,8 +719,14 @@ async function saveMemo(e){
   const content=document.getElementById('memo-content').value.trim();
   const resEl=document.getElementById('save-result');
   if(!content){resEl.textContent='메모 내용을 입력해주세요.';return;}
+  let bookTitle=document.getElementById('modal-book-title').value;
+  if(bookTitle==='__manual__'){
+    const book=await addManualMemoBook();
+    if(!book)return;
+    bookTitle=book.title;
+  }
   try{
-    const r=await fetch('/api/v2/memos',{method:'POST',headers:hdr(),body:JSON.stringify({user_id:UID,book_id:document.getElementById('modal-book-id').value,book_title:document.getElementById('modal-book-title').value,content,page_number:document.getElementById('page-number').value||null,tags:currentTags,mood:selectedMood,is_public:document.getElementById('is-public').checked})});
+    const r=await fetch('/api/v2/memos',{method:'POST',headers:hdr(),body:JSON.stringify({user_id:UID,book_id:document.getElementById('modal-book-id').value,book_title:bookTitle,content,page_number:document.getElementById('page-number').value||null,tags:currentTags,mood:selectedMood,is_public:document.getElementById('is-public').checked})});
     const d=await r.json();
     resEl.textContent=d.ok?(d.public_card?'별자리에 저장하고 공동체에도 공개했어요.':'별자리에 새 메모를 심었어요.'):(d.error||'저장 실패');
     if(d.ok){
@@ -655,6 +745,7 @@ function resetMemoForm(){
   selectedMood='inspired';
   renderTags();
   document.querySelectorAll('.mood').forEach(b=>b.classList.toggle('active',b.dataset.mood==='inspired'));
+  populateMemoBookOptions(dashboardShelfBooks);
 }
 
 /* ⑤ 메모 패널 */
@@ -789,10 +880,11 @@ async function initConstellation(){
 async function initDashboard(){
   try{
     const d=await fetch(`/api/v2/shelf?user_id=${encodeURIComponent(UID)}`,{headers:hdr()}).then(r=>r.json());
+    populateMemoBookOptions(d.books||[]);
     const st=d.stats||{};
     const se=(id,v)=>{const el=document.getElementById(id);if(el&&v!==undefined)el.textContent=v;};
     se('stat-total-books',st.total??st.done);se('stat-total-memos',st.memos);se('stat-connections',st.connections);se('stat-this-month',st.this_month??st.reading);
-    const book=(d.books||[]).find(b=>b.status==='reading');
+    const book=currentReadingBook||(d.books||[]).find(b=>b.status==='reading');
     const area=document.getElementById('current-book-area');
     if(area&&book){const p=Math.max(0,Math.min(100,Number(book.progress||0)));area.innerHTML=`<b style="font-family:'Noto Serif KR',serif">${esc(book.title)}</b><div class="muted">${esc(book.author||'')}</div><div class="progress"><div class="bar" style="width:${p}%"></div></div><div class="muted">${p}% 읽음</div>`;}
     const se2=document.getElementById('streak-badge');if(se2&&st.reading_streak!==undefined)se2.textContent=`🔥 ${st.reading_streak}일 연속 독서`;

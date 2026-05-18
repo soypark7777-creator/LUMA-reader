@@ -14,54 +14,99 @@
     questions: [],
     persona: null,
     lounges: [],
-    readers: []
+    readers: [],
+    avatarDataUrl: null
   };
 
-  const $ = (selector) => document.querySelector(selector);
+  const $ = (sel) => document.querySelector(sel);
 
+  /* ─── Init ─────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
-    paintStars();
+    initNav();
+    loadAvatarFromStorage();
     bindActions();
     loadProfile();
+    initTagline();
   });
 
+  /* ─── Auth / User helpers ───────────────────────────── */
   function getStoredUser() {
-    try {
-      return JSON.parse(localStorage.getItem('luma_user') || '{}');
-    } catch (_error) {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem('luma_user') || '{}'); } catch (_) { return {}; }
   }
-
   function getUserId() {
     const params = new URLSearchParams(window.location.search);
     const stored = getStoredUser();
     return params.get('user_id') || stored.user_id || stored.id || DEMO_USER_ID;
   }
-
   function authHeaders() {
     const token = localStorage.getItem('luma_token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
-
   async function apiGet(path) {
     const url = `${API_BASE}${path}?user_id=${encodeURIComponent(state.userId)}`;
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        ...authHeaders()
-      }
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || data.ok === false) {
-      throw new Error(data.error || `API error: ${response.status}`);
-    }
+    const res = await fetch(url, { headers: { Accept: 'application/json', ...authHeaders() } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.ok === false) throw new Error(data.error || `API ${res.status}`);
     return data;
   }
 
-  async function loadProfile() {
-    setLoading();
+  /* ─── Nav ───────────────────────────────────────────── */
+  function initNav() {
+    const el = $('#nav-user');
+    if (!el) return;
+    const user = getStoredUser();
+    if (user.display_name || user.email) {
+      const name = escHtml(user.display_name || user.email || '');
+      el.innerHTML = `<span style="color:var(--muted);font-size:.74rem">${name}</span>
+        <button class="nav-logout" onclick="logoutUser()">로그아웃</button>`;
+    } else {
+      el.innerHTML = '<a href="/auth/login" class="nav-login-btn">로그인</a>';
+    }
+  }
+  window.logoutUser = function () {
+    localStorage.removeItem('luma_token');
+    localStorage.removeItem('luma_user');
+    window.location.href = '/auth/login';
+  };
 
+  /* ─── Avatar photo (localStorage) ──────────────────── */
+  function loadAvatarFromStorage() {
+    const saved = localStorage.getItem('luma_avatar');
+    if (saved) setAvatarImage(saved);
+  }
+  function setAvatarImage(dataUrl) {
+    state.avatarDataUrl = dataUrl;
+    ['#avatar-img', '#modal-avatar-img'].forEach((sel) => {
+      const img = $(sel);
+      if (!img) return;
+      img.src = dataUrl;
+      img.style.display = 'block';
+    });
+    ['#avatar-initial', '#modal-avatar-initial'].forEach((sel) => {
+      const el = $(sel);
+      if (el) el.style.display = 'none';
+    });
+  }
+
+  function bindAvatarUpload(inputId) {
+    const input = $(inputId);
+    if (!input) return;
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const url = e.target.result;
+        localStorage.setItem('luma_avatar', url);
+        setAvatarImage(url);
+        toast('프로필 사진을 변경했습니다.');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ─── Load all profile data ─────────────────────────── */
+  async function loadProfile() {
     const requests = {
       summary: apiGet('/summary'),
       currentReading: apiGet('/current-reading'),
@@ -74,24 +119,15 @@
       readers: apiGet('/similar-readers')
     };
 
-    const entries = await Promise.allSettled(
-      Object.entries(requests).map(async ([key, promise]) => [key, await promise])
+    const results = await Promise.allSettled(
+      Object.entries(requests).map(async ([key, p]) => [key, await p])
     );
 
-    const failed = [];
-    entries.forEach((result) => {
-      if (result.status === 'fulfilled') {
-        const [key, data] = result.value;
-        absorbResponse(key, data);
-      } else {
-        failed.push(result.reason && result.reason.message ? result.reason.message : '알 수 없는 오류');
-      }
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') absorbResponse(...result.value);
     });
 
     renderAll();
-    if (failed.length) {
-      toast('일부 데이터를 불러오지 못해 기본 화면으로 표시했습니다.');
-    }
   }
 
   function absorbResponse(key, data) {
@@ -106,67 +142,55 @@
     if (key === 'readers') state.readers = data.readers || [];
   }
 
+  /* ─── Render all sections ───────────────────────────── */
   function renderAll() {
     renderSummary();
     renderConstellation();
     renderCurrentReading();
+    renderPersona();
     renderSentences();
     renderTimeline();
     renderQuestions();
-    renderPersona();
-    renderLounges();
-    renderReaders();
   }
 
-  function setLoading() {
-    [
-      '#constellation-view',
-      '#current-reading',
-      '#persona-view',
-      '#sentence-list',
-      '#timeline-list',
-      '#question-list',
-      '#lounge-list',
-      '#reader-list'
-    ].forEach((selector) => {
-      const node = $(selector);
-      if (node) node.innerHTML = '<div class="empty-state">데이터를 불러오는 중입니다.</div>';
-    });
-  }
-
+  /* ─── Summary / Profile card ────────────────────────── */
   function renderSummary() {
     const stored = getStoredUser();
     const profile = {
-      display_name: stored.display_name || stored.name || '박소연',
+      display_name: stored.display_name || stored.name || 'LUMA 독자',
       email: stored.email || state.userId,
-      bio: '사람의 마음과 우주, 고독에 대해 읽는 독자',
-      tags: ['철학', '우주', '고독', '성장'],
+      bio: stored.bio || '사람의 마음과 우주, 고독에 대해 읽는 독자',
+      tags: stored.tags || ['철학', '우주', '고독', '성장'],
+      mbti: stored.mbti || '',
       persona: '사유형 독자',
       ...(state.summary || {})
     };
-    const tags = Array.isArray(profile.tags) && profile.tags.length ? profile.tags : ['철학', '우주', '고독', '성장'];
+    const tags = Array.isArray(profile.tags) && profile.tags.length ? profile.tags : ['철학', '우주', '고독'];
 
     setText('#hero-name', profile.display_name);
     setText('#hero-bio', profile.bio);
     setText('#profile-name', profile.display_name);
-    setText('#profile-email', profile.email || profile.user_id || state.userId);
-    setText('#profile-bio', profile.bio);
+    setText('#profile-email', profile.email || state.userId);
+    setText('#profile-bio-text', profile.bio);
+    setText('#hero-persona', profile.persona || '사유형 독자');
     setText('#profile-persona', profile.persona || '사유형 독자');
-    setText('#nav-user', profile.display_name);
     setText('#luma-tagline', `${profile.persona || '사유형 독자'}의 독서 항해`);
 
     const initials = (profile.display_name || '나').trim().slice(0, 1);
-    setText('#profile-avatar', initials || '나');
+    setText('#avatar-initial', initials);
+    setText('#modal-avatar-initial', initials);
+
     renderTags('#hero-tags', tags);
     renderTags('#profile-tags', tags);
 
     const stats = profile.stats || {};
-    setText('#stat-books', stats.books_read || stats.books_done || stats.total_books || stats.books || 3);
+    setText('#stat-books', stats.books_read || stats.total_books || stats.books || 3);
     setText('#stat-memos', stats.memos || stats.saved_sentences || state.sentences.length || 12);
     setText('#stat-connections', stats.connections || state.readers.length || 5);
-    setText('#stat-streak', stats.streak_days || stats.reading_streak || stats.streak || 7);
+    setText('#stat-streak', (stats.streak_days || stats.streak || 7) + '일');
   }
 
+  /* ─── Constellation ─────────────────────────────────── */
   function renderConstellation() {
     const root = $('#constellation-view');
     if (!root) return;
@@ -175,89 +199,108 @@
     const nodes = Array.isArray(data.nodes) ? data.nodes : [];
     const links = Array.isArray(data.links) ? data.links : [];
 
-    if (!nodes.length || nodes.length <= 1) {
-      root.innerHTML = '<div class="empty-state">아직 별자리가 만들어지지 않았습니다.</div>';
-      return;
-    }
+    // Fallback demo data if empty
+    const displayNodes = nodes.length > 1 ? nodes : [
+      { id: 'user', label: '나', type: 'user' },
+      { id: 'b1', label: '코스모스', type: 'book' },
+      { id: 'b2', label: '데미안', type: 'book' },
+      { id: 's1', label: '자유롭도록 선고받았다', type: 'sentence' },
+      { id: 'q1', label: '인간은 왜 의미를 찾는가', type: 'question' },
+      { id: 'e1', label: '경외', type: 'emotion' },
+      { id: 't1', label: '철학', type: 'tag' },
+      { id: 't2', label: '우주', type: 'tag' }
+    ];
+    const displayLinks = links.length ? links : [
+      { source: 'user', target: 'b1' }, { source: 'user', target: 'b2' },
+      { source: 'b1', target: 's1' }, { source: 'b1', target: 'q1' },
+      { source: 'b1', target: 'e1' }, { source: 'b2', target: 't1' },
+      { source: 'user', target: 't2' }
+    ];
 
-    const width = 720;
-    const height = 380;
-    const center = { x: width / 2, y: height / 2 };
+    const W = 760, H = 320;
+    const cx = W / 2, cy = H / 2;
     const positions = {};
-    const orbitNodes = nodes.filter((node) => node.id !== 'user');
-    positions.user = center;
-
-    orbitNodes.forEach((node, index) => {
-      const angle = (Math.PI * 2 * index) / orbitNodes.length - Math.PI / 2;
-      const radius = index % 2 === 0 ? 132 : 172;
+    const userNode = displayNodes.find((n) => n.id === 'user');
+    const orbitNodes = displayNodes.filter((n) => n.id !== 'user');
+    positions['user'] = { x: cx, y: cy };
+    orbitNodes.forEach((node, i) => {
+      const angle = (Math.PI * 2 * i) / orbitNodes.length - Math.PI / 2;
+      const radius = i % 2 === 0 ? 118 : 158;
       positions[node.id] = {
-        x: center.x + Math.cos(angle) * radius,
-        y: center.y + Math.sin(angle) * radius
+        x: cx + Math.cos(angle) * radius,
+        y: cy + Math.sin(angle) * radius
       };
     });
 
-    const lineMarkup = links
-      .map((link) => {
-        const source = positions[link.source] || center;
-        const target = positions[link.target] || center;
-        return `<line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" />`;
-      })
-      .join('');
+    const lines = displayLinks.map((l) => {
+      const s = positions[l.source] || { x: cx, y: cy };
+      const t = positions[l.target] || { x: cx, y: cy };
+      return `<line class="const-line" x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}"/>`;
+    }).join('');
 
-    const nodeMarkup = nodes
-      .map((node) => {
-        const point = positions[node.id] || center;
-        const color = nodeColor(node.type);
-        const label = escapeHtml(node.label || node.id);
-        return `
-          <g class="constellation-node constellation-node-${escapeHtml(node.type || 'tag')}">
-            <circle cx="${point.x}" cy="${point.y}" r="${node.id === 'user' ? 34 : 24}" fill="${color}" />
-            <text x="${point.x}" y="${point.y + (node.id === 'user' ? 52 : 42)}">${label}</text>
-          </g>`;
-      })
-      .join('');
+    const nodesSvg = displayNodes.map((node) => {
+      const p = positions[node.id] || { x: cx, y: cy };
+      const isUser = node.id === 'user';
+      const r = isUser ? 30 : 18;
+      const cls = `const-circle-${node.type || 'tag'}`;
+      const label = escHtml(node.label || node.id);
+      const shortLabel = label.length > 8 ? label.slice(0, 7) + '…' : label;
+      return `
+        <g class="const-node" tabindex="0">
+          ${isUser
+            ? `<circle cx="${p.x}" cy="${p.y}" r="${r}" class="${cls}"/>`
+            : `<circle cx="${p.x}" cy="${p.y}" r="${r}" class="${cls}" opacity=".85"/>`
+          }
+          <text x="${p.x}" y="${p.y + r + 14}">${shortLabel}</text>
+        </g>`;
+    }).join('');
 
-    const cards = nodes
-      .filter((node) => node.id !== 'user')
-      .map((node) => `
-        <article class="constellation-chip">
-          <span class="dot" style="background:${nodeColor(node.type)}"></span>
-          <strong>${escapeHtml(node.label || '')}</strong>
-          <small>${typeLabel(node.type)}</small>
-        </article>`)
-      .join('');
+    const legendItems = [
+      { type: 'book', label: '책', color: 'rgba(125,232,168,.6)' },
+      { type: 'sentence', label: '문장', color: 'rgba(245,200,107,.55)' },
+      { type: 'question', label: '질문', color: 'rgba(143,220,255,.55)' },
+      { type: 'emotion', label: '감정', color: 'rgba(248,113,113,.55)' },
+      { type: 'tag', label: '키워드', color: 'rgba(74,222,128,.5)' }
+    ].map((item) =>
+      `<span class="const-legend-item">
+        <span class="const-dot" style="background:${item.color}"></span>${item.label}
+      </span>`
+    ).join('');
 
     root.innerHTML = `
-      <svg class="constellation-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="생각의 별자리">
-        <g class="constellation-lines">${lineMarkup}</g>
-        ${nodeMarkup}
+      <svg class="constellation-svg" viewBox="0 0 ${W} ${H}" aria-label="생각의 별자리">
+        <g>${lines}</g>${nodesSvg}
       </svg>
-      <div class="constellation-cards">${cards}</div>
-    `;
+      <div class="const-legend">${legendItems}</div>`;
   }
 
+  /* ─── Current Reading ───────────────────────────────── */
   function renderCurrentReading() {
     const root = $('#current-reading');
     if (!root) return;
     const book = state.currentReading || {};
+    const progress = Math.min(Math.max(Number(book.progress || book.progress_percent || 62), 0), 100);
     const tags = book.tags || ['우주', '인간', '질문'];
-    const progress = Number(book.progress || book.progress_percent || 62);
 
     root.innerHTML = `
       <article class="reading-card">
-        <div class="book-cover">${book.cover_url ? `<img src="${escapeAttr(book.cover_url)}" alt="">` : '<span>Cosmos</span>'}</div>
+        <div class="book-cover-thumb">
+          ${book.cover_url
+            ? `<img src="${escAttr(book.cover_url)}" alt="">`
+            : '📖'}
+        </div>
         <div class="reading-body">
-          <div class="section-kicker">지금 읽는 책</div>
-          <h3>${escapeHtml(book.title || '코스모스')}</h3>
-          <p class="muted">${escapeHtml(book.author || '칼 세이건')}</p>
+          <span class="section-kicker">지금 읽는 책</span>
+          <h3>${escHtml(book.title || '코스모스')}</h3>
+          <p class="muted">${escHtml(book.author || '칼 세이건')}</p>
           <div class="progress-row">
-            <div class="progress-bar"><span style="width:${Math.min(Math.max(progress, 0), 100)}%"></span></div>
-            <strong>${progress}% 읽는 중</strong>
+            <div class="progress-bar"><span style="width:${progress}%"></span></div>
+            <strong>${progress}%</strong>
           </div>
-          <blockquote>${escapeHtml(book.recent_memo || '인간은 우주를 이해하려고 하는 존재다.')}</blockquote>
+          <blockquote>${escHtml(book.recent_memo || '인간은 우주를 이해하려고 하는 존재다.')}</blockquote>
           <div class="reading-meta">
-            <span>최근 감정: ${escapeHtml(book.recent_emotion || '경외')}</span>
-            ${tags.map((tag) => `<span>#${escapeHtml(tag)}</span>`).join('')}
+            <span>최근 감정: ${escHtml(book.recent_emotion || '경외')}</span>
+            ${tags.map((t) => `<span>#${escHtml(t)}</span>`).join('')}
           </div>
           <div class="button-row">
             <a class="soft-button" href="/heart">이어 읽기</a>
@@ -268,68 +311,7 @@
       </article>`;
   }
 
-  function renderSentences() {
-    const root = $('#sentence-list');
-    if (!root) return;
-    const sentences = state.sentences.length ? state.sentences : [{
-      sentence: '인간은 자유롭도록 선고받았다.',
-      book_title: '실존주의와 인간감정',
-      saved_at: '2026.05.11',
-      tags: ['자유', '책임', '불안']
-    }];
-
-    root.innerHTML = sentences.map((item) => `
-      <article class="archive-card">
-        <blockquote>${escapeHtml(item.sentence || item.quote || '')}</blockquote>
-        <p class="muted">${escapeHtml(item.book_title || item.title || '나의 책장')} · ${formatDate(item.saved_at || item.created_at)}</p>
-        <div class="tag-row">${(item.tags || []).map((tag) => `<span>#${escapeHtml(tag)}</span>`).join('')}</div>
-        <div class="button-row compact">
-          <button type="button" class="soft-button" data-toast="다시 읽기 목록에 담았습니다.">다시 읽기</button>
-          <a class="soft-button" href="/live">토론 만들기</a>
-          <button type="button" class="soft-button" data-share="${escapeAttr(item.sentence || item.quote || '')}">공유</button>
-        </div>
-      </article>`).join('');
-  }
-
-  function renderTimeline() {
-    const root = $('#timeline-list');
-    if (!root) return;
-    const items = state.timeline.length ? state.timeline : [
-      { date: '5월', title: '코스모스 읽기 시작', detail: '우주 관련 질문 3개 생성' },
-      { date: '5월', title: '소크라테스 대화 2회 완료', detail: '독서모임 1회 참여' }
-    ];
-
-    root.innerHTML = items.map((item) => `
-      <article class="timeline-item">
-        <time>${escapeHtml(formatDate(item.date || item.created_at))}</time>
-        <div>
-          <strong>${escapeHtml(item.title || item.event || '')}</strong>
-          <p>${escapeHtml(item.detail || item.description || '')}</p>
-        </div>
-      </article>`).join('');
-  }
-
-  function renderQuestions() {
-    const root = $('#question-list');
-    if (!root) return;
-    const questions = state.questions.length ? state.questions : [{
-      question: '인간은 왜 자신의 위치를 알고 싶어할까?',
-      book_title: '코스모스',
-      tags: ['우주', '인간', '존재']
-    }];
-
-    root.innerHTML = questions.map((item) => `
-      <article class="question-card">
-        <h3>${escapeHtml(item.question || item.title || '')}</h3>
-        <p class="muted">관련 책: ${escapeHtml(item.book_title || item.book || '코스모스')}</p>
-        <div class="tag-row">${(item.tags || []).map((tag) => `<span>#${escapeHtml(tag)}</span>`).join('')}</div>
-        <div class="button-row compact">
-          <a class="soft-button" href="/socrates">다시 생각하기</a>
-          <a class="gold-button" href="/lounge">Lounge 공유</a>
-        </div>
-      </article>`).join('');
-  }
-
+  /* ─── Persona ───────────────────────────────────────── */
   function renderPersona() {
     const root = $('#persona-view');
     if (!root) return;
@@ -345,272 +327,251 @@
     root.innerHTML = `
       <article class="persona-card">
         <div>
-          <div class="section-kicker">독서 성향 분석</div>
-          <h3>당신은 ${escapeHtml(persona.persona || '사유형 독자')}입니다.</h3>
-          <p>${escapeHtml(persona.summary || '질문을 따라 책을 읽고, 문장 안에서 오래 머무는 독자입니다.')}</p>
+          <span class="section-kicker">독서 성향 분석</span>
+          <h3>당신은 ${escHtml(persona.persona || '사유형 독자')}입니다.</h3>
+          <p>${escHtml(persona.summary || '질문을 따라 책을 읽고, 문장 안에서 오래 머무는 독자입니다.')}</p>
         </div>
-        <ul>${traits.map((trait) => `<li>${escapeHtml(trait)}</li>`).join('')}</ul>
-        <div class="insight-grid">
-          <span>자주 읽는 주제 <strong>${topics.map(escapeHtml).join(', ')}</strong></span>
-          <span>자주 남기는 감정 <strong>${emotions.map(escapeHtml).join(', ')}</strong></span>
-          <span>추천 다음 활동 <strong>${escapeHtml(persona.recommendation || '철학 Lounge에 참여해보세요.')}</strong></span>
+        <ul class="persona-traits">
+          ${traits.map((t) => `<li>${escHtml(t)}</li>`).join('')}
+        </ul>
+        <div class="persona-grid">
+          <span><strong>자주 읽는 주제</strong>${topics.map(escHtml).join(', ')}</span>
+          <span><strong>자주 남기는 감정</strong>${emotions.map(escHtml).join(', ')}</span>
+          <span><strong>추천 다음 활동</strong>${escHtml(persona.recommendation || '철학 Lounge에 참여해보세요.')}</span>
+        </div>
+        <div class="button-row">
+          <a class="soft-button" href="/lounge">탐사 성운 가기</a>
+          <a class="gold-button" href="/socrates">소크라테스 대화</a>
         </div>
       </article>`;
   }
 
-  function renderLounges() {
-    const root = $('#lounge-list');
+  /* ─── Sentences ─────────────────────────────────────── */
+  function renderSentences() {
+    const root = $('#sentence-list');
     if (!root) return;
-    const lounges = state.lounges.length ? state.lounges : [{
-      name: '코스모스 읽기 모임',
-      book_title: '코스모스',
-      members: 12,
-      next_schedule: '금요일 오후 9시',
-      recent_question: '과학책은 인간을 더 겸손하게 만들까?'
-    }];
+    const sentences = state.sentences.length ? state.sentences : [
+      { sentence: '인간은 자유롭도록 선고받았다.', book_title: '실존주의와 인간감정', saved_at: '2026.05.11', tags: ['자유', '책임', '불안'] },
+      { sentence: '우주는 우리 안에 있다. 우리는 별의 재로 만들어졌다.', book_title: '코스모스', saved_at: '2026.05.08', tags: ['우주', '인간', '과학'] }
+    ];
 
-    root.innerHTML = lounges.map((room) => `
-      <article class="lounge-card">
-        <h3>${escapeHtml(room.name || room.title || '독서모임')}</h3>
-        <p>${escapeHtml(room.book_title || room.book || '함께 읽는 책')}</p>
-        <div class="lounge-meta">
-          <span>${escapeHtml(String(room.members || room.member_count || 12))}명 참여 중</span>
-          <span>다음 모임: ${escapeHtml(room.next_schedule || '금요일 오후 9시')}</span>
+    root.innerHTML = sentences.map((item) => `
+      <article class="archive-card">
+        <blockquote>${escHtml(item.sentence || item.quote || '')}</blockquote>
+        <p class="card-meta">${escHtml(item.book_title || '나의 책장')} · ${formatDate(item.saved_at || item.created_at)}</p>
+        <div class="tag-row compact">
+          ${(item.tags || []).map((t) => `<span>#${escHtml(t)}</span>`).join('')}
         </div>
-        <blockquote>${escapeHtml(room.recent_question || '오늘의 질문을 준비하고 있습니다.')}</blockquote>
-        <a class="gold-button" href="/live">입장하기</a>
-      </article>`).join('');
-  }
-
-  function renderReaders() {
-    const root = $('#reader-list');
-    if (!root) return;
-    const readers = state.readers.length ? state.readers : [{
-      display_name: '김OO',
-      common_tags: ['철학', '우주', '고독'],
-      common_books: ['코스모스', '어린왕자'],
-      question_style: '존재와 의미를 묻는 독자'
-    }];
-
-    root.innerHTML = readers.map((reader) => `
-      <article class="reader-card">
-        <div class="reader-avatar">${escapeHtml((reader.display_name || '독').slice(0, 1))}</div>
-        <div>
-          <h3>${escapeHtml(reader.display_name || reader.name || '비슷한 독자')}</h3>
-          <p>공통 관심사: ${(reader.common_tags || []).map(escapeHtml).join(', ')}</p>
-          <p>공통 책: ${(reader.common_books || []).map(escapeHtml).join(', ')}</p>
-          <p class="muted">${escapeHtml(reader.question_style || '질문을 통해 책을 읽습니다.')}</p>
-          <div class="button-row compact">
-            <a class="soft-button" href="/profile">프로필 보기</a>
-            <a class="gold-button" href="/lounge">대화 요청</a>
-          </div>
+        <div class="button-row compact">
+          <button type="button" class="soft-button" data-toast="다시 읽기 목록에 담았습니다.">다시 읽기</button>
+          <a class="soft-button" href="/live">토론 만들기</a>
+          <button type="button" class="soft-button" data-share="${escAttr(item.sentence || item.quote || '')}">공유</button>
         </div>
       </article>`).join('');
   }
 
+  /* ─── Timeline ──────────────────────────────────────── */
+  function renderTimeline() {
+    const root = $('#timeline-list');
+    if (!root) return;
+    const items = state.timeline.length ? state.timeline : [
+      { date: '2026.05', title: '코스모스 읽기 시작', detail: '우주 관련 질문 3개 생성', emoji: '📖' },
+      { date: '2026.05', title: '소크라테스 대화 2회 완료', detail: '인간의 자유에 대한 토론 기록', emoji: '💬' },
+      { date: '2026.04', title: '데미안 완독', detail: '성장 키워드 7개 저장', emoji: '✅' }
+    ];
+
+    root.innerHTML = '<div class="timeline-list">' + items.map((item) => `
+      <div class="timeline-item">
+        <div class="timeline-dot">${item.emoji || '📌'}</div>
+        <div class="timeline-content">
+          <time>${escHtml(formatDate(item.date || item.created_at))}</time>
+          <strong>${escHtml(item.title || item.event || '')}</strong>
+          <p>${escHtml(item.detail || item.description || '')}</p>
+        </div>
+      </div>`).join('') + '</div>';
+  }
+
+  /* ─── Questions ─────────────────────────────────────── */
+  function renderQuestions() {
+    const root = $('#question-list');
+    if (!root) return;
+    const questions = state.questions.length ? state.questions : [
+      { question: '인간은 왜 자신의 위치를 알고 싶어할까?', book_title: '코스모스', tags: ['우주', '인간', '존재'] },
+      { question: '자유는 항상 좋은 것인가?', book_title: '실존주의와 인간감정', tags: ['자유', '책임', '불안'] }
+    ];
+
+    root.innerHTML = questions.map((item) => `
+      <article class="question-card">
+        <h3>${escHtml(item.question || item.title || '')}</h3>
+        <p class="card-meta">관련 책: ${escHtml(item.book_title || item.book || '코스모스')}</p>
+        <div class="tag-row compact">
+          ${(item.tags || []).map((t) => `<span>#${escHtml(t)}</span>`).join('')}
+        </div>
+        <div class="button-row compact">
+          <a class="soft-button" href="/socrates">다시 생각하기</a>
+          <a class="gold-button" href="/lounge">Lounge 공유</a>
+        </div>
+      </article>`).join('');
+  }
+
+  /* ─── Actions ───────────────────────────────────────── */
   function bindActions() {
-    document.addEventListener('click', async (event) => {
-      const actionTarget = event.target.closest('[data-action]');
-      const toastTarget = event.target.closest('[data-toast]');
-      const shareTarget = event.target.closest('[data-share]');
+    bindAvatarUpload('#avatar-upload');
+    bindAvatarUpload('#modal-avatar-upload');
 
-      if (toastTarget) toast(toastTarget.dataset.toast);
-      if (shareTarget) shareText(shareTarget.dataset.share);
-      if (!actionTarget) return;
+    document.addEventListener('click', async (e) => {
+      const action = e.target.closest('[data-action]');
+      const toastEl = e.target.closest('[data-toast]');
+      const shareEl = e.target.closest('[data-share]');
 
-      const action = actionTarget.dataset.action;
-      if (action === 'edit-profile') openModal();
-      if (action === 'share-thought') window.location.href = '/lounge';
-      if (action === 'close-modal') closeModal();
-      if (action === 'save-profile') await saveProfile();
+      if (toastEl) toast(toastEl.dataset.toast);
+      if (shareEl) shareText(shareEl.dataset.share);
+      if (!action) return;
+
+      const act = action.dataset.action;
+      if (act === 'edit-profile') openModal();
+      if (act === 'close-modal') closeModal();
+      if (act === 'save-profile') await saveProfile();
+      if (act === 'share-thought') window.location.href = '/lounge';
     });
 
+    // Close modal on backdrop click
     const modal = $('#profile-modal');
-    if (modal) {
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal) closeModal();
-      });
-    }
+    if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   }
 
+  /* ─── Modal ─────────────────────────────────────────── */
   function openModal() {
-    const profile = state.summary || {};
     const stored = getStoredUser();
-    const tags = profile.tags || ['철학', '우주', '고독', '성장'];
-    $('#edit-name').value = profile.display_name || stored.display_name || stored.name || '';
-    $('#edit-bio').value = profile.bio || '';
-    $('#edit-tags').value = tags.join(', ');
-    $('#profile-modal').classList.add('is-open');
+    const profile = state.summary || {};
+    const tags = profile.tags || stored.tags || ['철학', '우주', '고독', '성장'];
+
+    const nameEl = $('#edit-name');
+    const bioEl = $('#edit-bio');
+    const tagsEl = $('#edit-tags');
+    const emailEl = $('#edit-email');
+    const mbtiEl = $('#edit-mbti');
+
+    if (nameEl) nameEl.value = profile.display_name || stored.display_name || stored.name || '';
+    if (bioEl) bioEl.value = profile.bio || stored.bio || '';
+    if (tagsEl) tagsEl.value = Array.isArray(tags) ? tags.join(', ') : '';
+    if (emailEl) emailEl.value = stored.email || state.userId;
+    if (mbtiEl) mbtiEl.value = profile.mbti || stored.mbti || '';
+
+    // Sync avatar preview in modal
+    if (state.avatarDataUrl) {
+      const img = $('#modal-avatar-img');
+      const init = $('#modal-avatar-initial');
+      if (img) { img.src = state.avatarDataUrl; img.style.display = 'block'; }
+      if (init) init.style.display = 'none';
+    } else {
+      const init = $('#modal-avatar-initial');
+      const stored2 = getStoredUser();
+      if (init) init.textContent = (stored2.display_name || 'LUMA 독자').slice(0, 1);
+    }
+
+    $('#profile-modal').classList.add('open');
   }
 
   function closeModal() {
     const modal = $('#profile-modal');
-    if (modal) modal.classList.remove('is-open');
+    if (modal) modal.classList.remove('open');
   }
 
+  /* ─── Save profile ──────────────────────────────────── */
   async function saveProfile() {
-    const displayName = $('#edit-name').value.trim() || '나';
-    const bio = $('#edit-bio').value.trim();
-    const tags = $('#edit-tags').value
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
+    const displayName = ($('#edit-name')?.value || '').trim() || 'LUMA 독자';
+    const bio = ($('#edit-bio')?.value || '').trim();
+    const tagsRaw = ($('#edit-tags')?.value || '').split(',').map((t) => t.trim()).filter(Boolean);
+    const mbti = $('#edit-mbti')?.value || '';
 
     try {
-      const response = await fetch('/api/v2/auth/profile', {
+      const res = await fetch('/api/v2/auth/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          ...authHeaders()
-        },
-        body: JSON.stringify({
-          display_name: displayName,
-          bio,
-          genre_prefs: tags
-        })
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders() },
+        body: JSON.stringify({ display_name: displayName, bio, genre_prefs: tagsRaw, mbti })
       });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || data.ok === false) throw new Error(data.error || '저장 실패');
-
-      state.summary = {
-        ...(state.summary || {}),
-        display_name: displayName,
-        bio,
-        tags
-      };
-      const stored = getStoredUser();
-      localStorage.setItem('luma_user', JSON.stringify({ ...stored, display_name: displayName, bio, tags }));
-      renderSummary();
-      closeModal();
-      toast('프로필을 저장했습니다.');
-    } catch (_error) {
-      state.summary = {
-        ...(state.summary || {}),
-        display_name: displayName,
-        bio,
-        tags
-      };
-      renderSummary();
-      closeModal();
-      toast('로그인 정보가 없어 화면에만 임시 반영했습니다.');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) throw new Error(data.error || '저장 실패');
+    } catch (_) {
+      // offline / no-auth — persist locally only
     }
+
+    // Always update local state + localStorage
+    const stored = getStoredUser();
+    const updated = { ...stored, display_name: displayName, bio, tags: tagsRaw, mbti };
+    localStorage.setItem('luma_user', JSON.stringify(updated));
+    state.summary = { ...(state.summary || {}), display_name: displayName, bio, tags: tagsRaw, mbti };
+
+    renderSummary();
+    closeModal();
+    initNav();
+    toast('프로필을 저장했습니다. 🌿');
   }
 
+  /* ─── Share ─────────────────────────────────────────── */
   async function shareText(text) {
     if (!text) return;
     if (navigator.share) {
-      try {
-        await navigator.share({ text });
-        return;
-      } catch (_error) {
-        // Clipboard fallback below.
-      }
+      try { await navigator.share({ text }); return; } catch (_) {}
     }
     try {
       await navigator.clipboard.writeText(text);
       toast('문장을 클립보드에 복사했습니다.');
-    } catch (_error) {
+    } catch (_) {
       toast('공유할 문장을 선택했습니다.');
     }
   }
 
-  function renderTags(selector, tags) {
-    const root = $(selector);
-    if (!root) return;
-    root.innerHTML = tags.map((tag) => `<span>#${escapeHtml(tag)}</span>`).join('');
+  /* ─── Utilities ─────────────────────────────────────── */
+  function renderTags(sel, tags) {
+    const el = $(sel);
+    if (!el) return;
+    el.innerHTML = tags.map((t) => `<span>#${escHtml(t)}</span>`).join('');
   }
-
-  function setText(selector, text) {
-    const node = $(selector);
-    if (node) node.textContent = text == null ? '' : String(text);
+  function setText(sel, text) {
+    const el = $(sel);
+    if (el) el.textContent = text == null ? '' : String(text);
   }
-
-  function toast(message) {
+  function toast(message, isError = false) {
     const node = $('#toast');
     if (!node) return;
     node.textContent = message;
-    node.classList.add('is-visible');
-    clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => node.classList.remove('is-visible'), 2600);
+    node.className = 'toast' + (isError ? ' error' : '');
+    node.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => node.classList.remove('show'), 2800);
   }
-
-  function nodeColor(type) {
-    return {
-      user: '#d8b768',
-      book: '#6cb79b',
-      sentence: '#f0d89b',
-      question: '#8fb8ff',
-      emotion: '#e58aa4',
-      tag: '#b3d86d',
-      keyword: '#b3d86d'
-    }[type] || '#d8b768';
-  }
-
-  function typeLabel(type) {
-    return {
-      book: '책',
-      sentence: '문장',
-      question: '질문',
-      emotion: '감정',
-      tag: '키워드',
-      keyword: '키워드'
-    }[type] || '연결';
-  }
-
   function formatDate(value) {
     if (!value) return '';
-    if (/^[0-9]{4}\.[0-9]{2}\.[0-9]{2}/.test(value) || value.includes('월')) return value;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    if (/^\d{4}\./.test(value) || value.includes('월')) return value;
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
   }
-
-  function escapeHtml(value) {
-    return String(value == null ? '' : value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+  function escHtml(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   }
+  function escAttr(v) { return escHtml(v).replace(/`/g, '&#096;'); }
 
-  function escapeAttr(value) {
-    return escapeHtml(value).replace(/`/g, '&#096;');
-  }
-
-  function paintStars() {
-    const canvas = $('#stars-cv');
-    if (!canvas || !canvas.getContext) return;
-    const ctx = canvas.getContext('2d');
-    const ratio = window.devicePixelRatio || 1;
-    const resize = () => {
-      canvas.width = Math.floor(window.innerWidth * ratio);
-      canvas.height = Math.floor(Math.max(window.innerHeight, 720) * ratio);
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${Math.max(window.innerHeight, 720)}px`;
-      draw();
-    };
-    const draw = () => {
-      const width = canvas.width;
-      const height = canvas.height;
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = 'rgba(216, 183, 104, 0.55)';
-      for (let i = 0; i < 110; i += 1) {
-        const x = seeded(i * 17) * width;
-        const y = seeded(i * 31) * height;
-        const radius = (seeded(i * 47) * 1.8 + 0.5) * ratio;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    };
-    window.addEventListener('resize', resize, { passive: true });
-    resize();
-  }
-
-  function seeded(value) {
-    const x = Math.sin(value + 12.9898) * 43758.5453;
-    return x - Math.floor(x);
+  /* ─── Rotating tagline ──────────────────────────────── */
+  function initTagline() {
+    const phrases = ['생각은 빛이 된다', '읽을수록 더 깊어진다', '나의 독서 우주를 탐험하세요', 'Illuminate Your Thoughts'];
+    const el = $('#luma-tagline');
+    if (!el) return;
+    let i = 0;
+    function show(idx) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-4px)';
+      setTimeout(() => {
+        el.textContent = phrases[idx];
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, 400);
+    }
+    show(0);
+    setInterval(() => { i = (i + 1) % phrases.length; show(i); }, 9000);
   }
 })();

@@ -40,7 +40,9 @@ def api_search_places():
     lng = _float_arg("lng")
     radius = _int_arg("radius", 3000)
     limit = _int_arg("limit", 12)
-    result = search_google_places(q or "독서모임 카페 도서관", lat, lng, radius, limit)
+    result = search_google_places(q or "독서모임하기 좋은 카페 도서관 북카페", lat, lng, radius, limit)
+    if request.args.get("strict_google") in ("1", "true", "yes") and result.get("source") == "mock":
+        result = {"source": "google_unavailable", "places": []}
     return jsonify({
         "ok": True,
         "places": result["places"],

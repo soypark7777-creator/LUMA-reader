@@ -20,7 +20,7 @@ body{
   min-height:100vh; height:100vh; overflow:hidden;
   background:var(--bg); color:var(--text); font-family:'Pretendard',sans-serif;
   display:grid;
-  grid-template-columns:220px 1fr 240px;
+  grid-template-columns:220px minmax(0,1fr);
   grid-template-rows:58px 1fr;
 }
 
@@ -32,10 +32,11 @@ body{
 }
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
 .logo img{height:32px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(193,127,59,.4));}
-.nav-links{display:flex;align-items:center;gap:4px;}
+.nav-links{display:flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.nav-links::-webkit-scrollbar{display:none;}
 .npill{
-  padding:5px 13px;border-radius:999px;font-size:.76rem;text-decoration:none;
-  color:var(--sub);transition:.18s;letter-spacing:.04em;
+  padding:5px 9px;border-radius:999px;font-size:.72rem;text-decoration:none;
+  color:var(--sub);transition:.18s;letter-spacing:.04em;white-space:nowrap;
 }
 .npill:hover{color:var(--text);background:rgba(255,255,255,.06);}
 .npill.active{color:var(--amber);background:rgba(193,127,59,.12);border:1px solid rgba(193,127,59,.25);}
@@ -305,7 +306,15 @@ body{
 .connection-label{font-size:.66rem;color:var(--amber);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
 .connection-text{font-size:.82rem;line-height:1.7;color:var(--text);}
 .connection-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
-@media(max-width:720px){.connection-grid{grid-template-columns:1fr;}}
+.const-connect-builder{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035);}
+.const-connect-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.const-connect-title{font-family:'Noto Serif KR',serif;font-size:.95rem;color:var(--text);}
+.const-connect-sub{font-size:.7rem;color:var(--sub);line-height:1.55;margin-top:3px;}
+.const-connect-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.const-connect-grid select,.const-connect-grid textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:9px 11px;font-family:inherit;font-size:.78rem;outline:none;}
+.const-connect-grid textarea{grid-column:1/-1;min-height:74px;resize:vertical;line-height:1.6;}
+.const-connect-result{font-size:.72rem;color:var(--sub);margin-top:10px;min-height:18px;}
+@media(max-width:720px){.connection-grid,.const-connect-grid{grid-template-columns:1fr;}.const-connect-grid textarea{grid-column:auto;}}
 
 /* ── MODALS ── */
 .modal{display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;}
@@ -373,11 +382,10 @@ textarea{min-height:90px;resize:vertical;}
 
 /* ── RESPONSIVE ── */
 @media(max-width:1100px){
-  body{grid-template-columns:200px 1fr 0;}
-  .right-panel{display:none;}
+  body{grid-template-columns:200px minmax(0,1fr);}
 }
 @media(max-width:760px){
-  body{grid-template-columns:0 1fr 0;}
+  body{grid-template-columns:0 minmax(0,1fr);}
   .sidebar{display:none;}
   .nav-links{display:none;}
   .book-grid{grid-template-columns:repeat(2,1fr);}
@@ -399,10 +407,13 @@ textarea{min-height:90px;resize:vertical;}
     <a href="/" class="npill">별자리 지도</a>
     <a href="/heart" class="npill active">마음 행성계</a>
     <a href="/lounge" class="npill">탐사 성운</a>
-    <a href="/social" class="npill">독자 광장</a>
-    <a href="/live" class="npill">라이브</a>
-    <a href="/socrates" class="npill">소크라테스</a>
-    <a href="/profile" class="npill">프로필</a>
+    <a href="/community/" class="npill">은하 공동체</a>
+    <a href="/live" class="npill">궤도 정거장</a>
+    <a href="/socrates" class="npill">지성의 위성</a>
+    <a href="/social" class="npill">독자 피드</a>
+    <a href="/deepdive" class="npill">심층 관측소</a>
+    <a href="/ocr" class="npill">광학 스캐너</a>
+    <a href="/profile" class="npill">나의 조종석</a>
   </div>
   <div class="nav-user" id="nav-user"></div>
 </nav>
@@ -509,6 +520,33 @@ textarea{min-height:90px;resize:vertical;}
       <div style="font-size:.72rem;color:var(--sub);text-align:center;margin-top:12px;opacity:.65;font-style:italic">
         책들 사이의 감정적 연결을 시각화한 별자리입니다
       </div>
+      <div class="const-connect-builder">
+        <div class="const-connect-head">
+          <div>
+            <div class="const-connect-title">서로의 행성 연결하기</div>
+            <div class="const-connect-sub">두 책 사이에 반복되는 감정, 질문, 삶의 장면을 골라 연결선을 만듭니다.</div>
+          </div>
+          <button class="mini-action" type="button" onclick="submitManualConnection()">연결선 만들기</button>
+        </div>
+        <div class="const-connect-grid">
+          <select id="connect-book-a"></select>
+          <select id="connect-book-b"></select>
+          <select id="connect-type">
+            <option value="같은 감정 반복">같은 감정 반복</option>
+            <option value="반대 감정 충돌">반대 감정 충돌</option>
+            <option value="같은 질문의 변주">같은 질문의 변주</option>
+            <option value="한 책의 답이 다른 책의 질문이 되는 관계">한 책의 답이 다른 책의 질문이 되는 관계</option>
+            <option value="삶의 경험으로 이어지는 연결">삶의 경험으로 이어지는 연결</option>
+          </select>
+          <select id="connect-strength">
+            <option value="0.55">은은한 연결</option>
+            <option value="0.75" selected>뚜렷한 연결</option>
+            <option value="0.92">강한 연결</option>
+          </select>
+          <textarea id="connect-note" placeholder="예: 두 책 모두 상실 이후 다시 삶을 선택하는 감정을 남겼다."></textarea>
+        </div>
+        <div class="const-connect-result" id="connect-result"></div>
+      </div>
       <div class="empty-state" id="const-empty" style="display:none">
         <div class="empty-orb" style="background:radial-gradient(circle at 35% 35%,rgba(126,184,247,.4),rgba(45,74,62,.2) 50%,transparent 70%),radial-gradient(circle at 65% 65%,rgba(22,42,34,.8),rgba(11,22,18,.9))"></div>
         <div class="empty-title">별자리가 아직 없어요</div>
@@ -519,39 +557,6 @@ textarea{min-height:90px;resize:vertical;}
 
   </div><!-- /main-body -->
 </main>
-
-<!-- ── RIGHT STAT PANEL ── -->
-<aside class="right-panel">
-  <div class="rp-label">독서 통계</div>
-  <div class="stat-grid">
-    <div class="stat-card"><div class="stat-num" id="st-books">—</div><div class="stat-lbl">책 권수</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-memos">—</div><div class="stat-lbl">감정 기록</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-streak">—</div><div class="stat-lbl">연속 일</div></div>
-    <div class="stat-card"><div class="stat-num" id="st-done">—</div><div class="stat-lbl">완독</div></div>
-  </div>
-
-  <div class="rp-label" style="margin-top:2px">이달의 독서 페르소나</div>
-  <div class="persona-card">
-    <div class="persona-label">Monthly Persona</div>
-    <div class="persona-orb"></div>
-    <div class="persona-title" id="persona-title">로딩 중…</div>
-    <div class="persona-desc" id="persona-desc">페르소나를 분석하는 중입니다</div>
-  </div>
-
-  <button class="quick-emo-btn" onclick="openLogEmotion()">
-    <span>✦</span><span>감정 기록하기</span>
-  </button>
-
-  <div class="rp-label" style="margin-top:2px">최근 감정 기록</div>
-  <div id="recent-emo-list">
-    <div style="color:var(--sub);font-size:.72rem;opacity:.6;padding:6px 0">불러오는 중…</div>
-  </div>
-
-  <div class="rp-label" style="margin-top:2px">최근 독서 메모</div>
-  <div id="recent-memo-list">
-    <div style="color:var(--sub);font-size:.72rem;opacity:.6;padding:6px 0">불러오는 중…</div>
-  </div>
-</aside>
 
 <!-- ── MODAL: 책 추가 ── -->
 <div class="modal" id="modal-add-book" onclick="if(event.target===this)closeModal('modal-add-book')">
@@ -779,6 +784,7 @@ async function loadShelf() {
   }
   renderShelf();
   renderShelfSidebar();
+  renderConnectionBuilder();
   updateStats();
 }
 
@@ -832,18 +838,25 @@ async function loadPersona() {
     const qs = userId ? '?user_id=' + userId : '';
     const data = await apiFetch('/api/v2/report/persona' + qs);
     const persona = data.persona || data;
-    document.getElementById('persona-title').textContent = persona.persona_name || persona.title || '탐구하는 독서가';
-    document.getElementById('persona-desc').textContent  = persona.description || '다양한 감정으로 독서를 탐험하는 당신만의 스타일';
+    const titleEl = document.getElementById('persona-title');
+    const descEl = document.getElementById('persona-desc');
+    if (titleEl) titleEl.textContent = persona.persona_name || persona.title || '탐구하는 독서가';
+    if (descEl) descEl.textContent  = persona.description || '다양한 감정으로 독서를 탐험하는 당신만의 스타일';
   } catch(e) {
-    document.getElementById('persona-title').textContent = '탐구하는 독서가';
-    document.getElementById('persona-desc').textContent  = '독서 기록이 쌓이면 페르소나가 분석됩니다';
+    const titleEl = document.getElementById('persona-title');
+    const descEl = document.getElementById('persona-desc');
+    if (titleEl) titleEl.textContent = '탐구하는 독서가';
+    if (descEl) descEl.textContent  = '독서 기록이 쌓이면 페르소나가 분석됩니다';
   }
 }
 
 function updateStats() {
-  document.getElementById('st-books').textContent  = shelfData.length;
-  document.getElementById('st-memos').textContent  = timelineData.length;
-  document.getElementById('st-done').textContent   = shelfData.filter(b => b.status === 'done').length;
+  const booksEl = document.getElementById('st-books');
+  const memosEl = document.getElementById('st-memos');
+  const doneEl = document.getElementById('st-done');
+  if (booksEl) booksEl.textContent = shelfData.length;
+  if (memosEl) memosEl.textContent = timelineData.length;
+  if (doneEl) doneEl.textContent = shelfData.filter(b => b.status === 'done').length;
 }
 
 function normalizeBook(b) {
@@ -1027,6 +1040,7 @@ function renderEmoSidebar() {
 ══════════════════════════════════════ */
 function renderRecentEmo() {
   const el = document.getElementById('recent-emo-list');
+  if (!el) return;
   if (timelineData.length === 0) {
     el.innerHTML = '<div style="color:var(--sub);font-size:.72rem;opacity:.6;padding:4px 0">기록이 없어요</div>';
     return;
@@ -1063,8 +1077,10 @@ function filterEmo(emo, btn) {
    STREAK CALCULATION
 ══════════════════════════════════════ */
 function calcStreak() {
+  const el = document.getElementById('st-streak');
+  if (!el) return;
   if (timelineData.length === 0) {
-    document.getElementById('st-streak').textContent = '0';
+    el.textContent = '0';
     return;
   }
   const days = [...new Set(timelineData.map(e => e.created_at ? e.created_at.slice(0,10) : null).filter(Boolean))].sort().reverse();
@@ -1074,7 +1090,7 @@ function calcStreak() {
     if (diff === 1) streak++;
     else break;
   }
-  document.getElementById('st-streak').textContent = streak;
+  el.textContent = streak;
 }
 
 /* ══════════════════════════════════════
@@ -1152,6 +1168,64 @@ function renderConstellation() {
     nSel.attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
   });
   renderMemoConnections();
+  renderConnectionBuilder();
+}
+
+function renderConnectionBuilder() {
+  const aSel = document.getElementById('connect-book-a');
+  const bSel = document.getElementById('connect-book-b');
+  if (!aSel || !bSel) return;
+  const books = (shelfData || []).filter(b => b.book_id || b.id);
+  const currentA = aSel.value;
+  const currentB = bSel.value;
+  const options = books.map(b => {
+    const id = esc(b.book_id || b.id);
+    const label = esc((b.status === 'reading' ? '읽는 중 · ' : '') + (b.title || '제목 없음'));
+    return `<option value="${id}">${label}</option>`;
+  }).join('');
+  aSel.innerHTML = options || '<option value="">책을 먼저 추가해주세요</option>';
+  bSel.innerHTML = options || '<option value="">책을 먼저 추가해주세요</option>';
+  if (currentA && books.some(b => String(b.book_id || b.id) === String(currentA))) aSel.value = currentA;
+  const reading = books.find(b => b.status === 'reading');
+  if (!aSel.value && reading) aSel.value = reading.book_id || reading.id;
+  if (currentB && books.some(b => String(b.book_id || b.id) === String(currentB))) bSel.value = currentB;
+  if ((!bSel.value || bSel.value === aSel.value) && books.length > 1) {
+    const other = books.find(b => String(b.book_id || b.id) !== String(aSel.value));
+    if (other) bSel.value = other.book_id || other.id;
+  }
+}
+
+async function submitManualConnection() {
+  const result = document.getElementById('connect-result');
+  const from = document.getElementById('connect-book-a')?.value || '';
+  const to = document.getElementById('connect-book-b')?.value || '';
+  const type = document.getElementById('connect-type')?.value || '같은 질문의 변주';
+  const note = document.getElementById('connect-note')?.value.trim() || '';
+  const strength = Number(document.getElementById('connect-strength')?.value || 0.75);
+  if (!from || !to) { result.textContent = '연결할 책 두 권을 선택해주세요.'; return; }
+  if (from === to) { result.textContent = '서로 다른 두 책을 선택해주세요.'; return; }
+  result.textContent = '연결선을 만드는 중...';
+  try {
+    const payload = {
+      user_id: userId,
+      from_book_id: from,
+      to_book_id: to,
+      theme: note ? `${type} · ${note}` : type,
+      note,
+      strength,
+    };
+    const data = await apiFetch('/api/v2/constellation/connect', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (!data.ok) { result.textContent = data.error || '연결 생성 실패'; return; }
+    result.textContent = '두 행성 사이에 새 연결선이 만들어졌습니다.';
+    document.getElementById('connect-note').value = '';
+    await Promise.all([loadConstellation(), loadMemoConnections()]);
+    renderConstellation();
+  } catch(e) {
+    result.textContent = '연결 생성 중 오류가 발생했습니다.';
+  }
 }
 
 function memoNodeMap() {

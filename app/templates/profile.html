@@ -3,164 +3,230 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LUMA - 나의 독서 우주</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Cinzel:wght@400;500&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>LUMA — 나의 독서 우주</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Cinzel:wght@400;500&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/profile.css">
 </head>
 <body>
-<canvas id="stars-cv"></canvas>
 
 <header class="topbar">
-  <a href="/" class="logo" aria-label="LUMA 홈">
+  <a href="/" class="logo">
     <img src="/asset/images/Luma_logo_1.png" alt="LUMA" onerror="this.style.display='none'">
     <span class="logo-copy">
       <strong>LUMA</strong>
       <small id="luma-tagline">생각은 빛이 된다</small>
     </span>
   </a>
-  <nav class="nav" aria-label="주요 페이지">
+  <nav class="nav">
     <a href="/" class="npill">별자리 지도</a>
     <a href="/heart" class="npill">마음 행성계</a>
     <a href="/lounge" class="npill">탐사 성운</a>
-    <a href="/social" class="npill">독자 광장</a>
-    <a href="/live" class="npill">라이브</a>
-    <a href="/socrates" class="npill">소크라테스</a>
-    <a href="/profile" class="npill active">프로필</a>
+    <a href="/community/" class="npill">은하 공동체</a>
+    <a href="/live" class="npill">궤도 정거장</a>
+    <a href="/socrates" class="npill">지성의 위성</a>
+    <a href="/social" class="npill">독자 피드</a>
+    <a href="/deepdive" class="npill">심층 관측소</a>
+    <a href="/ocr" class="npill">광학 스캐너</a>
+    <a href="/profile" class="npill active">나의 조종석</a>
   </nav>
   <div class="nav-user" id="nav-user"></div>
 </header>
 
 <main class="page">
-  <section class="hero-section">
+
+  <!-- ═══ PROFILE HERO ═══════════════════════════════════ -->
+  <section class="profile-hero">
     <div class="hero-copy">
       <p class="eyebrow">MY READING UNIVERSE</p>
-      <h1>나의 독서 우주</h1>
-      <p class="hero-desc">읽어온 문장들이 당신을 설명합니다.</p>
-      <div class="hero-identity">
-        <strong id="hero-name">LUMA 독자</strong>
-        <span id="hero-bio">사람의 마음과 우주, 고독에 대해 읽는 독자</span>
-      </div>
+      <h1 id="hero-name">나의 독서 우주</h1>
+      <p class="hero-bio" id="hero-bio">사람의 마음과 우주, 고독에 대해 읽는 독자</p>
       <div class="tag-row" id="hero-tags"></div>
-      <button class="btn gold" data-action="edit-profile">프로필 편집</button>
-    </div>
-    <aside class="profile-card glass">
-      <div class="avatar" id="profile-avatar">L</div>
-      <div>
-        <h2 id="profile-name">LUMA 독자</h2>
-        <p id="profile-email">user_demo</p>
+      <div class="persona-badge" id="hero-persona">사유형 독자</div>
+      <div class="hero-btns">
+        <button type="button" class="btn btn-mint" data-action="edit-profile">프로필 편집</button>
+        <button type="button" class="btn btn-ghost" data-action="share-thought">생각 공유하기</button>
       </div>
-      <p class="profile-bio" id="profile-bio">독서와 질문으로 나의 우주를 만드는 중입니다.</p>
+    </div>
+
+    <aside class="profile-card">
+      <div class="avatar-wrap">
+        <label for="avatar-upload" class="avatar-label" title="사진 변경 (클릭)">
+          <div class="avatar" id="profile-avatar">
+            <span id="avatar-initial">나</span>
+            <img id="avatar-img" src="" alt="프로필 사진" style="display:none">
+          </div>
+          <div class="avatar-cam">📷</div>
+        </label>
+        <input type="file" id="avatar-upload" accept="image/*">
+      </div>
+      <div class="profile-info">
+        <h2 id="profile-name">LUMA 독자</h2>
+        <p class="profile-email" id="profile-email">user_demo</p>
+        <div class="persona-badge small" id="profile-persona">사유형 독자</div>
+      </div>
+      <p class="profile-bio-text" id="profile-bio-text">독서와 질문으로 나의 우주를 만드는 중입니다.</p>
       <div class="tag-row compact" id="profile-tags"></div>
-      <div class="persona-line" id="profile-persona">사유형 독자</div>
-      <div class="button-row">
-        <button class="btn" data-action="edit-profile">프로필 편집</button>
-        <button class="btn ghost" data-action="share-thought">내 생각 공유하기</button>
+      <div class="card-btns">
+        <button type="button" class="btn btn-outline w-full" data-action="edit-profile">편집</button>
       </div>
     </aside>
   </section>
 
-  <section class="stats-grid" id="profile-stats" aria-label="프로필 통계">
-    <div class="stat glass"><span id="stat-books">0</span><small>내 책</small></div>
-    <div class="stat glass"><span id="stat-memos">0</span><small>저장 문장</small></div>
-    <div class="stat glass"><span id="stat-connections">0</span><small>연결</small></div>
-    <div class="stat glass"><span id="stat-streak">0</span><small>연속 독서</small></div>
+  <!-- ═══ STATS ══════════════════════════════════════════ -->
+  <section class="stats-grid">
+    <div class="stat-card">
+      <span id="stat-books">0</span>
+      <small>읽은 책</small>
+    </div>
+    <div class="stat-card">
+      <span id="stat-memos">0</span>
+      <small>저장 문장</small>
+    </div>
+    <div class="stat-card">
+      <span id="stat-connections">0</span>
+      <small>독서 연결</small>
+    </div>
+    <div class="stat-card">
+      <span id="stat-streak">0일</span>
+      <small>연속 독서</small>
+    </div>
   </section>
 
-  <section class="layout">
-    <section class="panel wide" data-section="constellation">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">THOUGHT CONSTELLATION</p>
-          <h2>생각의 별자리</h2>
-        </div>
-        <a class="panel-link" href="/">전체 지도</a>
+  <!-- ═══ 생각의 별자리 (galaxy bg) ═══════════════════════ -->
+  <section class="panel panel-wide">
+    <div class="panel-head">
+      <div>
+        <p class="eyebrow">THOUGHT CONSTELLATION</p>
+        <h2>생각의 별자리</h2>
       </div>
-      <div class="constellation-wrap" id="constellation-view" aria-live="polite">
-        <div class="loading">별자리 데이터를 불러오는 중입니다.</div>
-      </div>
-    </section>
+      <a class="panel-link" href="/">전체 지도</a>
+    </div>
+    <div class="constellation-wrap" id="constellation-view">
+      <div class="constellation-loading">별자리 데이터를 불러오는 중입니다.</div>
+    </div>
+  </section>
 
-    <section class="panel" data-section="current-reading">
+  <!-- ═══ 2COL: 현재 읽는 책 + 독서 성향 분석 ═══════════ -->
+  <div class="two-col">
+    <section class="panel">
       <div class="panel-head">
         <div>
           <p class="eyebrow">CURRENT BOOK</p>
           <h2>현재 읽는 책</h2>
         </div>
       </div>
-      <div id="current-reading" class="section-body loading">읽는 책을 확인하는 중입니다.</div>
+      <div id="current-reading" class="panel-body loading-text">읽는 책을 확인하는 중입니다.</div>
     </section>
 
-    <section class="panel" data-section="persona">
+    <section class="panel">
       <div class="panel-head">
         <div>
           <p class="eyebrow">READING PERSONA</p>
           <h2>독서 성향 분석</h2>
         </div>
       </div>
-      <div id="persona-view" class="section-body loading">성향을 분석하는 중입니다.</div>
+      <div id="persona-view" class="panel-body loading-text">성향을 분석하는 중입니다.</div>
     </section>
+  </div>
 
-    <section class="panel wide" data-section="sentences">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">SENTENCE ARCHIVE</p>
-          <h2>내 문장 아카이브</h2>
-        </div>
+  <!-- ═══ 내 문장 아카이브 (wide) ═══════════════════════ -->
+  <section class="panel panel-wide">
+    <div class="panel-head">
+      <div>
+        <p class="eyebrow">SENTENCE ARCHIVE</p>
+        <h2>내 문장 아카이브</h2>
       </div>
-      <div id="sentence-list" class="card-list loading">문장을 불러오는 중입니다.</div>
-    </section>
+    </div>
+    <div id="sentence-list" class="panel-body sentence-grid loading-text">문장을 불러오는 중입니다.</div>
+  </section>
 
-    <section class="panel" data-section="timeline">
+  <!-- ═══ 2COL: 독서 타임라인 + 내 질문들 ═══════════════ -->
+  <div class="two-col">
+    <section class="panel">
       <div class="panel-head">
         <div>
           <p class="eyebrow">READING TIMELINE</p>
           <h2>독서 타임라인</h2>
         </div>
       </div>
-      <div id="timeline-list" class="timeline loading">타임라인을 정리하는 중입니다.</div>
+      <div id="timeline-list" class="panel-body loading-text">타임라인을 정리하는 중입니다.</div>
     </section>
 
-    <section class="panel" data-section="questions">
+    <section class="panel">
       <div class="panel-head">
         <div>
           <p class="eyebrow">MY QUESTIONS</p>
           <h2>내 질문들</h2>
         </div>
       </div>
-      <div id="question-list" class="card-list loading">질문을 불러오는 중입니다.</div>
+      <div id="question-list" class="panel-body loading-text">질문을 불러오는 중입니다.</div>
     </section>
+  </div>
 
-    <section class="panel" data-section="lounges">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">JOINED LOUNGE</p>
-          <h2>참여 중인 Lounge</h2>
-        </div>
-      </div>
-      <div id="lounge-list" class="card-list loading">참여 모임을 확인하는 중입니다.</div>
-    </section>
-
-    <section class="panel" data-section="similar-readers">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">SIMILAR READERS</p>
-          <h2>비슷한 독자 추천</h2>
-        </div>
-      </div>
-      <div id="reader-list" class="card-list loading">비슷한 독자를 찾는 중입니다.</div>
-    </section>
-  </section>
 </main>
 
-<div class="modal" id="profile-modal" aria-hidden="true">
+<!-- ═══ PROFILE EDIT MODAL ════════════════════════════ -->
+<div class="modal" id="profile-modal">
   <div class="modal-box">
-    <button class="modal-close" data-action="close-modal">×</button>
-    <h2>프로필 편집</h2>
-    <label>닉네임<input id="edit-name" type="text"></label>
-    <label>한 줄 소개<textarea id="edit-bio" rows="3"></textarea></label>
-    <label>관심 키워드<input id="edit-tags" type="text" placeholder="철학, 우주, 고독"></label>
-    <button class="btn gold" data-action="save-profile">저장</button>
+    <button type="button" class="modal-close" data-action="close-modal" aria-label="닫기">✕</button>
+    <h2 class="modal-title">프로필 편집</h2>
+
+    <div class="modal-avatar-section">
+      <label for="modal-avatar-upload" class="modal-avatar-label" title="사진 변경">
+        <div class="modal-avatar" id="modal-avatar-preview">
+          <span id="modal-avatar-initial">나</span>
+          <img id="modal-avatar-img" src="" alt="" style="display:none">
+        </div>
+        <div class="modal-avatar-cam">📷 사진 변경</div>
+      </label>
+      <input type="file" id="modal-avatar-upload" accept="image/*">
+    </div>
+
+    <div class="modal-fields">
+      <label class="field-group">
+        <span class="field-label">닉네임</span>
+        <input id="edit-name" type="text" placeholder="닉네임을 입력하세요" class="field-input">
+      </label>
+      <label class="field-group">
+        <span class="field-label">이메일</span>
+        <input id="edit-email" type="email" placeholder="이메일 주소" class="field-input" readonly style="opacity:.6;cursor:not-allowed">
+      </label>
+      <label class="field-group">
+        <span class="field-label">한 줄 소개</span>
+        <textarea id="edit-bio" rows="3" placeholder="나를 소개하는 한 문장을 써보세요" class="field-input"></textarea>
+      </label>
+      <label class="field-group">
+        <span class="field-label">관심 키워드 <small>(쉼표로 구분)</small></span>
+        <input id="edit-tags" type="text" placeholder="철학, 우주, 고독, 성장" class="field-input">
+      </label>
+      <label class="field-group">
+        <span class="field-label">MBTI</span>
+        <select id="edit-mbti" class="field-input field-select">
+          <option value="">선택 안 함</option>
+          <option value="INFP">INFP — 열정적인 중재자</option>
+          <option value="INFJ">INFJ — 통찰력 있는 상담가</option>
+          <option value="ENFP">ENFP — 열정적인 활동가</option>
+          <option value="ENFJ">ENFJ — 정의로운 사회운동가</option>
+          <option value="INTJ">INTJ — 용의주도한 전략가</option>
+          <option value="INTP">INTP — 논리적인 사색가</option>
+          <option value="ENTJ">ENTJ — 대담한 통솔자</option>
+          <option value="ENTP">ENTP — 뜨거운 논쟁을 즐기는 변론가</option>
+          <option value="ISFJ">ISFJ — 용감한 수호자</option>
+          <option value="ISTJ">ISTJ — 청렴결백한 논리주의자</option>
+          <option value="ISFP">ISFP — 호기심 많은 예술가</option>
+          <option value="ISTP">ISTP — 만능 재주꾼</option>
+          <option value="ESFJ">ESFJ — 사교적인 외교관</option>
+          <option value="ESTJ">ESTJ — 엄격한 관리자</option>
+          <option value="ESFP">ESFP — 자유로운 영혼의 연예인</option>
+          <option value="ESTP">ESTP — 모험을 즐기는 사업가</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-action="close-modal">취소</button>
+      <button type="button" class="btn btn-mint" data-action="save-profile">저장하기</button>
+    </div>
   </div>
 </div>
 

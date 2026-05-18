@@ -48,15 +48,17 @@ a { color: inherit; text-decoration: none; }
   backdrop-filter: blur(16px);
 }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
-.nav { display: flex; gap: 3px; }
+.nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
 .npill {
-  padding: 6px 14px;
+  padding: 6px 9px;
   border-radius: 18px;
-  font-size: .76rem;
+  font-size: .72rem;
   color: var(--muted);
   transition: .18s;
   font-weight: 500;
   border: 1px solid transparent;
+  white-space: nowrap;
 }
 .npill:hover { color: var(--text); background: var(--card); }
 .npill.active {
@@ -202,10 +204,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     <a href="/" class="npill">별자리 지도</a>
     <a href="/heart" class="npill">마음 행성계</a>
     <a href="/lounge" class="npill">탐사 성운</a>
-    <a href="/social" class="npill">독자 광장</a>
-    <a href="/live" class="npill">라이브</a>
-    <a href="/socrates" class="npill">소크라테스</a>
-    <a href="/profile" class="npill">프로필</a>
+    <a href="/community/" class="npill">은하 공동체</a>
+    <a href="/live" class="npill">궤도 정거장</a>
+    <a href="/socrates" class="npill">지성의 위성</a>
+    <a href="/social" class="npill">독자 피드</a>
+    <a href="/deepdive" class="npill">심층 관측소</a>
+    <a href="/ocr" class="npill active">광학 스캐너</a>
+    <a href="/profile" class="npill">나의 조종석</a>
   </nav>
   <div class="nav-user" id="nav-user"></div>
 </header>
