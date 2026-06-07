@@ -77,11 +77,12 @@ body{
 }
 .shelf-row:hover{background:rgba(255,255,255,.04);}
 .shelf-thumb{
-  width:34px;height:50px;border-radius:5px;flex-shrink:0;overflow:hidden;
-  background:linear-gradient(135deg,#1e3a30,var(--amber));
+  width:32px;height:46px;border-radius:6px;flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,#10231c,#1d3329);
+  border:1px solid rgba(244,205,137,.12);
   display:flex;align-items:center;justify-content:center;font-size:.9rem;
 }
-.shelf-thumb img{width:100%;height:100%;object-fit:cover;}
+.shelf-thumb img{width:100%;height:100%;object-fit:contain;background:rgba(5,14,10,.72);}
 .shelf-info{flex:1;min-width:0;}
 .shelf-title{font-size:.78rem;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .shelf-author{font-size:.64rem;color:var(--sub);margin-top:2px;}
@@ -162,18 +163,18 @@ body{
 .tab-panel.active{display:block;}
 
 /* book grid */
-.book-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,150px));gap:14px;align-items:start;}
 .book-card{
   background:var(--card);border:1px solid var(--line);border-radius:12px;
-  overflow:hidden;cursor:pointer;transition:.2s;
+  overflow:hidden;cursor:pointer;transition:.2s;min-width:0;
 }
 .book-card:hover{border-color:rgba(193,127,59,.3);transform:translateY(-2px);box-shadow:var(--glow-sm);}
 .cover-wrap{
-  width:100%;aspect-ratio:2/3;
-  background:linear-gradient(135deg,#1a3528 0%,#2D4A3E 50%,#1e2f28 100%);
+  width:100%;aspect-ratio:2/3;max-height:210px;
+  background:linear-gradient(135deg,#0f211a 0%,#1d3329 55%,#101b16 100%);
   display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;
 }
-.cover-img{width:100%;height:100%;object-fit:cover;}
+.cover-img{width:100%;height:100%;object-fit:contain;background:rgba(5,14,10,.72);padding:3px;}
 .cover-fallback{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
   flex-direction:column;gap:6px;
@@ -280,8 +281,8 @@ body{
 .memo-pill-title{font-size:.68rem;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
 .memo-pill-body{font-family:'Noto Serif KR',serif;font-size:.74rem;color:var(--text);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .detail-book{display:grid;grid-template-columns:96px 1fr;gap:15px;align-items:start;margin-bottom:16px;}
-.detail-cover{width:96px;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#1a3528,#2D4A3E);display:grid;place-items:center;color:var(--sub);}
-.detail-cover img{width:100%;height:100%;object-fit:cover;}
+.detail-cover{width:88px;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#10231c,#1d3329);border:1px solid rgba(244,205,137,.12);display:grid;place-items:center;color:var(--sub);}
+.detail-cover img{width:100%;height:100%;object-fit:contain;background:rgba(5,14,10,.72);}
 .detail-title{font-family:'Noto Serif KR',serif;font-size:1.02rem;color:var(--text);line-height:1.35;margin-bottom:5px;}
 .detail-meta{font-size:.74rem;color:var(--sub);line-height:1.65;}
 .detail-section{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;}
@@ -328,12 +329,12 @@ body{
 .btn-close:hover{color:var(--text);}
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:.74rem;color:var(--sub);margin-bottom:6px;}
-input[type="text"],input[type="search"],select,textarea{
+input[type="text"],input[type="search"],input[type="url"],select,textarea{
   width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;
   color:var(--text);padding:9px 12px;font-family:inherit;font-size:.85rem;outline:none;
   transition:border-color .15s;
 }
-input[type="text"]:focus,input[type="search"]:focus,select:focus,textarea:focus{border-color:rgba(193,127,59,.4);}
+input[type="text"]:focus,input[type="search"]:focus,input[type="url"]:focus,select:focus,textarea:focus{border-color:rgba(193,127,59,.4);}
 select option{background:var(--panel2);}
 textarea{min-height:90px;resize:vertical;}
 .book-search-results{max-height:200px;overflow-y:auto;margin-top:8px;}
@@ -347,10 +348,14 @@ textarea{min-height:90px;resize:vertical;}
 .search-result-row.selected{background:rgba(193,127,59,.12);border:1px solid rgba(193,127,59,.28);}
 .sr-thumb{
   width:32px;height:46px;border-radius:4px;flex-shrink:0;overflow:hidden;
-  background:linear-gradient(135deg,#1a3528,var(--amber));
+  background:linear-gradient(135deg,#10231c,#1d3329);
+  border:1px solid rgba(244,205,137,.12);
   display:flex;align-items:center;justify-content:center;font-size:.8rem;
 }
-.sr-thumb img{width:100%;height:100%;object-fit:cover;}
+.sr-thumb img{width:100%;height:100%;object-fit:contain;background:rgba(5,14,10,.72);}
+.cover-edit-preview{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);}
+.cover-edit-preview img{width:42px;height:60px;object-fit:contain;border-radius:5px;background:rgba(5,14,10,.78);border:1px solid rgba(244,205,137,.12);}
+.cover-edit-preview span{font-size:.68rem;color:var(--sub);line-height:1.45;}
 .sr-info{flex:1;min-width:0;}
 .sr-title{font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sr-author{font-size:.65rem;color:var(--sub);margin-top:2px;}
@@ -388,7 +393,7 @@ textarea{min-height:90px;resize:vertical;}
   body{grid-template-columns:0 minmax(0,1fr);}
   .sidebar{display:none;}
   .nav-links{display:none;}
-  .book-grid{grid-template-columns:repeat(2,1fr);}
+  .book-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));}
 }
 </style>
 </head>
@@ -575,6 +580,22 @@ textarea{min-height:90px;resize:vertical;}
       <div class="search-result-row selected" id="selected-book-display"></div>
     </div>
     <div class="field">
+      <label>책 이름</label>
+      <input type="text" id="book-title-input" placeholder="책 이름을 입력하세요">
+    </div>
+    <div class="field">
+      <label>작가</label>
+      <input type="text" id="book-author-input" placeholder="작가 이름을 입력하세요">
+    </div>
+    <div class="field">
+      <label>책 이미지 URL</label>
+      <input type="url" id="book-cover-input" placeholder="표지 이미지 URL" oninput="updateCoverPreview(this.value)">
+      <div class="cover-edit-preview">
+        <img id="book-cover-preview" src="" alt="책 표지 미리보기" onerror="this.style.display='none'">
+        <span>이미지 주소를 붙여 넣으면 서재 카드와 상세 화면에 같은 표지가 적용됩니다.</span>
+      </div>
+    </div>
+    <div class="field">
       <label>읽기 상태</label>
       <div class="status-row">
         <button class="status-btn active" data-status="reading" onclick="selectStatus(this)">📖 읽는 중</button>
@@ -670,7 +691,7 @@ const userId = (() => {
     return u.user_id || u.id || 'user_demo';
   } catch(e) { return 'user_demo'; }
 })();
-const token = localStorage.getItem('luma_token') || '';
+let token = localStorage.getItem('luma_token') || '';
 
 /* ══════════════════════════════════════
    NAV
@@ -767,8 +788,18 @@ async function apiFetch(url, opts) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(url, Object.assign({}, opts, { headers: Object.assign(headers, opts.headers || {}) }));
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && token && String(data.error || '').includes('토큰')) {
+    localStorage.removeItem('luma_token');
+    token = '';
+    const retryHeaders = Object.assign({}, opts.headers || {});
+    delete retryHeaders.Authorization;
+    const retry = await fetch(url, Object.assign({}, opts, { headers: Object.assign({ 'Content-Type': 'application/json' }, retryHeaders) }));
+    if (!retry.ok) throw new Error('HTTP ' + retry.status);
+    return retry.json();
+  }
+  if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
 }
 
 /* ══════════════════════════════════════
@@ -864,11 +895,57 @@ function updateStats() {
   if (doneEl) doneEl.textContent = shelfData.filter(b => b.status === 'done').length;
 }
 
+const LOCAL_BOOK_IMAGES = [
+  '/asset/images/책/BOOK.jpg',
+  '/asset/images/책/BOOK (2).jpg',
+  '/asset/images/책/BOOK (3).jpg',
+  '/asset/images/책/BOOK (4).jpg',
+  '/asset/images/책/BOOK (5).jpg',
+  '/asset/images/책/BOOK STORE.jpg',
+  '/asset/images/책/BOOK STORE (2).jpg',
+  '/asset/images/책/MEETING.jpg'
+];
+
+function stableAssetHash(s) {
+  let h = 0;
+  String(s || '').split('').forEach(ch => { h = ((h << 5) - h) + ch.charCodeAt(0); h |= 0; });
+  return Math.abs(h);
+}
+
+function localBookImage(b) {
+  const key = `${b?.title || ''}|${b?.author || ''}|${b?.book_id || b?.id || ''}`;
+  return LOCAL_BOOK_IMAGES[stableAssetHash(key) % LOCAL_BOOK_IMAGES.length];
+}
+
+function isLocalBookImage(url) {
+  return String(url || '').startsWith('/asset/images/');
+}
+
+function realCoverUrl(b) {
+  const url = b?.cover_url || b?.thumbnail || b?.book_cover_url || b?.image || '';
+  return isLocalBookImage(url) ? '' : url;
+}
+
+function updateCoverPreview(url) {
+  const img = document.getElementById('book-cover-preview');
+  if (!img) return;
+  const src = String(url || '').trim();
+  if (!src) {
+    img.removeAttribute('src');
+    img.style.display = 'none';
+    return;
+  }
+  img.style.display = 'block';
+  img.src = src;
+}
+
 function normalizeBook(b) {
+  const cover = realCoverUrl(b);
   return Object.assign({}, b, {
     id: b.id || b.book_id,
     book_id: b.book_id || b.id,
-    cover_url: b.cover_url || b.thumbnail || b.book_cover_url || b.image || '',
+    cover_url: cover,
+    display_cover_url: cover || localBookImage(b),
     cover_emoji: b.cover_emoji || b.emoji || '📚',
     progress: Number(b.progress || 0),
     status: b.status || b.reading_status || 'want'
@@ -894,7 +971,7 @@ function mergeReadingBooksIntoConstellation() {
       genre: book.genre || '',
       status: 'reading',
       progress: Number(book.progress || 0),
-      cover_url: book.cover_url || '',
+      cover_url: book.cover_url || book.display_cover_url || '',
       isbn: book.isbn || '',
       publisher: book.publisher || '',
       total_pages: book.total_pages || 0,
@@ -923,8 +1000,9 @@ function bookCoverHtml(b, cls='cover-img') {
   const emoji = esc(b.cover_emoji || '📚');
   const label = esc(String(b.title || '책').slice(0, 8));
   const fallback = `<div class="cover-fallback" style="display:flex"><span>${emoji}</span><span>${label}</span></div>`;
-  if (!b.cover_url) return fallback;
-  return `<img class="${cls}" src="${esc(b.cover_url)}" alt="${title}" loading="lazy"
+  const src = b.cover_url || b.display_cover_url || localBookImage(b);
+  if (!src) return fallback;
+  return `<img class="${cls}" src="${esc(src)}" alt="${title}" loading="lazy"
     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="cover-fallback"><span>${emoji}</span><span>${label}</span></div>`;
 }
@@ -1012,10 +1090,11 @@ function renderShelfSidebar() {
   }
   el.innerHTML = shelfData.map(b => {
     const sl = statusLabel(b.status);
+    const cover = b.cover_url || b.display_cover_url || localBookImage(b);
     return `<div class="shelf-row" onclick="switchMainPanel('shelf')">
       <div class="shelf-thumb">
-        ${b.cover_url
-          ? `<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" loading="lazy" onerror="this.outerHTML='<span>${esc(b.cover_emoji || '📚')}</span>'">`
+        ${cover
+          ? `<img src="${esc(cover)}" alt="${esc(b.title)}" loading="lazy" onerror="this.outerHTML='<span>${esc(b.cover_emoji || '📚')}</span>'">`
           : `<span>${esc(b.cover_emoji || '📚')}</span>`}
       </div>
       <div class="shelf-info">
@@ -1454,7 +1533,7 @@ async function searchBooks(q) {
     res.innerHTML = books.slice(0, 8).map((b, i) => `
       <div class="search-result-row" onclick="selectSearchBook(${i})" data-idx="${i}">
         <div class="sr-thumb">
-          <img src="${esc(b.cover_url||b.thumbnail||'')}" alt=""
+          <img src="${esc(realCoverUrl(b)||localBookImage(b))}" alt=""
             onerror="this.style.display='none'">
         </div>
         <div class="sr-info">
@@ -1469,6 +1548,22 @@ async function searchBooks(q) {
   }
 }
 
+async function findBookCoverForForm(title, author) {
+  const manual = document.getElementById('book-cover-input').value.trim();
+  if (manual && !isLocalBookImage(manual)) return { cover_url: manual };
+  if (selectedBookObj && realCoverUrl(selectedBookObj)) return selectedBookObj;
+  const query = [title, author].filter(Boolean).join(' ').trim();
+  if (!query) return {};
+  try {
+    const data = await apiFetch('/api/v2/books/search?q=' + encodeURIComponent(query) + '&source=all&sort=cover&limit=6');
+    const books = (data.books || data.results || data || []).slice()
+      .sort((a, b) => Number(Boolean(realCoverUrl(b))) - Number(Boolean(realCoverUrl(a))));
+    return books.find(b => realCoverUrl(b)) || {};
+  } catch(e) {
+    return {};
+  }
+}
+
 function selectSearchBook(idx) {
   const books = window._bookSearchCache || [];
   const b = books[idx];
@@ -1476,12 +1571,17 @@ function selectSearchBook(idx) {
   selectedBookObj = b;
   document.getElementById('book-search-results').innerHTML = '';
   document.getElementById('book-search-input').value = b.title;
+  document.getElementById('book-title-input').value = b.title || '';
+  document.getElementById('book-author-input').value = b.author || b.authors || '';
+  const coverUrl = realCoverUrl(b);
+  document.getElementById('book-cover-input').value = coverUrl;
+  updateCoverPreview(coverUrl || localBookImage(b));
   const info = document.getElementById('selected-book-info');
   const disp = document.getElementById('selected-book-display');
   info.style.display = 'block';
   disp.innerHTML = `
     <div class="sr-thumb">
-      <img src="${esc(b.cover_url||b.thumbnail||'')}" alt="" onerror="this.style.display='none'">
+      <img src="${esc(realCoverUrl(b)||localBookImage(b))}" alt="" onerror="this.style.display='none'">
     </div>
     <div class="sr-info">
       <div class="sr-title">${esc(b.title)}</div>
@@ -1521,6 +1621,10 @@ function openAddBook() {
   document.getElementById('book-search-input').value = '';
   document.getElementById('book-search-input').disabled = false;
   document.getElementById('book-search-results').innerHTML = '';
+  document.getElementById('book-title-input').value = '';
+  document.getElementById('book-author-input').value = '';
+  document.getElementById('book-cover-input').value = '';
+  updateCoverPreview('');
   document.getElementById('selected-book-info').style.display = 'none';
   document.getElementById('progress-field').style.display = 'block';
   document.getElementById('book-progress').value = 0;
@@ -1538,8 +1642,13 @@ function openEditBook(id) {
   document.querySelector('#modal-add-book .modal-head-title').textContent = '책 기록 수정하기';
   document.getElementById('btn-submit-book').textContent = '변경사항 저장';
   document.getElementById('book-search-input').value = b.title || '';
-  document.getElementById('book-search-input').disabled = true;
+  document.getElementById('book-search-input').disabled = false;
   document.getElementById('book-search-results').innerHTML = '';
+  document.getElementById('book-title-input').value = b.title || '';
+  document.getElementById('book-author-input').value = b.author || '';
+  const coverUrl = realCoverUrl(b);
+  document.getElementById('book-cover-input').value = coverUrl;
+  updateCoverPreview(coverUrl || localBookImage(b));
   document.getElementById('selected-book-info').style.display = 'none';
   document.querySelectorAll('#modal-add-book .status-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.status === selectedStatus);
@@ -1606,12 +1715,13 @@ async function openBookDetail(id) {
   const sl = statusLabel(b.status);
   const bookMemos = memoData.filter(m => String(m.book_id || '') === String(b.book_id || b.id));
   const bookEmotions = timelineData.filter(e => String(e.book_id || '') === String(b.book_id || b.id));
+  const cover = b.cover_url || b.display_cover_url || localBookImage(b);
   const body = document.getElementById('book-detail-body');
   body.innerHTML = `
     <div class="detail-book">
       <div class="detail-cover">
-        ${b.cover_url
-          ? `<img src="${esc(b.cover_url)}" alt="${esc(b.title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${esc(b.cover_emoji||'📚')}</span>`
+        ${cover
+          ? `<img src="${esc(cover)}" alt="${esc(b.title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${esc(b.cover_emoji||'📚')}</span>`
           : `<span>${esc(b.cover_emoji||'📚')}</span>`}
       </div>
       <div>
@@ -1724,20 +1834,26 @@ async function submitShelfBook() {
 
 async function submitAddBook() {
   const titleInput = document.getElementById('book-search-input').value.trim();
-  if (!selectedBookObj && !titleInput) {
+  const manualTitle = document.getElementById('book-title-input').value.trim();
+  const manualAuthor = document.getElementById('book-author-input').value.trim();
+  const manualCover = document.getElementById('book-cover-input').value.trim();
+  const title = manualTitle || (selectedBookObj ? selectedBookObj.title : titleInput);
+  if (!title) {
     alert('책을 검색하거나 제목을 입력해주세요.');
     return;
   }
+  const autoBook = await findBookCoverForForm(title, manualAuthor || (selectedBookObj ? (selectedBookObj.author||selectedBookObj.authors||'') : ''));
+  const cover = realCoverUrl(autoBook) || (manualCover && !isLocalBookImage(manualCover) ? manualCover : '') || realCoverUrl(selectedBookObj);
   const payload = {
     user_id:   userId,
-    title:     selectedBookObj ? selectedBookObj.title   : titleInput,
-    author:    selectedBookObj ? (selectedBookObj.author||selectedBookObj.authors||'') : '',
-    cover_url: selectedBookObj ? (selectedBookObj.cover_url||selectedBookObj.thumbnail||'') : '',
-    isbn:      selectedBookObj ? (selectedBookObj.isbn||'') : '',
-    publisher: selectedBookObj ? (selectedBookObj.publisher||'') : '',
-    published_date: selectedBookObj ? (selectedBookObj.published_date||selectedBookObj.publishedDate||'') : '',
-    description: selectedBookObj ? (selectedBookObj.description||'') : '',
-    total_pages: selectedBookObj ? (selectedBookObj.total_pages||0) : 0,
+    title,
+    author:    manualAuthor || (selectedBookObj ? (selectedBookObj.author||selectedBookObj.authors||'') : ''),
+    cover_url: cover,
+    isbn:      (autoBook.isbn || (selectedBookObj ? selectedBookObj.isbn : '') || ''),
+    publisher: (autoBook.publisher || (selectedBookObj ? selectedBookObj.publisher : '') || ''),
+    published_date: (autoBook.published_date || autoBook.publishedDate || (selectedBookObj ? (selectedBookObj.published_date||selectedBookObj.publishedDate||'') : '')),
+    description: (autoBook.description || (selectedBookObj ? selectedBookObj.description : '') || ''),
+    total_pages: (autoBook.total_pages || (selectedBookObj ? selectedBookObj.total_pages : 0) || 0),
     status:    selectedStatus,
     progress:  selectedStatus === 'reading' ? parseInt(document.getElementById('book-progress').value) :
                selectedStatus === 'done'    ? 100 : 0,
@@ -1755,10 +1871,26 @@ async function submitAddBook() {
 
 async function submitEditBook() {
   const progress = selectedStatus === 'done' ? 100 : selectedStatus === 'want' ? 0 : parseInt(document.getElementById('book-progress').value || '0');
+  const title = document.getElementById('book-title-input').value.trim() || document.getElementById('book-search-input').value.trim();
+  const author = document.getElementById('book-author-input').value.trim();
+  const autoBook = await findBookCoverForForm(title, author);
+  const manualCover = document.getElementById('book-cover-input').value.trim();
+  const coverUrl = realCoverUrl(autoBook) || (manualCover && !isLocalBookImage(manualCover) ? manualCover : '');
   try {
     const res = await apiFetch('/api/v2/shelf/books/' + encodeURIComponent(editingBookId), {
       method: 'PUT',
-      body: JSON.stringify({ user_id: userId, status: selectedStatus, progress })
+      body: JSON.stringify({
+        user_id: userId,
+        title,
+        author,
+        cover_url: coverUrl,
+        isbn: autoBook.isbn || '',
+        publisher: autoBook.publisher || '',
+        description: autoBook.description || '',
+        total_pages: autoBook.total_pages || 0,
+        status: selectedStatus,
+        progress
+      })
     });
     if (!res.ok) { alert(res.error || '수정 실패'); return; }
     closeModal('modal-add-book');

@@ -28,6 +28,9 @@ def get_all_clubs(user_id="user_demo"):
         club["id"] = c["club_id"]
         club["current_book"] = c.get("current_book_title", "")
         club["current_book_author"] = c.get("current_book_author", "")
+        club["meeting_place"] = c.get("meeting_place_name", "")
+        club["meeting_place_address"] = c.get("meeting_place_address", "")
+        club["max_members"] = c.get("max_members", 10)
         club["member_count"] = len(c.get("member_ids",[]))
         club["is_member"]    = user_id in c.get("member_ids",[])
         club["card_count"]   = len([x for x in _cards if x["club_id"]==c["club_id"]])
@@ -42,15 +45,48 @@ def get_club(club_id, user_id="user_demo"):
         "id": c["club_id"],
         "current_book": c.get("current_book_title", ""),
         "current_book_author": c.get("current_book_author", ""),
+        "meeting_place": c.get("meeting_place_name", ""),
+        "meeting_place_address": c.get("meeting_place_address", ""),
+        "max_members": c.get("max_members", 10),
         "member_count":len(c.get("member_ids",[])),
         "is_member":user_id in c.get("member_ids",[]),
         "card_count":len([x for x in _cards if x["club_id"]==club_id]),
     }
 
 def create_club(data):
-    club = {"club_id":f"club_{uuid.uuid4().hex[:6]}","name":data.get("name","새 모임"),"description":data.get("description",""),"host_user_id":data.get("user_id","user_demo"),"member_ids":[data.get("user_id","user_demo")],"current_book_title":data.get("book_title",""),"current_book_author":data.get("book_author",""),"is_private":data.get("is_private",False),"tags":data.get("tags",[]),"emoji":data.get("emoji","📚"),"created_at":datetime.now().isoformat(),"is_live":False}
+    try:
+        max_members = max(1, int(data.get("max_members") or 10))
+    except (TypeError, ValueError):
+        max_members = 10
+    club = {
+        "club_id": f"club_{uuid.uuid4().hex[:6]}",
+        "name": data.get("name", "새 모임"),
+        "description": data.get("description", ""),
+        "host_user_id": data.get("user_id", "user_demo"),
+        "member_ids": [data.get("user_id", "user_demo")],
+        "current_book_title": data.get("book_title", ""),
+        "current_book_author": data.get("book_author", ""),
+        "max_members": max_members,
+        "meeting_place_name": data.get("meeting_place_name", ""),
+        "meeting_place_address": data.get("meeting_place_address", ""),
+        "meeting_place_lat": data.get("meeting_place_lat"),
+        "meeting_place_lng": data.get("meeting_place_lng"),
+        "meeting_place_google_id": data.get("meeting_place_google_id", ""),
+        "meeting_place_url": data.get("meeting_place_url", ""),
+        "is_private": data.get("is_private", False),
+        "tags": data.get("tags", []),
+        "emoji": data.get("emoji", "📚"),
+        "created_at": datetime.now().isoformat(),
+        "is_live": False,
+    }
     _clubs.insert(0, club)
-    return {**club, "id": club["club_id"], "current_book": club.get("current_book_title", "")}
+    return {
+        **club,
+        "id": club["club_id"],
+        "current_book": club.get("current_book_title", ""),
+        "current_book_author": club.get("current_book_author", ""),
+        "meeting_place": club.get("meeting_place_name", ""),
+    }
 
 def join_club(club_id, user_id):
     c = next((x for x in _clubs if x["club_id"]==club_id), None)
@@ -94,6 +130,23 @@ def update_club_settings(club_id, data):
         c["name"] = str(data["name"]).strip()
     if "description" in data:
         c["description"] = data.get("description") or ""
+    if "emoji" in data and str(data.get("emoji") or "").strip():
+        c["emoji"] = str(data["emoji"]).strip()
+    if "max_members" in data:
+        try:
+            c["max_members"] = max(1, int(data.get("max_members") or 10))
+        except (TypeError, ValueError):
+            c["max_members"] = 10
+    for key in (
+        "meeting_place_name",
+        "meeting_place_address",
+        "meeting_place_lat",
+        "meeting_place_lng",
+        "meeting_place_google_id",
+        "meeting_place_url",
+    ):
+        if key in data:
+            c[key] = data.get(key) or ""
     return {"ok":True,"club":get_club(club_id)}
 
 def delete_club(club_id, user_id="user_demo"):

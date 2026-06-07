@@ -12,6 +12,7 @@ The response always contains at least {"ok": bool, "books": list}.
 """
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from functools import lru_cache
 
@@ -29,6 +30,23 @@ FILTER_CONTRACT = {
     "sort": ["score", "rating", "reviews", "recent", "shuffle"],
     "limit": {"min": 1, "max": 40, "default": 20},
 }
+
+LOCAL_BOOK_IMAGES = [
+    "/asset/images/책/BOOK.jpg",
+    "/asset/images/책/BOOK (2).jpg",
+    "/asset/images/책/BOOK (3).jpg",
+    "/asset/images/책/BOOK (4).jpg",
+    "/asset/images/책/BOOK (5).jpg",
+    "/asset/images/책/BOOK STORE.jpg",
+    "/asset/images/책/BOOK STORE (2).jpg",
+    "/asset/images/책/MEETING.jpg",
+]
+
+
+def _local_book_cover(book: dict) -> str:
+    key = f"{book.get('title', '')}|{book.get('author', '')}|{book.get('book_id', '')}"
+    digest = hashlib.md5(key.encode("utf-8")).hexdigest()
+    return LOCAL_BOOK_IMAGES[int(digest[:8], 16) % len(LOCAL_BOOK_IMAGES)]
 
 FIELD_QUERY = {
     "문학": ["문학 고전", "한국 소설", "세계 문학"],
@@ -127,13 +145,22 @@ def recommend_books(filters: dict | None = None, limit: int = 20) -> dict:
             },
         )
     except Exception as exc:
+        fallback_books = []
+        try:
+            fallback_books = [
+                shape_lounge_book(score_book(tag_book(normalize_book(book, book.get("source", "seed")), filters), filters))
+                for book in get_seed_books()
+            ][:limit]
+        except Exception:
+            fallback_books = []
         return response_contract(
-            ok=False,
-            books=[],
+            ok=True,
+            books=fallback_books,
             filters=filters,
+            count=len(fallback_books),
             error=str(exc),
             meta={
-                "source": "lounge_pipeline_error",
+                "source": "lounge_pipeline_fallback",
                 "pipeline": ["seed", "providers", "normalize", "dedupe", "tag", "score"],
                 "contract_version": "2026-05-18",
                 "fallback_ready": True,
@@ -177,7 +204,7 @@ def shape_lounge_book(book: dict) -> dict:
     fallback = book.get("fallback_cover") or {}
     if not fallback:
         fallback = normalize_book(book, book.get("source", "")).get("fallback_cover", {})
-    cover_url = book.get("cover_url", "")
+    cover_url = book.get("cover_url", "") or _local_book_cover(book)
     cover_candidates = _cover_candidates_for_response(book, cover_url)
     return {
         "book_id": book.get("book_id", ""),

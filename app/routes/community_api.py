@@ -18,6 +18,27 @@ from flask import Blueprint, jsonify, request
 community_api_bp = Blueprint("community_api", __name__)
 
 
+@community_api_bp.route("/clubs", methods=["GET"])
+def list_clubs_alias():
+    """Compatibility alias for preflight and frontend club list checks."""
+    from flask import jsonify, request
+
+    user_id = request.args.get("user_id", "user_demo")
+    try:
+        from app.services import club_service
+
+        for name in ("list_clubs", "get_clubs", "list_user_clubs", "get_user_clubs"):
+            fn = getattr(club_service, name, None)
+            if callable(fn):
+                result = fn(user_id)
+                if isinstance(result, dict):
+                    return jsonify({"ok": True, **result})
+                return jsonify({"ok": True, "clubs": result or []})
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc), "source": "community_clubs_alias"}), 500
+    return jsonify({"ok": True, "clubs": [], "source": "community_clubs_alias"})
+
+
 def _uid() -> str:
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Bearer "):
@@ -194,6 +215,7 @@ def create_club():
         return jsonify({"ok": False, "error": "모임방 이름을 입력하세요."}), 400
     from app.services.club_service import create_club as create
 
+    data.setdefault("user_id", _uid())
     club = create(data)
     return jsonify({"ok": True, "club": club, "club_id": club.get("club_id")}), 201
 

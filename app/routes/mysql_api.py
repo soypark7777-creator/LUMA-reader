@@ -3,6 +3,7 @@ LUMA — MySQL 기반 통합 API 라우터 v2
 ──────────────────────────────────────────────────────
 모든 엔드포인트가 MySQL ↔ Mock 자동 전환
 """
+import hashlib
 from datetime import date, datetime
 
 from flask import Blueprint, request, jsonify, g
@@ -178,12 +179,33 @@ def profile_similar_readers():
 #  책 탐색  /api/v2/books/*
 # ══════════════════════════════════════════════════════
 
+LOCAL_BOOK_IMAGES = [
+    "/asset/images/책/BOOK.jpg",
+    "/asset/images/책/BOOK (2).jpg",
+    "/asset/images/책/BOOK (3).jpg",
+    "/asset/images/책/BOOK (4).jpg",
+    "/asset/images/책/BOOK (5).jpg",
+    "/asset/images/책/BOOK STORE.jpg",
+    "/asset/images/책/BOOK STORE (2).jpg",
+    "/asset/images/책/MEETING.jpg",
+]
+
+
+def _local_book_cover(book: dict) -> str:
+    key = f"{book.get('title', '')}|{book.get('author', '')}|{book.get('book_id', '')}"
+    digest = hashlib.md5(key.encode("utf-8")).hexdigest()
+    return LOCAL_BOOK_IMAGES[int(digest[:8], 16) % len(LOCAL_BOOK_IMAGES)]
+
+
 def _discover_book_shape(book: dict, reason: str = "") -> dict:
+    cover_url = book.get("cover_url", "") or book.get("thumbnail", "") or _local_book_cover(book)
     return {
         "book_id": book.get("book_id") or book.get("isbn") or book.get("title", ""),
         "title": book.get("title", ""),
         "author": book.get("author", ""),
-        "cover_url": book.get("cover_url", ""),
+        "cover_url": cover_url,
+        "thumbnail": book.get("thumbnail", "") or cover_url,
+        "thumbnail_url": book.get("thumbnail_url", "") or cover_url,
         "cover_emoji": book.get("cover_emoji", "📚"),
         "category": book.get("genre", book.get("category", "")),
         "genre": book.get("genre", book.get("category", "")),

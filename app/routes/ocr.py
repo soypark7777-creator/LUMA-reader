@@ -90,21 +90,71 @@ def _normalize_resources(resources: dict[str, Any]) -> dict[str, Any]:
     return {**resources, "youtube": videos, "papers": papers}
 
 
-def _analyze_text(content: str, book_title: str = "") -> dict[str, Any]:
-    from app.services.gemini_service import analyze_memo_theme, extract_keywords, generate_reframe_question
-
-    theme_info = analyze_memo_theme(content)
-    reframe = generate_reframe_question(content, book_title)
-    question = reframe.get("question") if isinstance(reframe, dict) else reframe
+def _local_resources(text: str, book_title: str = "") -> dict[str, Any]:
+    query = " ".join(part for part in [book_title, "독서 해석"] if part).strip() or "독서 문장 해석"
     return {
-        "keywords": extract_keywords(content, book_title),
-        "theme": theme_info.get("theme", "") if isinstance(theme_info, dict) else theme_info,
+        "youtube": [
+            {
+                "title": f"{query} 관련 강의 검색",
+                "channel": "YouTube 검색",
+                "url": f"https://www.youtube.com/results?search_query={query}",
+            }
+        ],
+        "papers": [
+            {
+                "title": f"{book_title or '이 구절'} 관련 비평/해설 자료 검색",
+                "source": "Google Scholar",
+                "year": "",
+            }
+        ],
+    }
+
+
+def _analyze_text(content: str, book_title: str = "") -> dict[str, Any]:
+    title = (book_title or "").strip()
+    words = [
+        token.strip(".,!?()[]{}'\"")
+        for token in content.replace("\n", " ").split()
+        if len(token.strip(".,!?()[]{}'\"")) >= 2
+    ]
+    keywords = []
+    for token in words:
+        if token not in keywords:
+            keywords.append(token)
+        if len(keywords) >= 5:
+            break
+    lower = content.lower()
+    if any(word in content for word in ("사랑", "슬픔", "외로움", "그리움", "마음")):
+        theme = "감정과 관계"
+        emotion = "감성"
+    elif any(word in content for word in ("생각", "질문", "의미", "진실", "이유")):
+        theme = "사유와 질문"
+        emotion = "사유"
+    elif any(word in lower for word in ("time", "life", "truth", "love")):
+        theme = "삶의 의미"
+        emotion = "성찰"
+    else:
+        theme = "독서 메모"
+        emotion = "사유"
+    summary = f"{title + '의 ' if title else ''}구절에서 '{keywords[0] if keywords else '문장'}'을 중심으로 생각할 지점을 발견했습니다."
+    question = f"{title + '에서 ' if title else ''}이 문장이 지금 나에게 묻는 것은 무엇일까요?"
+    theme_info = {
+        "theme": theme,
+        "summary": summary,
+        "emotion": emotion,
+        "depth_score": min(100, max(30, len(content) // 8)),
+    }
+    reframe = {"question": question, "source": "local"}
+    return {
+        "keywords": keywords or ["독서", "문장", "생각"],
+        "theme": theme,
         "theme_info": theme_info,
-        "summary": theme_info.get("summary", "") if isinstance(theme_info, dict) else "",
-        "emotion": theme_info.get("emotion", "") if isinstance(theme_info, dict) else "",
+        "summary": summary,
+        "emotion": emotion,
         "depth_score": theme_info.get("depth_score", 0) if isinstance(theme_info, dict) else 0,
-        "question": question or "",
+        "question": question,
         "reframe": reframe,
+        "book_title": title,
     }
 
 
@@ -194,10 +244,12 @@ def ocr_scan():
 def ocr_enhance():
     data = _json_body()
     text = (data.get("text") or "").strip()
+    book_title = (data.get("book_title") or "").strip()
+    book_author = (data.get("book_author") or "").strip()
     if not text:
         return jsonify({"ok": False, "error": "text 값이 필요합니다.", "source": "ocr_enhance"}), 400
 
-    result = enhance_text(text)
+    result = enhance_text(text, book_title=book_title, book_author=book_author)
     corrected = result.get("corrected") or result.get("enhanced") or text
     return jsonify({"ok": True, **result, "corrected": corrected, "enhanced": corrected})
 
@@ -293,7 +345,7 @@ def ocr_full_pipeline():
         book_info = {"title": book_title, "author": book_author, "source": "provided_text"}
 
     memo_result = _normalize_memo_result(generate_memo_from_text(text, book_title))
-    resources = _normalize_resources(get_all_resources(text, book_title))
+    resources = _local_resources(text, book_title)
     analysis = _analyze_text(memo_result["memo_draft"] or text, book_title)
 
     return jsonify({

@@ -59,6 +59,13 @@ Expected response:
 curl.exe -X POST "http://localhost:5000/ocr" -F "file=@test.jpg"
 ```
 
+Python smoke tests:
+
+```powershell
+python scripts\test_google_vision_ocr.py
+python scripts\test_ocr_http.py
+```
+
 The response uses this shape:
 
 ```json

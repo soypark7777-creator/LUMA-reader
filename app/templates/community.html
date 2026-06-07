@@ -153,7 +153,7 @@ button,input,textarea,select{font-family:inherit;}
 .club-member-pill{font-size:.72rem;color:var(--green);background:rgba(74,222,128,.1);padding:3px 10px;border-radius:20px;}
 .club-book-label{font-size:.72rem;color:var(--sub);}
 .club-book-label strong{color:var(--gold);}
-.club-actions{display:flex;gap:8px;}
+.club-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
 .btn-ai-guide{
   padding:8px 14px;border-radius:10px;font-size:.76rem;cursor:pointer;transition:.2s;
   background:rgba(196,181,253,.1);border:1px solid rgba(196,181,253,.3);color:var(--purple);
@@ -166,6 +166,20 @@ button,input,textarea,select{font-family:inherit;}
   display:flex;align-items:center;gap:5px;
 }
 .btn-report:hover{background:rgba(147,197,253,.2);}
+.btn-place{
+  padding:8px 14px;border-radius:10px;font-size:.76rem;cursor:pointer;transition:.2s;
+  background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.28);color:var(--green);
+  display:flex;align-items:center;gap:5px;
+}
+.btn-place:hover{background:rgba(74,222,128,.18);}
+.btn-settings{
+  padding:8px 14px;border-radius:10px;font-size:.76rem;cursor:pointer;transition:.2s;
+  background:rgba(245,200,107,.1);border:1px solid var(--gold-border);color:var(--gold);
+  display:flex;align-items:center;gap:5px;
+}
+.btn-settings:hover{background:rgba(245,200,107,.18);}
+.club-place-pill{font-size:.72rem;color:var(--green);background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);padding:3px 10px;border-radius:20px;}
+.club-place-pill.empty{color:var(--sub);border-color:var(--border);background:rgba(255,255,255,.035);}
 
 /* TABS */
 .club-tabs{display:flex;gap:0;padding:0 22px;}
@@ -264,6 +278,7 @@ button,input,textarea,select{font-family:inherit;}
 .map-search-row{display:flex;gap:7px;margin-bottom:8px;}
 .map-search-input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(54,208,127,.14);border-radius:9px;padding:8px 10px;color:var(--text);font-size:.76rem;outline:none;}
 .map-search-input:focus{border-color:var(--map-green-border);box-shadow:0 0 0 3px rgba(54,208,127,.08);}
+.world-jump-row{border-top:1px solid rgba(54,208,127,.1);padding-top:8px;}
 .btn-search{
   padding:8px 13px;border-radius:9px;font-size:.76rem;cursor:pointer;
   background:var(--map-green-soft);border:1px solid var(--map-green-border);color:var(--map-green);transition:.2s;
@@ -427,6 +442,7 @@ button,input,textarea,select{font-family:inherit;}
   border-radius:10px;padding:10px 13px;font-size:.86rem;color:var(--text);outline:none;transition:.2s;
 }
 .form-input:focus{border-color:var(--gold-border);}
+textarea.form-input{min-height:76px;resize:vertical;line-height:1.55;}
 .emoji-picker{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
 .ep-btn{
   width:44px;height:44px;border-radius:10px;border:1px solid var(--border);
@@ -565,9 +581,19 @@ button,input,textarea,select{font-family:inherit;}
                 현재 책:
                 <strong>{% if active_club.current_book %}{{ active_club.current_book }}{% else %}미정{% endif %}</strong>
               </span>
+              <span class="club-place-pill {% if not active_club.meeting_place %}empty{% endif %}">
+                장소: {% if active_club.meeting_place %}{{ active_club.meeting_place }}{% else %}미정{% endif %}
+              </span>
+              <span class="club-book-label">정원 {{ active_club.max_members or 10 }}명</span>
             </div>
           </div>
           <div class="club-actions">
+            <button class="btn-place" onclick="switchToPlacesTab()">
+              ⌖ 장소 선택
+            </button>
+            <button class="btn-settings" onclick="openSettingsTab()">
+              ⚙ 방 수정
+            </button>
             <button class="btn-ai-guide" onclick="requestAIGuide('{{ active_club.club_id or active_club.id }}')">
               ✦ AI 토론 가이드
             </button>
@@ -650,9 +676,13 @@ button,input,textarea,select{font-family:inherit;}
               <div class="filter-block">
                 <div class="filter-title"><strong>장소 검색</strong><span>자연어</span></div>
                 <div class="map-search-row" style="margin-bottom:0">
-                  <input class="map-search-input" id="places-search-input" placeholder="성수 조용한 카페, 강남역 6명 모임..." onkeydown="if(event.key==='Enter')searchPlaces()">
+                  <input class="map-search-input" id="places-search-input" placeholder="Paris book cafe, Tokyo library, 뉴욕 독서모임..." onkeydown="if(event.key==='Enter')searchPlaces()">
                   <button class="btn-search" onclick="searchPlaces()">검색</button>
                 </div>
+              </div>
+              <div class="map-search-row world-jump-row" style="margin-bottom:0">
+                <input class="map-search-input" id="places-world-input" placeholder="도시·국가로 지도 이동: London, Berlin, Singapore..." onkeydown="if(event.key==='Enter')goToWorldPlace()">
+                <button class="btn-locate" onclick="goToWorldPlace()">세계 이동</button>
               </div>
               <div class="map-search-row" style="margin-bottom:0">
                 <button class="btn-locate" onclick="useMyLocation()">내 위치로 찾기</button>
@@ -708,7 +738,7 @@ button,input,textarea,select{font-family:inherit;}
               <div>지도 API 키가 없습니다. 검색 결과 목록으로 장소를 탐색할 수 있어요.</div>
               {% endif %}
             </div>
-            <div class="map-status" id="map-status">서울 중심으로 독서모임 장소를 준비하고 있습니다.</div>
+            <div class="map-status" id="map-status">전세계 어디든 도시를 입력하거나 지도를 움직여 모임 장소를 고를 수 있습니다.</div>
             <div class="my-location-legend" id="my-location-legend" style="display:none"><span class="my-location-dot"></span>내 위치</div>
           </main>
           <aside class="map-panel">
@@ -734,6 +764,8 @@ button,input,textarea,select{font-family:inherit;}
               <input class="field-input" id="setting-club-name" value="{{ active_club.name or '' }}" placeholder="모임방 이름">
               <div class="field-label">소개</div>
               <input class="field-input" id="setting-club-description" value="{{ active_club.description or '' }}" placeholder="모임방 소개">
+              <div class="field-label">최대 인원</div>
+              <input class="field-input" id="setting-max-members" type="number" min="1" max="200" value="{{ active_club.max_members or 10 }}" placeholder="최대 인원">
               <div class="settings-actions">
                 <button class="btn-primary" style="width:auto;margin-top:0;padding:10px 16px;" onclick="saveClubProfile('{{ active_club.club_id or active_club.id }}')">수정 저장</button>
                 <button class="btn-danger" onclick="deleteClub('{{ active_club.club_id or active_club.id }}')">모임방 삭제</button>
@@ -754,6 +786,22 @@ button,input,textarea,select{font-family:inherit;}
               <div class="field-label">저자</div>
               <input class="field-input" id="setting-book-author" value="{{ active_club.current_book_author or '' }}" placeholder="저자 이름">
               <button class="btn-primary" style="margin-top:0;padding:9px;" onclick="saveBookSetting('{{ active_club.club_id or active_club.id }}')">저장</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>모임 장소</h3>
+          <div class="book-setting-card">
+            <div class="book-cover-area" title="지도에서 장소 선택">⌖</div>
+            <div class="book-info-fields">
+              <div class="field-label">장소 이름</div>
+              <input class="field-input" id="setting-place-name" value="{{ active_club.meeting_place_name or active_club.meeting_place or '' }}" placeholder="예: London Review Bookshop">
+              <div class="field-label">주소</div>
+              <input class="field-input" id="setting-place-address" value="{{ active_club.meeting_place_address or '' }}" placeholder="지도에서 장소를 선택하거나 직접 입력">
+              <input type="hidden" id="setting-place-lat" value="{{ active_club.meeting_place_lat or '' }}">
+              <input type="hidden" id="setting-place-lng" value="{{ active_club.meeting_place_lng or '' }}">
+              <button class="btn-primary" style="margin-top:0;padding:9px;" onclick="saveClubProfile('{{ active_club.club_id or active_club.id }}')">장소 저장</button>
             </div>
           </div>
         </div>
@@ -817,9 +865,13 @@ button,input,textarea,select{font-family:inherit;}
             <div class="filter-block">
               <div class="filter-title"><strong>장소 검색</strong><span>자연어</span></div>
               <div class="map-search-row" style="margin-bottom:0">
-                <input class="map-search-input" id="places-search-input" placeholder="성수 조용한 카페, 강남역 6명 모임..." onkeydown="if(event.key==='Enter')searchPlaces()">
+                <input class="map-search-input" id="places-search-input" placeholder="Paris book cafe, Tokyo library, 뉴욕 독서모임..." onkeydown="if(event.key==='Enter')searchPlaces()">
                 <button class="btn-search" onclick="searchPlaces()">검색</button>
               </div>
+            </div>
+            <div class="map-search-row world-jump-row" style="margin-bottom:0">
+              <input class="map-search-input" id="places-world-input" placeholder="도시·국가로 지도 이동: London, Berlin, Singapore..." onkeydown="if(event.key==='Enter')goToWorldPlace()">
+              <button class="btn-locate" onclick="goToWorldPlace()">세계 이동</button>
             </div>
             <div class="map-search-row" style="margin-bottom:0">
               <button class="btn-locate" onclick="useMyLocation()">내 위치로 찾기</button>
@@ -875,7 +927,7 @@ button,input,textarea,select{font-family:inherit;}
             <div>지도 API 키가 없습니다. 검색 결과 목록으로 장소를 탐색할 수 있어요.</div>
             {% endif %}
           </div>
-          <div class="map-status" id="map-status">서울 중심으로 독서모임 장소를 준비하고 있습니다.</div>
+          <div class="map-status" id="map-status">전세계 어디든 도시를 입력하거나 지도를 움직여 모임 장소를 고를 수 있습니다.</div>
           <div class="my-location-legend" id="my-location-legend" style="display:none"><span class="my-location-dot"></span>내 위치</div>
         </main>
         <aside class="map-panel">
@@ -907,6 +959,10 @@ button,input,textarea,select{font-family:inherit;}
         <input class="form-input" id="club-name-input" placeholder="예: 우주를 읽는 모임" maxlength="40" required>
       </div>
       <div class="form-field">
+        <label class="form-label">소개</label>
+        <textarea class="form-input" id="club-description-input" placeholder="어떤 책을 어떤 분위기로 읽는 모임인지 적어주세요."></textarea>
+      </div>
+      <div class="form-field">
         <label class="form-label">대표 이모지</label>
         <div class="emoji-picker" id="emoji-picker">
           <button type="button" class="ep-btn selected" data-emoji="📚">📚</button>
@@ -929,6 +985,18 @@ button,input,textarea,select{font-family:inherit;}
           <option value="30">30명</option>
           <option value="50">50명</option>
         </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">첫 책</label>
+        <input class="form-input" id="club-book-title-input" placeholder="책 제목">
+      </div>
+      <div class="form-field">
+        <label class="form-label">저자</label>
+        <input class="form-input" id="club-book-author-input" placeholder="저자 이름">
+      </div>
+      <div class="form-field">
+        <label class="form-label">모임 장소</label>
+        <input class="form-input" id="club-place-input" placeholder="예: Seoul, London, Tokyo의 북카페">
       </div>
       <button type="submit" class="btn-primary">✦ 만들기</button>
     </form>
@@ -968,11 +1036,10 @@ function initMap(){
   const container=document.getElementById('map');
   if(!container){window.__mapsReady=true;return;}
   window._map=new google.maps.Map(container,{
-    center:{lat:37.5665,lng:126.9780},zoom:13,
+    center:{lat:20,lng:0},zoom:2,
     mapTypeControl:false,streetViewControl:false,fullscreenControl:true,
     gestureHandling:'greedy',
     language:'ko',
-    region:'KR',
     styles:[
       {elementType:'geometry',stylers:[{color:'#10251d'}]},
       {featureType:'landscape.natural',elementType:'geometry',stylers:[{color:'#163421'}]},
@@ -1001,7 +1068,7 @@ window.addEventListener('error',e=>{
   }
 });
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ maps_api_key }}&language=ko&region=KR&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ maps_api_key }}&language=ko&callback=initMap" async defer></script>
 {% endif %}
 
 <script>
@@ -1009,6 +1076,7 @@ window.addEventListener('error',e=>{
 const _cu=JSON.parse(localStorage.getItem('luma_user')||'{}');
 const UID=_cu.user_id||'';
 const TOKEN=localStorage.getItem('luma_token')||'';
+const ACTIVE_CLUB_ID={{ ((active_club.club_id or active_club.id) if active_club else "")|tojson }};
 function userId(){return UID||_cu.user_id||'user_demo';}
 function hdr(){return TOKEN?{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`}:{'Content-Type':'application/json'};}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1072,6 +1140,10 @@ function switchToPlacesTab(){
   if(tabBtn)switchTab('places',tabBtn);
   else document.getElementById('view-map')?.scrollIntoView({block:'start',behavior:'smooth'});
 }
+function openSettingsTab(){
+  const tabBtn=[...document.querySelectorAll('.ctab')].find(b=>b.textContent.includes('설정'));
+  if(tabBtn)switchTab('settings',tabBtn);
+}
 
 /* ── CREATE CLUB MODAL ── */
 let selectedEmoji='📚';
@@ -1099,12 +1171,26 @@ document.addEventListener('DOMContentLoaded',()=>{
 async function submitCreateClub(e){
   e.preventDefault();
   const name=document.getElementById('club-name-input').value.trim();
+  const description=document.getElementById('club-description-input')?.value.trim()||'';
   const max=document.getElementById('max-members-select').value;
+  const bookTitle=document.getElementById('club-book-title-input')?.value.trim()||'';
+  const bookAuthor=document.getElementById('club-book-author-input')?.value.trim()||'';
+  const place=document.getElementById('club-place-input')?.value.trim()||'';
   const msg=document.getElementById('create-modal-msg');
   if(!name){msg.textContent='모임방 이름을 입력해주세요.';return;}
   msg.textContent='생성 중...';
   try{
-    const r=await fetch('/api/v2/community/clubs',{method:'POST',headers:hdr(),body:JSON.stringify({name,emoji:selectedEmoji,max_members:Number(max)})});
+    const r=await fetch('/api/v2/community/clubs',{method:'POST',headers:hdr(),body:JSON.stringify({
+      name,
+      description,
+      emoji:selectedEmoji,
+      max_members:Number(max),
+      book_title:bookTitle,
+      book_author:bookAuthor,
+      meeting_place_name:place,
+      meeting_place_address:place,
+      user_id:userId()
+    })});
     const d=await r.json();
     if(d.ok){const cid=d.club_id||d.club?.id;msg.textContent='모임방이 생성되었습니다!';setTimeout(()=>{window.location=cid?'/community/?club='+cid:'/community/';},800);}
     else{msg.textContent=d.error||'생성 실패. 다시 시도해주세요.';}
@@ -1189,11 +1275,12 @@ async function submitComment(cardId){
 }
 
 /* ── PLACES ── */
-const DEFAULT_CENTER={lat:37.5665,lng:126.9780};
-const DEFAULT_PLACE_QUERY='독서모임하기 좋은 카페 도서관 북카페';
+const DEFAULT_CENTER={lat:20,lng:0};
+const DEFAULT_PLACE_QUERY='book cafe library bookstore reading group';
 const placeState={
   query:DEFAULT_PLACE_QUERY,
   center:{...DEFAULT_CENTER},
+  locationBiased:false,
   userLocation:null,
   rawResults:[],
   searchResults:[],
@@ -1222,7 +1309,7 @@ function distanceBetweenKm(a,b){
 function normalizePlace(p){
   const lat=Number(p.lat||p.latitude||0);
   const lng=Number(p.lng||p.longitude||0);
-  const distance=p.distance_km??distanceBetweenKm(placeState.userLocation||placeState.center,{lat,lng});
+  const distance=p.distance_km??distanceBetweenKm(placeState.userLocation||(placeState.locationBiased?placeState.center:null),{lat,lng});
   return {
     place_id:p.place_id||p.id||p.google_place_id||'',
     google_place_id:p.google_place_id||p.place_id||'',
@@ -1519,6 +1606,7 @@ function renderDetail(){
       ${p.memo?`<div class="detail-summary">${esc(p.memo)}</div>`:''}
       <div class="detail-actions">
         <button class="detail-btn primary" onclick="saveSelectedPlace()">${p.saved?'저장됨':'LUMA에 저장'}</button>
+        ${ACTIVE_CLUB_ID?`<button class="detail-btn primary" onclick="assignSelectedPlaceToClub()">이 장소를 모임 장소로 지정</button>`:''}
         <button class="detail-btn" onclick="toggleEditForm()">수정</button>
         ${p.place_id?`<button class="detail-btn danger" onclick="deleteSelectedPlace()">삭제</button>`:''}
         ${p.google_maps_url?`<a class="detail-btn" href="${esc(p.google_maps_url)}" target="_blank" rel="noopener">길찾기</a>`:''}
@@ -1603,7 +1691,7 @@ function loadPlacesIfActive(){
 }
 async function fetchPlaceBatch(query,radius){
   const params=new URLSearchParams({q:query,limit:'40',radius:String(radius)});
-  if(placeState.center?.lat&&placeState.center?.lng){
+  if(placeState.locationBiased&&placeState.center?.lat&&placeState.center?.lng){
     params.set('lat',placeState.center.lat);
     params.set('lng',placeState.center.lng);
   }
@@ -1620,11 +1708,20 @@ async function findGooglePlaces(query){
   const radius=selectedRadius();
   const candidates=[
     {q:base,r:radius},
-    {q:`${base} 카페 도서관 북카페`,r:Math.max(radius,3000)},
-    {q:'주변 조용한 카페 독서',r:Math.max(radius,3000)},
-    {q:'주변 도서관 북카페 서점',r:Math.max(radius,5000)},
-    {q:'독서모임하기 좋은 카페 도서관 북카페',r:Math.max(radius,8000)}
+    {q:`${base} quiet cafe library bookstore`,r:Math.max(radius,3000)},
+    {q:'book cafe library bookstore reading group',r:Math.max(radius,5000)}
   ];
+  if(placeState.locationBiased){
+    candidates.push(
+      {q:'quiet cafe for reading',r:Math.max(radius,3000)},
+      {q:'library bookstore book cafe',r:Math.max(radius,5000)}
+    );
+  }else{
+    candidates.push(
+      {q:'best book cafe library for book club worldwide',r:Math.max(radius,8000)},
+      {q:'quiet reading room bookstore cafe',r:Math.max(radius,8000)}
+    );
+  }
   const seen=new Set();
   const ids=new Set();
   const merged=[];
@@ -1658,11 +1755,12 @@ async function loadPlaces(query=placeState.query){
     placeState.mode='search';
     applyPlaceFilters();
     renderSavedStrip();
-    const basis=placeState.userLocation?'내 위치':'지도 중심';
+    const basis=placeState.userLocation?'내 위치':(placeState.locationBiased?'지도 중심':'전세계 검색어');
     if(result.source==='google_unavailable'||!result.places.length){
-      setMapStatus('이 주변 Google 장소를 찾지 못했습니다. 위치 권한, GOOGLE_MAPS_API_KEY, 서버 재시작 상태를 확인해주세요.');
+      setMapStatus('Google 장소를 찾지 못했습니다. 도시·국가 이름을 더 구체적으로 입력하거나 GOOGLE_MAPS_API_KEY 상태를 확인해주세요.');
     }else{
-      setMapStatus(`${basis} 기준 약 ${result.radius/1000}km 안에서 카페·도서관·북카페 ${placeState.searchResults.length}곳을 찾았습니다.`);
+      const radiusText=placeState.locationBiased?` 약 ${result.radius/1000}km 안에서`:'';
+      setMapStatus(`${basis} 기준${radiusText} 카페·도서관·북카페 ${placeState.searchResults.length}곳을 찾았습니다.`);
     }
     mapEl('map-research-btn')?.classList.remove('show');
     if(placeState.visibleResults[0])selectPlace(placeState.visibleResults[0],{pan:false});
@@ -1673,7 +1771,36 @@ async function loadPlaces(query=placeState.query){
 }
 function searchPlaces(){
   const q=mapEl('places-search-input')?.value.trim()||'';
+  placeState.locationBiased=false;
   loadPlaces(q||DEFAULT_PLACE_QUERY);
+}
+function goToWorldPlace(){
+  const city=mapEl('places-world-input')?.value.trim()||'';
+  if(!city){setMapStatus('이동할 도시나 국가 이름을 입력해주세요.');return;}
+  const input=mapEl('places-search-input');
+  const query=`${city} book cafe library bookstore`;
+  if(input)input.value=query;
+  setMapStatus(`${city} 지도로 이동하는 중입니다...`);
+  if(window.google?.maps?.Geocoder&&window._map){
+    const geocoder=new google.maps.Geocoder();
+    geocoder.geocode({address:city},(results,status)=>{
+      if(status==='OK'&&results?.[0]?.geometry?.location){
+        const loc=results[0].geometry.location;
+        placeState.center={lat:loc.lat(),lng:loc.lng()};
+        placeState.locationBiased=true;
+        window._map.setCenter(placeState.center);
+        window._map.setZoom(13);
+        loadPlaces(query);
+      }else{
+        placeState.locationBiased=false;
+        setMapStatus('지도 이동은 실패했지만 도시 이름으로 전세계 검색을 계속합니다.');
+        loadPlaces(query);
+      }
+    });
+  }else{
+    placeState.locationBiased=false;
+    loadPlaces(query);
+  }
 }
 function quickSearch(q){
   const input=mapEl('places-search-input');
@@ -1684,18 +1811,21 @@ function searchHere(){
   if(window._map){
     const c=window._map.getCenter();
     placeState.center={lat:c.lat(),lng:c.lng()};
+    placeState.locationBiased=true;
   }
   loadPlaces(placeState.query);
 }
 function useMyLocation(){
   if(!navigator.geolocation){
-    setMapStatus('브라우저가 현재 위치를 지원하지 않아 서울 중심으로 검색합니다.');
+    placeState.locationBiased=false;
+    setMapStatus('브라우저가 현재 위치를 지원하지 않아 전세계 검색어로 찾습니다.');
     return loadPlaces(DEFAULT_PLACE_QUERY);
   }
   setMapStatus('현재 위치를 확인하는 중입니다...');
   navigator.geolocation.getCurrentPosition(pos=>{
       placeState.userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
       placeState.center={...placeState.userLocation};
+      placeState.locationBiased=true;
       const legend=mapEl('my-location-legend');if(legend)legend.style.display='flex';
       const input=mapEl('places-search-input');
       if(input&&!input.value.trim())input.value=DEFAULT_PLACE_QUERY;
@@ -1708,8 +1838,9 @@ function useMyLocation(){
     loadPlaces(input?.value?.trim()||DEFAULT_PLACE_QUERY);
   },()=>{
     placeState.center={...DEFAULT_CENTER};
-    setMapStatus('위치 권한이 없어 서울 중심으로 검색합니다.');
-    loadPlaces('서울 독서모임하기 좋은 카페 도서관 북카페');
+    placeState.locationBiased=false;
+    setMapStatus('위치 권한이 없어 전세계 검색어로 찾습니다. 도시 이름을 입력해보세요.');
+    loadPlaces(DEFAULT_PLACE_QUERY);
   },{enableHighAccuracy:true,timeout:7000});
 }
 async function loadSavedPlaces(){
@@ -1752,6 +1883,35 @@ async function saveSelectedPlace(){
       setMapStatus('LUMA 독서모임 장소로 저장했습니다.');
     } else alert(d.error||'저장하지 못했습니다.');
   }catch(e){alert('저장 중 오류가 발생했습니다.');}
+}
+async function assignSelectedPlaceToClub(){
+  const p=placeState.selectedPlace;
+  if(!p||!ACTIVE_CLUB_ID)return;
+  const body={
+    meeting_place_name:p.name||'',
+    meeting_place_address:p.address||'',
+    meeting_place_lat:p.lat||'',
+    meeting_place_lng:p.lng||'',
+    meeting_place_google_id:p.google_place_id||p.place_id||'',
+    meeting_place_url:p.google_maps_url||''
+  };
+  try{
+    const r=await fetch(`/api/v2/community/clubs/${encodeURIComponent(ACTIVE_CLUB_ID)}/settings`,{method:'POST',headers:hdr(),body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!d.ok){alert(d.error||'모임 장소를 저장하지 못했습니다.');return;}
+    const nameEl=document.getElementById('setting-place-name');
+    const addrEl=document.getElementById('setting-place-address');
+    const latEl=document.getElementById('setting-place-lat');
+    const lngEl=document.getElementById('setting-place-lng');
+    if(nameEl)nameEl.value=body.meeting_place_name;
+    if(addrEl)addrEl.value=body.meeting_place_address;
+    if(latEl)latEl.value=body.meeting_place_lat;
+    if(lngEl)lngEl.value=body.meeting_place_lng;
+    setMapStatus('이 장소를 모임방 장소로 지정했습니다.');
+    setTimeout(()=>window.location.reload(),700);
+  }catch(e){
+    alert('모임 장소 저장 중 오류가 발생했습니다.');
+  }
 }
 function toggleEditForm(){document.getElementById('place-edit-form')?.classList.toggle('open');}
 async function updateSelectedPlace(){
@@ -1822,8 +1982,7 @@ function bootPlacesMap(){
   if(!document.getElementById('view-map')||placeState.loaded)return;
   placeState.loaded=true;
   refreshSavedPlaces();
-  if(navigator.geolocation)setTimeout(()=>useMyLocation(),250);
-  else loadPlaces();
+  loadPlaces();
 }
 window.__pendingMapInit=bootPlacesMap;
 
@@ -1853,16 +2012,99 @@ async function requestReport(clubId){
 }
 
 /* ── SETTINGS SAVE ── */
+async function saveClubProfile(clubId){
+  const body={
+    name:document.getElementById('setting-club-name')?.value.trim()||'',
+    description:document.getElementById('setting-club-description')?.value.trim()||'',
+    max_members:document.getElementById('setting-max-members')?.value||10,
+    meeting_place_name:document.getElementById('setting-place-name')?.value.trim()||'',
+    meeting_place_address:document.getElementById('setting-place-address')?.value.trim()||'',
+    meeting_place_lat:document.getElementById('setting-place-lat')?.value||'',
+    meeting_place_lng:document.getElementById('setting-place-lng')?.value||''
+  };
+  if(!body.name){alert('모임방 이름을 입력해주세요.');return;}
+  try{
+    const r=await fetch(`/api/v2/community/clubs/${encodeURIComponent(clubId)}/settings`,{method:'POST',headers:hdr(),body:JSON.stringify(body)});
+    const d=await r.json();
+    if(d.ok){
+      setMapStatus('모임방 정보를 저장했습니다.');
+      setTimeout(()=>window.location.reload(),650);
+    }else{
+      alert(d.error||'저장 실패');
+    }
+  }catch(e){alert('연결 오류');}
+}
+async function deleteClub(clubId){
+  if(!confirm('이 모임방을 삭제할까요? 공유된 카드도 함께 사라집니다.'))return;
+  try{
+    const r=await fetch(`/api/v2/community/clubs/${encodeURIComponent(clubId)}`,{method:'DELETE',headers:hdr(),body:JSON.stringify({user_id:userId()})});
+    const d=await r.json();
+    if(d.ok)window.location='/community/';
+    else alert(d.error||'삭제 실패');
+  }catch(e){alert('연결 오류');}
+}
 async function saveBookSetting(clubId){
   const title=document.getElementById('setting-book-title').value.trim();
   const author=document.getElementById('setting-book-author').value.trim();
   try{
     const r=await fetch(`/api/v2/community/clubs/${clubId}/settings`,{method:'POST',headers:hdr(),body:JSON.stringify({current_book:title,current_book_author:author})});
     const d=await r.json();
-    if(d.ok){const cover=document.getElementById('book-cover-preview');if(cover)cover.textContent=title?'📖':'+';}
+    if(d.ok){
+      const cover=document.getElementById('book-cover-preview');
+      if(cover)cover.textContent=title?'📖':'+';
+      setTimeout(()=>window.location.reload(),500);
+    }
     else{alert(d.error||'저장 실패');}
   }catch(e){alert('연결 오류');}
 }
 </script>
+<script>
+(function syncCommunityAuthState() {
+  function readUser() {
+    try {
+      return JSON.parse(localStorage.getItem('luma_user') || '{}');
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function(char) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char];
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('luma_token');
+    localStorage.removeItem('luma_user');
+    location.href = '/auth/login';
+  }
+
+  var token = localStorage.getItem('luma_token');
+  var user = readUser();
+  var label = user.display_name || user.nickname || user.name || user.email || '로그인 사용자';
+  var navUser = document.getElementById('nav-user') || document.querySelector('.nav-user');
+  var loginLinks = Array.prototype.slice.call(document.querySelectorAll('a[href="/auth/login"], a[href*="/auth/login"]'));
+
+  window.communityLogout = logout;
+
+  if (token) {
+    var html = '<span class="nav-user-name">' + escapeHtml(user.emoji || '✨') + ' ' + escapeHtml(label) + '</span>' +
+      '<button type="button" class="nav-logout" onclick="communityLogout()">로그아웃</button>';
+    if (navUser) {
+      navUser.innerHTML = html;
+    }
+    loginLinks.forEach(function(link) {
+      var wrapper = document.createElement('span');
+      wrapper.className = link.className || 'nav-user';
+      wrapper.innerHTML = html;
+      link.replaceWith(wrapper);
+    });
+  } else if (navUser && !loginLinks.length) {
+    navUser.innerHTML = '<a href="/auth/login" class="nav-login-btn">로그인</a>';
+  }
+})();
+</script>
+<script src="/static/js/luma_nav_ocr_style.js?v=20260606-nav3"></script>
 </body>
 </html>

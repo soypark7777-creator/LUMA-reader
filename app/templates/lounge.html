@@ -534,7 +534,7 @@ button,input,select{font-family:inherit}
 
 <script>
 /* ─── State ─────────────────────────────────────── */
-const TOKEN=localStorage.getItem('luma_token')||'';
+let TOKEN=localStorage.getItem('luma_token')||'';
 const USER=(()=>{try{return JSON.parse(localStorage.getItem('luma_user')||'{}');}catch(e){return {};}})();
 const UID=USER.user_id||'user_demo';
 let heroBook=null,activeChipEl=null;
@@ -640,6 +640,19 @@ const QUERY_VARIANTS={
 
 /* ─── Auth ───────────────────────────────────────── */
 function hdr(){return TOKEN?{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN}:{'Content-Type':'application/json'};}
+async function apiJson(url, options={}){
+  const response=await fetch(url,{...options,headers:{...hdr(),...(options.headers||{})}});
+  const data=await response.json().catch(()=>({}));
+  if(response.status===401&&TOKEN&&String(data.error||'').includes('토큰')){
+    localStorage.removeItem('luma_token');
+    TOKEN='';
+    const retry=await fetch(url,{...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
+    if(!retry.ok)throw new Error(`HTTP ${retry.status}`);
+    return retry.json();
+  }
+  if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);
+  return data;
+}
 
 /* ─── Toast ──────────────────────────────────────── */
 function showToast(msg,err=false){
@@ -728,6 +741,20 @@ function cleanCoverUrl(url){
   if(url.startsWith('http://'))url='https://'+url.slice(7);
   return url;
 }
+const LOCAL_BOOK_IMAGES=[
+  '/asset/images/책/BOOK.jpg',
+  '/asset/images/책/BOOK (2).jpg',
+  '/asset/images/책/BOOK (3).jpg',
+  '/asset/images/책/BOOK (4).jpg',
+  '/asset/images/책/BOOK (5).jpg',
+  '/asset/images/책/BOOK STORE.jpg',
+  '/asset/images/책/BOOK STORE (2).jpg',
+  '/asset/images/책/MEETING.jpg'
+];
+function localBookImage(book){
+  const key=`${book?.title||''}|${book?.author||''}`;
+  return LOCAL_BOOK_IMAGES[stableHash(key)%LOCAL_BOOK_IMAGES.length];
+}
 function coverCandidates(book){
   const b=book||{};
   const info=b.volumeInfo||{};
@@ -738,6 +765,7 @@ function coverCandidates(book){
   ].map(cleanCoverUrl).filter(Boolean);
   const isbn=String(b.isbn||b.isbn13||b.isbn10||'').replace(/[^0-9Xx]/g,'');
   if(isbn.length===10||isbn.length===13)raw.push(`https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`);
+  raw.push(localBookImage(b));
   return [...new Set(raw)];
 }
 function coverDataAttr(covers){
@@ -1342,16 +1370,14 @@ async function refreshExplore(){
 /* ─── Load sections ──────────────────────────────── */
 async function loadDailyMagazine(){
   try{
-    const r=await fetch(`/api/v2/discover/today?user_id=${encodeURIComponent(UID)}`,{headers:hdr()});
-    const d=await r.json();
+    const d=await apiJson(`/api/v2/discover/today?user_id=${encodeURIComponent(UID)}`);
     if(d.hero){setHero(d.hero);return;}
     if(d.book){setHero(d.book);return;}
     throw new Error('empty-discover');
   }catch(e){
     try{
       const persona=userPersona();
-      const r=await fetch(`/api/v2/lounge/books/recommend?persona=${encodeURIComponent(persona)}&sort=score&limit=10&user_id=${encodeURIComponent(UID)}`,{headers:hdr()});
-      const d=await r.json();
+      const d=await apiJson(`/api/v2/lounge/books/recommend?persona=${encodeURIComponent(persona)}&sort=score&limit=10&user_id=${encodeURIComponent(UID)}`);
       const books=(d.books||[]).filter(b=>b&&b.title);
       if(books.length){
         const daily=books[stableHash(`${UID}|${new Date().toISOString().slice(0,10)}`)%books.length];
@@ -1366,8 +1392,7 @@ async function loadDailyMagazine(){
 async function loadPersonaRecommendations(){
   try{
     const sort=sectionSort('persona');
-    const r=await fetch(`/api/v2/lounge/books/recommend?user_id=${encodeURIComponent(UID)}&persona=${encodeURIComponent(userPersona())}&field=${encodeURIComponent(selectedGenre())}&limit=18&sort=${encodeURIComponent(sort)}`,{headers:hdr()});
-    const d=await r.json();
+    const d=await apiJson(`/api/v2/lounge/books/recommend?user_id=${encodeURIComponent(UID)}&persona=${encodeURIComponent(userPersona())}&field=${encodeURIComponent(selectedGenre())}&limit=18&sort=${encodeURIComponent(sort)}`);
     const base=d.books||[];
     const genre=selectedGenre();
     const queries=genreQueries([

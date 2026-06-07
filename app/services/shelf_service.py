@@ -98,6 +98,39 @@ def _enrich_missing_covers(books: list[dict]) -> list[dict]:
     return books
 
 
+def _is_local_placeholder_cover(url: str) -> bool:
+    """UI fallback 이미지는 실제 책 표지가 아니므로 저장 전에 외부 검색으로 교체한다."""
+    value = str(url or "").strip()
+    return value.startswith("/asset/images/")
+
+
+def _lookup_book_metadata(title: str, author: str = "") -> dict:
+    query = " ".join(x for x in [title, author] if x).strip()
+    if not query:
+        return {}
+    try:
+        candidates = search_books_naver(query, 3) + search_books_google(query, 3)
+    except Exception:
+        candidates = []
+    with_cover = [b for b in candidates if b.get("cover_url")]
+    if not with_cover:
+        return {}
+    return with_cover[0]
+
+
+def _fill_book_cover_metadata(data: dict, title: str, author: str = "") -> dict:
+    cover = (data.get("cover_url") or data.get("thumbnail") or "").strip()
+    if cover and not _is_local_placeholder_cover(cover):
+        return data
+    found = _lookup_book_metadata(title, author)
+    if not found:
+        return data
+    for key in ("cover_url", "isbn", "publisher", "description", "published_date", "total_pages"):
+        if found.get(key) and not data.get(key):
+            data[key] = found.get(key)
+    return data
+
+
 # ──────────────────────────────────────────────────────────
 #  서재 전체 조회
 # ──────────────────────────────────────────────────────────
@@ -177,6 +210,7 @@ def add_book(user_id: str, data: dict) -> dict:
     title  = (data.get("title") or "").strip()
     if not title:
         return {"ok": False, "error": "책 제목을 입력하세요."}
+    data = _fill_book_cover_metadata(data, title, data.get("author", ""))
 
     book_id  = f"book_{uuid.uuid4().hex[:8]}"
     shelf_id = f"sh_{uuid.uuid4().hex[:8]}"
@@ -272,6 +306,10 @@ def update_shelf_book(book_id: str, user_id: str, data: dict) -> dict:
     status   = data.get("status")
     progress = data.get("progress")
     rating   = data.get("rating")
+    title    = (data.get("title") or "").strip()
+    author   = (data.get("author") or "").strip()
+    data = _fill_book_cover_metadata(data, title, author)
+    cover_url = (data.get("cover_url") or data.get("thumbnail") or "").strip()
     now      = datetime.now()
 
     finished_at = now.date() if status == "done" else None
@@ -279,6 +317,10 @@ def update_shelf_book(book_id: str, user_id: str, data: dict) -> dict:
     if is_connected():
         try:
             sets, vals = [], []
+            book_sets, book_vals = [], []
+            if title: book_sets.append("title=%s"); book_vals.append(title)
+            if author: book_sets.append("author=%s"); book_vals.append(author)
+            if cover_url: book_sets.append("cover_url=%s"); book_vals.append(cover_url)
             if status   is not None: sets.append("status=%s");      vals.append(status)
             if progress is not None: sets.append("progress=%s");    vals.append(int(progress))
             if rating   is not None: sets.append("rating=%s");      vals.append(int(rating))
@@ -287,13 +329,17 @@ def update_shelf_book(book_id: str, user_id: str, data: dict) -> dict:
                 sets.append("finished_at=%s"); vals.append(None)
             if status == "reading":
                 sets.append("started_at=COALESCE(started_at,%s)"); vals.append(now.date())
-            if not sets:
+            if not sets and not book_sets:
                 return {"ok": False, "error": "변경할 내용이 없습니다."}
-            vals += [book_id, user_id]
-            execute_write(
-                "UPDATE shelf_books SET " + ",".join(sets) + " WHERE book_id=%s AND user_id=%s",
-                vals
-            )
+            if sets:
+                vals += [book_id, user_id]
+                execute_write(
+                    "UPDATE shelf_books SET " + ",".join(sets) + " WHERE book_id=%s AND user_id=%s",
+                    vals
+                )
+            if book_sets:
+                book_vals.append(book_id)
+                execute_write("UPDATE books SET " + ",".join(book_sets) + " WHERE book_id=%s", book_vals)
         except Exception as e:
             return {"ok": False, "error": str(e)}
     else:
@@ -304,6 +350,11 @@ def update_shelf_book(book_id: str, user_id: str, data: dict) -> dict:
         if progress is not None: s["progress"] = int(progress)
         if rating:   s["rating"]   = int(rating)
         if finished_at: s["finished_at"] = str(finished_at)
+        b = next((x for x in _books_mem if x["book_id"] == book_id), None)
+        if b:
+            if title: b["title"] = title
+            if author: b["author"] = author
+            if cover_url: b["cover_url"] = cover_url
 
     return {"ok": True}
 

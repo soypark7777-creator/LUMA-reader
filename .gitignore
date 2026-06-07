@@ -22,6 +22,7 @@ firebase-credentials.json
 *-credentials.json
 service-account*.json
 secrets/
+*.json
 google-vision-key.json
 
 # ── IDE ─────────────────────────────────────────

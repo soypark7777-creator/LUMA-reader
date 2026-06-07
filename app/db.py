@@ -31,7 +31,7 @@ def _load_config() -> dict:
         from dotenv import load_dotenv
         for env_path in _dotenv_paths():
             if env_path.exists():
-                load_dotenv(env_path, override=False)
+                load_dotenv(env_path, override=True)
     except ImportError:
         _parse_dotenv()
 

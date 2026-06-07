@@ -324,6 +324,80 @@ def _detect_language(text: str) -> str:
     return max(counts, key=counts.get)
 
 
+def enhance_text(raw_text: str, book_title: str = "", book_author: str = "") -> dict:
+    """Correct OCR text with optional book context."""
+    corrected = _clean_text(raw_text)
+    corrected = re.sub(r"([가-힣A-Za-z0-9])\s+([,.;:!?])", r"\1\2", corrected)
+    corrected = re.sub(r"\s+([)\]}])", r"\1", corrected)
+    corrected = re.sub(r"([(\[{])\s+", r"\1", corrected)
+    corrected = re.sub(r"([.!?])([가-힣A-Za-z])", r"\1 \2", corrected)
+    return {
+        "ok": True,
+        "original": raw_text,
+        "corrected": corrected,
+        "changes": ["기본 공백과 줄바꿈을 정리했습니다."],
+        "quality": "fair",
+        "source": "local",
+    }
+
+
+def generate_memo_from_text(extracted_text: str, book_title: str = "") -> dict:
+    """Generate a reader memo draft from extracted text."""
+    preview = _clean_text(extracted_text)[:80].strip()
+    title = book_title or "이 책"
+    return {
+        "ok": True,
+        "memo_draft": f"{title}의 이 구절은 '{preview}...'라는 흐름 속에서 오래 붙잡고 싶은 생각을 남깁니다.",
+        "tags": ["독서", "문장", "생각"],
+        "mood": "inspired",
+        "insight": "이 문장은 내가 당연하게 여기던 관점을 다시 묻게 합니다.",
+        "source": "local",
+        "original_text": extracted_text,
+    }
+
+
+def _detect_language(text: str) -> str:
+    korean = len(re.findall(r"[가-힣]", text))
+    japanese = len(re.findall(r"[\u3040-\u30ff]", text))
+    chinese = len(re.findall(r"[\u4e00-\u9fff]", text))
+    english = len(re.findall(r"[a-zA-Z]", text))
+    counts = {"ko": korean, "ja": japanese, "zh": chinese, "en": english}
+    return max(counts, key=counts.get)
+
+
+def detect_book_info(image_bytes: bytes) -> dict:
+    """Detect book metadata without inventing a fallback title."""
+    prompt = """이 이미지는 책 표지 또는 책 페이지입니다.
+보이는 정보만 근거로 책 정보를 JSON 형식으로 답하세요.
+확실하지 않은 값은 빈 문자열 또는 null로 두고, 책 제목을 추측하지 마세요.
+
+{
+  "title": "책 제목",
+  "author": "작가명",
+  "publisher": "출판사 또는 null",
+  "subtitle": "부제 또는 null",
+  "language": "ko|en|ja|zh|other"
+}"""
+    raw = _gemini_ocr(image_bytes, prompt)
+    if raw:
+        from app.services.gemini_service import _parse_json_safe
+
+        parsed = _parse_json_safe(raw)
+        if parsed and (parsed.get("title") or parsed.get("author") or parsed.get("publisher")):
+            return {"ok": True, **parsed, "source": "gemini", "confidence": 0.88}
+
+    return {
+        "ok": True,
+        "title": "",
+        "author": "",
+        "publisher": None,
+        "subtitle": None,
+        "language": "ko",
+        "source": "manual_required",
+        "confidence": 0.0,
+    }
+
+
 def get_ocr_status() -> dict:
     try:
         from app.services.google_vision_ocr import get_google_vision_status

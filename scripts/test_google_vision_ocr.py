@@ -1,43 +1,68 @@
-"""Smoke check for LUMA Google Vision OCR credentials."""
+"""Smoke test Google Vision OCR configuration without printing key contents."""
 from __future__ import annotations
 
-import os
+import argparse
+import base64
+import sys
 from pathlib import Path
 
-try:
-    from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-    load_dotenv()
-except Exception:
-    pass
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+
+ONE_PIXEL_PNG = (
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/"
+    "x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+)
 
 
 def main() -> int:
-    path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "./secrets/google-vision-key.json")
-    resolved = Path(path)
-    if not resolved.is_absolute():
-        resolved = Path.cwd() / resolved
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--image", help="Optional image path to OCR.")
+    args = parser.parse_args()
 
-    print(f"GOOGLE_APPLICATION_CREDENTIALS={path}")
-    print(f"resolved={resolved}")
-    print(f"exists={resolved.exists()}")
+    load_dotenv(override=True)
 
-    if not resolved.exists():
-        return 1
+    from app.services.google_vision_ocr import (
+        extract_text_google_vision,
+        get_google_vision_status,
+        resolve_credentials_path,
+    )
 
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(resolved)
+    status = get_google_vision_status()
+    resolved = resolve_credentials_path()
+    print("engine:", status.get("engine"))
+    print("credentials_path:", status.get("credentials_path"))
+    print("resolved_exists:", resolved.exists())
 
     try:
-        print("importing google.cloud.vision...")
         from google.cloud import vision
 
-        print("creating ImageAnnotatorClient...")
         vision.ImageAnnotatorClient()
-        print("client=ok")
+        print("client:", "ok")
+    except Exception as exc:
+        print("client:", "error")
+        print("error:", exc)
+        return 1
+
+    if args.image:
+        image_bytes = Path(args.image).read_bytes()
+    else:
+        image_bytes = base64.b64decode(ONE_PIXEL_PNG)
+
+    try:
+        result = extract_text_google_vision(image_bytes, args.image or "one-pixel.png")
+        print("ocr:", "ok")
+        print("text_length:", result.get("text_length", 0))
+        print("source:", result.get("source"))
         return 0
     except Exception as exc:
-        print(f"client=failed: {exc}")
-        return 2
+        print("ocr:", "error")
+        print("error:", exc)
+        return 1
 
 
 if __name__ == "__main__":
